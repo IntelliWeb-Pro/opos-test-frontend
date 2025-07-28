@@ -3,22 +3,17 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
+// --- Icono de Lupa para el buscador ---
+const SearchIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+  </svg>
+);
+
 export default function HomePage() {
   const [oposiciones, setOposiciones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
 
   useEffect(() => {
     fetch(process.env.NEXT_PUBLIC_API_URL + '/api/oposiciones/')
@@ -31,44 +26,48 @@ export default function HomePage() {
   }, []); 
 
   return (
-    <>
-      {/* --- SECCIÓN INICIAL HERO --- */}
-      <section 
-        className={`h-screen flex items-center justify-center text-center transition-opacity duration-700 fixed top-0 left-0 w-full ${isScrolled ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-      >
-        <div className="px-4">
-          {/* CORRECCIÓN: Reducimos el tamaño del texto a 6xl y 7xl */}
-          <h1 className="text-6xl md:text-7xl font-extrabold text-white drop-shadow-lg">
-            Tu éxito empieza con la práctica.
+    <div>
+      {/* --- Sección Hero con Buscador --- */}
+      <section className="bg-white py-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-4xl font-bold text-dark tracking-tight sm:text-5xl lg:text-6xl">
+            La preparación de test que necesitas para tu oposición
           </h1>
-          <p className="text-xl md:text-2xl mt-4 max-w-3xl mx-auto text-white drop-shadow-md">
-            La plataforma definitiva con miles de preguntas actualizadas para asegurar tu plaza.
+          <p className="mt-6 text-lg leading-8 text-secondary max-w-2xl mx-auto">
+            Miles de preguntas actualizadas y justificadas para que practiques sin límites y consigas tu plaza.
           </p>
-          <div className={`mt-16 transition-opacity duration-500 ${isScrolled ? 'opacity-0' : 'opacity-100'}`}>
-             <p className="text-lg text-white drop-shadow-sm">Desliza para empezar</p>
-             <div className="animate-bounce mt-2 text-white text-4xl">↓</div>
+          <div className="mt-10 flex items-center justify-center gap-x-6">
+            <div className="relative w-full max-w-md">
+              <input 
+                type="text" 
+                placeholder="Busca tu oposición..."
+                className="w-full pl-4 pr-12 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+                <SearchIcon />
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* --- SECCIÓN DE OPOSICIONES --- */}
-      <div style={{ marginTop: '100vh' }}>
-        <div className={`container mx-auto px-6 py-20 bg-white/90 backdrop-blur-lg rounded-t-2xl shadow-2xl`}>
-          <h2 className="text-4xl font-bold text-center mb-12 text-dark-text">Oposiciones Disponibles</h2>
+      {/* --- Sección de Oposiciones --- */}
+      <section className="py-16 bg-light">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-center mb-12 text-dark">Oposiciones más preparadas</h2>
           
           {loading ? (
             <p className="text-center">Cargando oposiciones...</p>
           ) : error ? (
             <p className="text-center text-red-600">Error al cargar los datos: {error}</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {oposiciones.map((opo, index) => (
-                <div key={opo.id} style={{ animationDelay: `${index * 100}ms` }} className="opacity-0 animate-fade-in">
-                  <Link href={`/oposicion/${opo.id}`} className="block bg-light-base border border-gray-200 rounded-lg shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300 h-full">
-                    <div className="p-6 flex flex-col h-full">
-                      <div className="border-t-4 border-accent w-1/4 mb-4"></div>
-                      <h3 className="text-xl font-bold text-dark-text flex-grow">{opo.nombre}</h3>
-                      <p className="text-light-text mt-2">{opo.temas.length} temas disponibles</p>
+                <div key={opo.id} style={{ animationDelay: `${index * 50}ms` }} className="opacity-0 animate-fade-in-up">
+                  <Link href={`/oposicion/${opo.id}`} className="block bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 h-full">
+                    <div className="p-5 flex flex-col h-full">
+                      <h3 className="text-md font-bold text-dark flex-grow">{opo.nombre}</h3>
+                      <p className="text-sm text-secondary mt-2">{opo.temas.length} temas</p>
                     </div>
                   </Link>
                 </div>
@@ -76,7 +75,7 @@ export default function HomePage() {
             </div>
           )}
         </div>
-      </div>
-    </>
+      </section>
+    </div>
   );
 }
