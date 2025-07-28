@@ -3,6 +3,7 @@
 import { useAuth } from '@/context/AuthContext';
 import { loadStripe } from '@stripe/stripe-js';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react'; // Importamos useState
 
 // Carga la instancia de Stripe con tu clave publicable
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
@@ -10,15 +11,17 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
 export default function PreciosPage() {
   const { user, token } = useAuth();
   const router = useRouter();
+  const [isSubscribing, setIsSubscribing] = useState(false); // Nuevo estado para el botón
 
   const handleSubscribe = async () => {
     if (!user) {
-      router.push('/login'); // Si no está logueado, lo mandamos a login
+      router.push('/login');
       return;
     }
 
+    setIsSubscribing(true); // Desactivamos el botón y mostramos "Cargando..."
+
     try {
-      // 1. Pedimos a nuestro backend que cree una sesión de pago
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/create-checkout-session/`, {
         method: 'POST',
         headers: {
@@ -33,7 +36,6 @@ export default function PreciosPage() {
 
       const session = await response.json();
       
-      // 2. Redirigimos al usuario a la página de pago de Stripe
       const stripe = await stripePromise;
       const { error } = await stripe.redirectToCheckout({
         sessionId: session.sessionId,
@@ -41,10 +43,12 @@ export default function PreciosPage() {
 
       if (error) {
         console.error('Error de Stripe:', error);
+        setIsSubscribing(false); // Reactivamos el botón si hay un error
       }
 
     } catch (error) {
       console.error('Error al suscribirse:', error);
+      setIsSubscribing(false); // Reactivamos el botón si hay un error
     }
   };
 
@@ -55,7 +59,6 @@ export default function PreciosPage() {
         <p className="text-secondary mt-2">Acceso ilimitado a todos los tests</p>
         
         <div className="my-8">
-          {/* --- PRECIO CORREGIDO --- */}
           <span className="text-5xl font-extrabold text-dark">5,99€</span>
           <span className="text-xl font-medium text-secondary">/mes</span>
         </div>
@@ -69,9 +72,10 @@ export default function PreciosPage() {
 
         <button 
           onClick={handleSubscribe} 
-          className="mt-10 w-full bg-primary text-white py-3 rounded-lg text-lg font-semibold hover:bg-primary-hover transition-colors"
+          disabled={isSubscribing} // El botón se deshabilita mientras carga
+          className="mt-10 w-full bg-primary text-white py-3 rounded-lg text-lg font-semibold hover:bg-primary-hover transition-colors disabled:bg-gray-400"
         >
-          Suscribirse ahora
+          {isSubscribing ? 'Procesando...' : 'Suscribirse ahora'}
         </button>
       </div>
     </main>
