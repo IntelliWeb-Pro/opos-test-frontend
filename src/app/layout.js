@@ -9,6 +9,7 @@ function Navbar() {
   const { user, logout } = useAuth();
 
   return (
+    // CORRECCIÓN: 'sticky' asegura que la barra se quede fija arriba al hacer scroll
     <header className="bg-white shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
@@ -47,7 +48,7 @@ function Navbar() {
 // --- Componente de Footer replicado ---
 function Footer() {
     return (
-        <footer className="bg-white mt-16">
+        <footer className="bg-white">
             <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 border-t">
                 <p className="text-center text-sm text-gray-500">
                     © {new Date().getFullYear()} OposTest Pro. Todos los derechos reservados.
