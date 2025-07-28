@@ -39,6 +39,7 @@ function Navbar() {
 export default function RootLayout({ children }) {
   return (
     <html lang="es">
+      {/* CORRECCIÓN: Hemos quitado 'bg-background' para que se vea la imagen de fondo */}
       <body className={`${montserrat.className} text-dark-text`}>
         <AuthProvider>
           <Navbar />
