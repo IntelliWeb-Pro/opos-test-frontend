@@ -1,8 +1,6 @@
-// src/context/AuthContext.js (Versión Final)
-
 'use client';
-
-import { createContext, useState, useContext, useEffect } from 'react';
+    
+import { createContext, useState, useContext, useEffect, useCallback } from 'react'; // CAMBIO: Importamos useCallback
 import { useRouter } from 'next/navigation';
 
 const AuthContext = createContext(null);
@@ -10,80 +8,71 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  const [loading, setLoading] = useState(true); // Estado para saber si aún estamos verificando la sesión inicial
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // --- NUEVA FUNCIÓN PARA OBTENER LOS DATOS DEL USUARIO ---
-  const fetchUser = async (authToken) => {
+  // CAMBIO: Envolvemos la función en useCallback
+  const logout = useCallback(() => {
+    setToken(null);
+    setUser(null);
+    localStorage.removeItem('access_token');
+    router.push('/login');
+  }, [router]);
+
+  // CAMBIO: Envolvemos la función en useCallback
+  const fetchUser = useCallback(async (authToken) => {
     try {
-      const response = await fetch('https://opos-test-backend.onrender.com/api/auth/user/', {
+      const response = await fetch('https://opos-test-backend.onrender.com/api/auth/user/', { // Usamos la URL de producción
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`, // Usamos el token para autenticarnos
+          'Authorization': `Bearer ${authToken}`,
         },
       });
       if (!response.ok) {
-        // Si el token no es válido, limpiamos la sesión
         throw new Error('Token inválido');
       }
       const userData = await response.json();
-      setUser(userData); // Guardamos los datos reales del usuario (ej: { pk, username, email })
+      setUser(userData);
     } catch {
-      // Si hay cualquier error (token expirado, etc.), cerramos sesión
       logout();
     }
-  };
+  }, [logout]);
   
-  // Al cargar la app, mira si ya hay un token guardado para mantener la sesión
+  // CAMBIO: Añadimos fetchUser a las dependencias
   useEffect(() => {
     const storedToken = localStorage.getItem('access_token');
     if (storedToken) {
       setToken(storedToken);
-      fetchUser(storedToken); // Obtenemos los datos del usuario con el token guardado
+      fetchUser(storedToken);
     }
-    setLoading(false); // Terminamos la carga inicial
-  }, []);
+    setLoading(false);
+  }, [fetchUser]);
 
   const login = async (email, password) => {
     try {
-      const response = await fetch('https://opos-test-backend.onrender.com/api/auth/login/', {
+      const response = await fetch('https://opos-test-backend.onrender.com/api/auth/login/', { // Usamos la URL de producción
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
       
-      if (!response.ok) {
-        throw new Error('Error al iniciar sesión');
-      }
-
+      if (!response.ok) { throw new Error('Error al iniciar sesión'); }
       const data = await response.json();
-      
-      setToken(data.access);
-        localStorage.setItem('access_token', data.access);
-      
-      await fetchUser(data.access); // Obtenemos los datos del usuario justo después de iniciar sesión
-      
+      const accessToken = data.access;
+      setToken(accessToken);
+      localStorage.setItem('access_token', accessToken);
+      await fetchUser(accessToken);
       router.push('/');
       return true;
-
     } catch (error) {
       console.error(error);
+      logout();
       return false;
     }
   };
 
-  const logout = () => {
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem('access_token');
-    router.push('/login');
-  };
-
-  // No mostramos la app hasta que sepamos si el usuario está logueado o no
-  if (loading) {
-    return null; 
-  }
+  if (loading) { return null; }
 
   return (
     <AuthContext.Provider value={{ user, token, login, logout }}>
