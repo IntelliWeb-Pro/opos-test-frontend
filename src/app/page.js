@@ -33,7 +33,7 @@ export default function HomePage() {
   return (
     <>
       <section 
-        className={`h-screen flex items-center justify-center text-center transition-opacity duration-700 fixed top-0 left-0 w-full ${isScrolled ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        className={`h-screen flex items-center justify-center text-center transition-opacity duration-700 fixed top-0 left-0 w-full z-20 ${isScrolled ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
       >
         <div>
           <h1 className="text-7xl md:text-8xl font-extrabold text-white drop-shadow-lg">
