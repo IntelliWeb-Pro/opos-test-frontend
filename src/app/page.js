@@ -32,21 +32,27 @@ export default function HomePage() {
 
   return (
     <>
+      {/* --- SECCIÓN INICIAL HERO --- */}
       <section 
-        className={`h-screen flex items-center justify-center text-center transition-opacity duration-700 fixed top-0 left-0 w-full z-20 ${isScrolled ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        className={`h-screen flex items-center justify-center text-center transition-opacity duration-700 fixed top-0 left-0 w-full ${isScrolled ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
       >
-        <div>
-          <h1 className="text-7xl md:text-8xl font-extrabold text-white drop-shadow-lg">
+        <div className="px-4">
+          {/* CORRECCIÓN: Reducimos el tamaño del texto a 6xl y 7xl */}
+          <h1 className="text-6xl md:text-7xl font-extrabold text-white drop-shadow-lg">
             Tu éxito empieza con la práctica.
           </h1>
           <p className="text-xl md:text-2xl mt-4 max-w-3xl mx-auto text-white drop-shadow-md">
             La plataforma definitiva con miles de preguntas actualizadas para asegurar tu plaza.
           </p>
-          <p className="mt-8 text-lg text-white animate-pulse drop-shadow-sm">Desliza hacia abajo para empezar</p>
+          <div className={`mt-16 transition-opacity duration-500 ${isScrolled ? 'opacity-0' : 'opacity-100'}`}>
+             <p className="text-lg text-white drop-shadow-sm">Desliza para empezar</p>
+             <div className="animate-bounce mt-2 text-white text-4xl">↓</div>
+          </div>
         </div>
       </section>
 
-      <div className="relative z-10" style={{ marginTop: '100vh' }}>
+      {/* --- SECCIÓN DE OPOSICIONES --- */}
+      <div style={{ marginTop: '100vh' }}>
         <div className={`container mx-auto px-6 py-20 bg-white/90 backdrop-blur-lg rounded-t-2xl shadow-2xl`}>
           <h2 className="text-4xl font-bold text-center mb-12 text-dark-text">Oposiciones Disponibles</h2>
           

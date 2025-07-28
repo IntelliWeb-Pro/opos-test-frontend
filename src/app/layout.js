@@ -39,15 +39,13 @@ export default function RootLayout({ children }) {
   return (
     <html lang="es">
       <body className={`${montserrat.className} text-dark-text`}>
-        {/* CORRECCIÓN: Envolvemos todo en un div con un z-index positivo */}
-        <div className="relative z-10">
-          <AuthProvider>
-            <Navbar />
-            <main>
-              {children}
-            </main>
-          </AuthProvider>
-        </div>
+        {/* CORRECCIÓN: Hemos eliminado el div envolvente con z-index */}
+        <AuthProvider>
+          <Navbar />
+          <main>
+            {children}
+          </main>
+        </AuthProvider>
       </body>
     </html>
   );
