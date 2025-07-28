@@ -10,10 +10,22 @@ body::before {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-image: url('https://img.freepik.com/foto-gratis/foto-paisaje-montana-silueta-cielo-despejado-fondo_181624-12776.jpg?semt=ais_hybrid&w=740');
+  background-image: url('https://www.xtrafondos.com/wallpapers/montanas-en-bosque-minimalista-flat-3306.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  filter: blur(8px); /* El efecto de desenfoque */
-  z-index: -1; /* Lo ponemos detrás de todo el contenido */
+  filter: blur(8px);
+  z-index: -2; /* Lo ponemos aún más atrás */
+}
+
+/* --- NUEVO: Capa de oscurecimiento --- */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.3); /* Negro con 30% de opacidad */
+  z-index: -1; /* Se sitúa entre el fondo y el contenido */
 }
