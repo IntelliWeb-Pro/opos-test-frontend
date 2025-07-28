@@ -16,12 +16,12 @@ function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Link href="/" className="text-2xl font-bold text-primary">OposTest Pro</Link>
+            <Link href="/" className="text-2xl font-bold text-primary">OposTest</Link>
           </div>
 
           {/* Menú de Escritorio (oculto en móvil) */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link href="/precios" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Precios</Link>
+            <Link href="/precios" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Suscríbete</Link>
             {user && (
               <Link href="/progreso" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Mi Progreso</Link>
             )}
