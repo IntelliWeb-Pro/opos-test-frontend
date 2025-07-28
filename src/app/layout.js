@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from "@/context/AuthContext";
 import Link from 'next/link';
 import "./globals.css";
 import { useState } from "react"; // Importamos useState para el menú móvil
+<link rel="icon" href="/favicon.ico" />
 
 // --- Componente de Navegación RESPONSIVO ---
 function Navbar() {
