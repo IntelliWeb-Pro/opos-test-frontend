@@ -40,7 +40,7 @@ function Navbar() {
           </div>
         </div>
       </div>
-    </header> // <-- CORRECCIÓN: Ahora es </header> en lugar de </nav>
+    </header>
   );
 }
 
