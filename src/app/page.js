@@ -14,6 +14,21 @@ export default function HomePage() {
   const [oposiciones, setOposiciones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [heroOpacity, setHeroOpacity] = useState(1);
+
+  // Efecto para controlar la opacidad con el scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY;
+      const screenHeight = window.innerHeight;
+      // La opacidad se reduce a medida que se baja en la primera mitad de la pantalla
+      const newOpacity = Math.max(0, 1 - (scrollPosition / (screenHeight / 2)));
+      setHeroOpacity(newOpacity);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     fetch(process.env.NEXT_PUBLIC_API_URL + '/api/oposiciones/')
@@ -27,33 +42,26 @@ export default function HomePage() {
 
   return (
     <div>
-      {/* --- Sección Hero con Buscador --- */}
-      <section className="bg-white py-16 sm:py-20">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          {/* Tamaños de texto responsivos */}
+      {/* --- Sección Hero Fija que se Desvanece --- */}
+      <section 
+        className="h-screen w-full fixed top-0 left-0 flex items-center justify-center text-center -z-10"
+        style={{ opacity: heroOpacity, pointerEvents: heroOpacity === 0 ? 'none' : 'auto' }}
+      >
+        <div className="bg-white/80 backdrop-blur-sm p-10 rounded-lg shadow-2xl max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold text-dark tracking-tight sm:text-5xl lg:text-6xl">
             La preparación de test que necesitas para tu oposición
           </h1>
           <p className="mt-6 text-lg leading-8 text-secondary max-w-2xl mx-auto">
             Miles de preguntas actualizadas y justificadas para que practiques sin límites y consigas tu plaza.
           </p>
-          <div className="mt-10 flex items-center justify-center gap-x-6">
-            <div className="relative w-full max-w-md">
-              <input 
-                type="text" 
-                placeholder="Busca tu oposición..."
-                className="w-full pl-4 pr-12 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
-                <SearchIcon />
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
-      {/* --- Sección de Oposiciones --- */}
-      <section className="py-16 bg-light">
+      {/* --- Contenedor para crear el espacio de scroll --- */}
+      <div className="h-screen"></div>
+
+      {/* --- Sección de Oposiciones que aparece --- */}
+      <section className="py-16 bg-light relative z-10">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center mb-12 text-dark">Oposiciones más preparadas</h2>
           
@@ -62,7 +70,6 @@ export default function HomePage() {
           ) : error ? (
             <p className="text-center text-red-600">Error al cargar los datos: {error}</p>
           ) : (
-            // Cuadrícula responsiva: 1 columna en móvil, 2 en tablet, 4 en escritorio
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {oposiciones.map((opo, index) => (
                 <div key={opo.id} style={{ animationDelay: `${index * 50}ms` }} className="opacity-0 animate-fade-in-up">
