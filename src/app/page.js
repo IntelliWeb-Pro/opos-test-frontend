@@ -18,7 +18,7 @@ const StarIcon = ({ className }) => (
 );
 
 // --- Hook personalizado para la animación de scroll ---
-const useScrollAnimation = () => {
+const useScrollAnimation = (delay = 0) => {
   const ref = useRef(null);
 
   useEffect(() => {
@@ -26,22 +26,22 @@ const useScrollAnimation = () => {
       ([entry]) => {
         if (entry.isIntersecting) {
           entry.target.classList.remove('opacity-0');
-          // CORRECCIÓN: Usamos la nueva animación 'animate-fade-in'
-          entry.target.classList.add('animate-fade-in');
+          entry.target.classList.add('animate-fade-in-up');
         }
       },
       {
-        threshold: 0.1, // El elemento se animará cuando el 10% sea visible
+        threshold: 0.1,
       }
     );
 
-    if (ref.current) {
-      observer.observe(ref.current);
+    const currentRef = ref.current;
+    if (currentRef) {
+      observer.observe(currentRef);
     }
 
     return () => {
-      if (ref.current) {
-        observer.unobserve(ref.current);
+      if (currentRef) {
+        observer.unobserve(currentRef);
       }
     };
   }, []);
@@ -75,13 +75,21 @@ export default function HomePage() {
   const [oposiciones, setOposiciones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [heroOpacity, setHeroOpacity] = useState(1);
 
-  // Asignamos una referencia a cada sección para animarla
-  const heroRef = useScrollAnimation();
-  const categoriesRef = useScrollAnimation();
-  const oposicionesRef = useScrollAnimation();
-  const testimonialsRef = useScrollAnimation();
+  // Efecto para controlar la opacidad del Hero con el scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY;
+      const screenHeight = window.innerHeight;
+      const newOpacity = Math.max(0, 1 - (scrollPosition / (screenHeight * 0.6)));
+      setHeroOpacity(newOpacity);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
+  // Efecto para cargar las oposiciones desde la API
   useEffect(() => {
     fetch(process.env.NEXT_PUBLIC_API_URL + '/api/oposiciones/')
       .then(response => {
@@ -92,11 +100,19 @@ export default function HomePage() {
       .catch(error => { setError(error.message); setLoading(false); });
   }, []); 
 
+  // Asignamos una referencia a cada sección para animarla al aparecer
+  const categoriesRef = useScrollAnimation();
+  const oposicionesRef = useScrollAnimation();
+  const testimonialsRef = useScrollAnimation();
+
   return (
     <div>
-      {/* --- Sección Hero --- */}
-      <section ref={heroRef} className="bg-white py-20 opacity-0">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      {/* --- Sección Hero Fija que se Desvanece --- */}
+      <section 
+        className="h-screen w-full fixed top-0 left-0 flex items-center justify-center text-center -z-10"
+        style={{ opacity: heroOpacity, pointerEvents: heroOpacity === 0 ? 'none' : 'auto' }}
+      >
+        <div className="bg-white/80 backdrop-blur-sm p-10 rounded-lg shadow-2xl max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold text-dark tracking-tight sm:text-5xl lg:text-6xl">
             La preparación de test que necesitas para tu oposición
           </h1>
@@ -106,70 +122,74 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- Sección de Categorías --- */}
-      <section ref={categoriesRef} className="py-16 bg-light opacity-0" style={{ animationDelay: '200ms' }}>
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {categories.map((category) => (
-              <div key={category.name} className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 text-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer">
-                <div className="text-4xl">{category.icon}</div>
-                <h3 className="mt-4 text-lg font-bold text-dark">{category.name}</h3>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* --- Contenedor invisible para generar el espacio de scroll --- */}
+      <div className="h-screen"></div>
 
-      {/* --- Sección de Oposiciones --- */}
-      <section ref={oposicionesRef} className="py-16 bg-white opacity-0" style={{ animationDelay: '200ms' }}>
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center mb-12 text-dark">Oposiciones más preparadas</h2>
-          
-          {loading ? (
-            <p className="text-center">Cargando oposiciones...</p>
-          ) : error ? (
-            <p className="text-center text-red-600">Error al cargar los datos: {error}</p>
-          ) : (
+      {/* --- Contenido Principal que aparecerá progresivamente --- */}
+      <div className="relative z-10 bg-light">
+        
+        {/* --- Sección de Categorías --- */}
+        <section ref={categoriesRef} className="py-16 opacity-0">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {oposiciones.map((opo) => (
-                // La animación individual ya no es necesaria, la controla el hook de la sección
-                <Link key={opo.id} href={`/oposicion/${opo.id}`} className="block bg-light border border-gray-200 rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 h-full">
-                  <div className="p-5 flex flex-col h-full">
-                    <h3 className="text-md font-bold text-dark flex-grow">{opo.nombre}</h3>
-                    <p className="text-sm text-secondary mt-2">{opo.temas.length} temas</p>
-                  </div>
-                </Link>
+              {categories.map((category) => (
+                <div key={category.name} className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 text-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                  <div className="text-4xl">{category.icon}</div>
+                  <h3 className="mt-4 text-lg font-bold text-dark">{category.name}</h3>
+                </div>
               ))}
             </div>
-          )}
-        </div>
-      </section>
+          </div>
+        </section>
 
-      {/* --- Sección de Opiniones --- */}
-      <section ref={testimonialsRef} className="py-16 bg-light opacity-0" style={{ animationDelay: '200ms' }}>
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center mb-4 text-dark">Te acompañamos en tu camino al éxito</h2>
-          <p className="text-lg text-center text-secondary mb-12">Nuestros opositores nos avalan.</p>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {testimonials.map((testimonial) => (
-              <div key={testimonial.name} className="bg-white p-6 rounded-lg border border-gray-200 flex flex-col">
-                <div className="flex items-center mb-4">
-                  <div className="flex items-center">
-                    {[...Array(testimonial.rating)].map((_, i) => <StarIcon key={i} className="w-5 h-5 text-yellow-400" />)}
-                    {[...Array(5 - testimonial.rating)].map((_, i) => <StarIcon key={i} className="w-5 h-5 text-gray-300" />)}
+        {/* --- Sección de Oposiciones --- */}
+        <section ref={oposicionesRef} className="py-16 bg-white opacity-0" style={{ animationDelay: '150ms' }}>
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl font-bold text-center mb-12 text-dark">Oposiciones más preparadas</h2>
+            {loading ? (
+              <p className="text-center">Cargando...</p>
+            ) : error ? (
+              <p className="text-center text-red-600">{error}</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {oposiciones.map((opo) => (
+                  <Link key={opo.id} href={`/oposicion/${opo.id}`} className="block bg-light border border-gray-200 rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 h-full">
+                    <div className="p-5 flex flex-col h-full">
+                      <h3 className="text-md font-bold text-dark flex-grow">{opo.nombre}</h3>
+                      <p className="text-sm text-secondary mt-2">{opo.temas.length} temas</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* --- Sección de Opiniones --- */}
+        <section ref={testimonialsRef} className="py-16 bg-light opacity-0" style={{ animationDelay: '150ms' }}>
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl font-bold text-center mb-4 text-dark">Te acompañamos en tu camino al éxito</h2>
+            <p className="text-lg text-center text-secondary mb-12">Nuestros opositores nos avalan.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {testimonials.map((testimonial) => (
+                <div key={testimonial.name} className="bg-white p-6 rounded-lg border border-gray-200 flex flex-col">
+                  <div className="flex items-center mb-4">
+                    <div className="flex items-center">
+                      {[...Array(testimonial.rating)].map((_, i) => <StarIcon key={i} className="w-5 h-5 text-yellow-400" />)}
+                      {[...Array(5 - testimonial.rating)].map((_, i) => <StarIcon key={i} className="w-5 h-5 text-gray-300" />)}
+                    </div>
+                  </div>
+                  <p className="text-dark flex-grow">&quot;{testimonial.text}&quot;</p>
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <p className="font-bold text-dark">{testimonial.name}</p>
+                    <p className="text-sm text-secondary">{testimonial.opo}</p>
                   </div>
                 </div>
-                <p className="text-dark flex-grow">&quot;{testimonial.text}&quot;</p>
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <p className="font-bold text-dark">{testimonial.name}</p>
-                  <p className="text-sm text-secondary">{testimonial.opo}</p>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
   );
 }
