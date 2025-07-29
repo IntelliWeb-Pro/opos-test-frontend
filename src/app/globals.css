@@ -14,7 +14,7 @@ body::before {
   width: 100vw;
   height: 100vh;
   /* --- CORRECCIÓN: Usamos la nueva URL de la imagen --- */
-  background-image: url('https://storage.googleapis.com/gemini-prod/images/331e3427-24ea-4573-82c5-5511d73e0c2f.jpg');
+  background-image: url('https://files.fm/u/sfa8game6p');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
