@@ -1,18 +1,15 @@
-// src/app/tema/[id]/page.js (Versión Final con guardado)
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext'; // <-- IMPORTAMOS useAuth
+import { useAuth } from '@/context/AuthContext';
 
 const TIEMPO_POR_PREGUNTA = 90;
 
 export default function TestPage() {
   const params = useParams();
-  const { user, token } = useAuth(); // <-- OBTENEMOS EL USUARIO Y EL TOKEN
-
-  // ... (todos los useState de antes sin cambios)
+  const { user, token } = useAuth();
+  
   const [preguntas, setPreguntas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -24,10 +21,9 @@ export default function TestPage() {
   const [cargandoResultados, setCargandoResultados] = useState(false);
   const [datosCorreccion, setDatosCorreccion] = useState([]);
 
-  // ... (useEffect para cargar preguntas y el temporizador no cambian)
   useEffect(() => {
     setLoading(true);
-    fetch(`https://opos-test-backend.onrender.com/api/preguntas/?tema=${params.id}`)
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/preguntas/?tema=${params.id}`)
       .then(res => res.json())
       .then(data => {
         setPreguntas(data);
@@ -58,15 +54,13 @@ export default function TestPage() {
     if (preguntaActualIndex > 0) { setPreguntaActualIndex(preguntaActualIndex - 1); }
   };
 
-  // --- FUNCIÓN terminarTest ACTUALIZADA ---
   const terminarTest = async () => {
     setTestTerminado(true);
     setCargandoResultados(true);
     const idsPreguntas = preguntas.map(p => p.id);
 
     try {
-      // 1. Obtenemos la corrección (como antes)
-      const responseCorreccion = await fetch('https://opos-test-backend.onrender.com/api/preguntas/corregir/', {
+      const responseCorreccion = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/preguntas/corregir/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids: idsPreguntas }),
@@ -74,7 +68,6 @@ export default function TestPage() {
       const dataCorreccion = await responseCorreccion.json();
       setDatosCorreccion(dataCorreccion);
 
-      // 2. Calculamos la puntuación
       let correctas = 0;
       dataCorreccion.forEach(preguntaCorregida => {
         const respuestaUsuario = respuestasUsuario[preguntaCorregida.id];
@@ -85,13 +78,13 @@ export default function TestPage() {
       });
       setPuntuacion(correctas);
 
-      // 3. Si hay un usuario logueado, guardamos el resultado
       if (user && token) {
-        await fetch('https://opos-test-backend.onrender.com/api/resultados/', {
+        // --- CORRECCIÓN CLAVE: Usamos la variable de entorno ---
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/resultados/`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`, // ¡Enviamos el token!
+            'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify({
             tema: params.id,
@@ -108,11 +101,10 @@ export default function TestPage() {
   };
 
   // ... (El resto del return con la vista del test y la corrección no cambia)
-  // ... (Pega aquí el resto del código de la vista que ya tenías)
-   if (loading) return <p className="text-center mt-10">Cargando test...</p>;
+  if (loading) return <p className="text-center mt-10">Cargando test...</p>;
   if (error) return <p className="text-center mt-10 text-red-600">{error}</p>;
   if (preguntas.length === 0) return <p className="text-center mt-10">No hay preguntas para este tema.</p>;
-
+  
   if (testTerminado) {
     if (cargandoResultados) { return <p className="text-center mt-10">Calculando resultados...</p>; }
     return (
