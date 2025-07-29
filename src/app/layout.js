@@ -11,11 +11,11 @@ function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-50">
+    // 'fixed' asegura que la barra siempre esté visible en la parte superior
+    <header className="bg-white/80 backdrop-blur-md shadow-sm fixed top-0 left-0 w-full z-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex-shrink-0">
-            {/* --- CORRECCIÓN: Nombre de la marca actualizado --- */}
             <Link href="/" className="text-2xl font-bold text-primary">OposTest</Link>
           </div>
           {/* Menú de Escritorio */}
@@ -69,10 +69,9 @@ function Navbar() {
 
 function Footer() {
     return (
-        <footer className="bg-white mt-16">
+        <footer className="bg-white relative z-10">
             <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 border-t">
                 <p className="text-center text-sm text-gray-500">
-                    {/* --- CORRECCIÓN: Nombre de la marca actualizado --- */}
                     © {new Date().getFullYear()} OposTest. Todos los derechos reservados.
                 </p>
             </div>
@@ -83,7 +82,7 @@ function Footer() {
 export default function RootLayout({ children }) {
   return (
     <html lang="es">
-      <body className="font-sans bg-light">
+      <body className="font-sans">
         <AuthProvider>
           <div className="flex flex-col min-h-screen">
             <Navbar />
