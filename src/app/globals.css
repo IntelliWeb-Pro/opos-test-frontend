@@ -4,3 +4,31 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Capa de la imagen de fondo desenfocada */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-image: url('https://www.xtrafondos.com/wallpapers/montanas-en-bosque-minimalista-flat-3306.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(8px);
+  z-index: -2;
+}
+
+/* Capa de oscurecimiento para mejorar el contraste */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: -1;
+}
