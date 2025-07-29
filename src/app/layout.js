@@ -3,26 +3,30 @@
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import Link from 'next/link';
 import "./globals.css";
-import { useState } from "react"; // Importamos useState para el menú móvil
-<link rel="icon" href="/favicon.ico" />
+import { useState } from "react";
+
+// --- METADATA PARA EL TÍTULO DE LA PESTAÑA ---
+// Next.js recomienda exportar esto por separado en los layouts.
+// Aunque no se use directamente en el código de abajo, Next.js lo leerá.
+export const metadata = {
+  title: "OposTest", // <-- TÍTULO CORREGIDO
+  description: "La mejor plataforma para tus tests de oposición",
+};
 
 // --- Componente de Navegación RESPONSIVO ---
 function Navbar() {
   const { user, logout } = useAuth();
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // Estado para el menú hamburguesa
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
           <div className="flex-shrink-0">
             <Link href="/" className="text-2xl font-bold text-primary">OposTest</Link>
           </div>
-
-          {/* Menú de Escritorio (oculto en móvil) */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link href="/precios" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Suscríbete</Link>
+            <Link href="/precios" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Precios</Link>
             {user && (
               <Link href="/progreso" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Mi Progreso</Link>
             )}
@@ -40,8 +44,6 @@ function Navbar() {
               </div>
             )}
           </div>
-
-          {/* Botón de Hamburguesa (visible solo en móvil) */}
           <div className="md:hidden flex items-center">
             <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-primary focus:outline-none">
               <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
@@ -55,8 +57,6 @@ function Navbar() {
           </div>
         </div>
       </div>
-
-      {/* Menú Desplegable Móvil */}
       {isMenuOpen && (
         <div className="md:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
@@ -90,7 +90,7 @@ function Footer() {
         <footer className="bg-white mt-16">
             <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 border-t">
                 <p className="text-center text-sm text-gray-500">
-                    © {new Date().getFullYear()} OposTest Pro. Todos los derechos reservados.
+                    © {new Date().getFullYear()} OposTest. Todos los derechos reservados.
                 </p>
             </div>
         </footer>
