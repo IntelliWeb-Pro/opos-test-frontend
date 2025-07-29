@@ -3,11 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
-// Importamos los componentes para los gráficos
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-
-// Colores para los gráficos de tarta
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export default function ProgresoPage() {
   const { user, token } = useAuth();
@@ -29,12 +25,17 @@ export default function ProgresoPage() {
     })
       .then(res => {
         if (!res.ok) {
-          throw new Error('No se pudo cargar tu progreso. Es posible que aún no hayas completado ningún test.');
+          throw new Error('Error de red al cargar tu progreso.');
         }
         return res.json();
       })
       .then(data => {
-        setStats(data);
+        // CORRECCIÓN: Comprobamos si la respuesta tiene datos o el mensaje de 'no hay resultados'
+        if (data.message) {
+          setStats(null); // No hay estadísticas que mostrar
+        } else {
+          setStats(data);
+        }
         setLoading(false);
       })
       .catch(err => {
@@ -43,7 +44,7 @@ export default function ProgresoPage() {
       });
   }, [token]);
 
-  if (loading) return <p className="text-center mt-10">Cargando tus estadísticas...</p>;
+  if (loading) return <p className="text-center mt-20">Cargando tus estadísticas...</p>;
   
   if (!user) {
     return (
@@ -58,6 +59,7 @@ export default function ProgresoPage() {
     );
   }
   
+  // Si hay un error de red O si no hay estadísticas (stats es null)
   if (error || !stats) {
     return (
         <main className="text-center p-8 container mx-auto">
@@ -72,6 +74,7 @@ export default function ProgresoPage() {
     )
   }
 
+  // Si llegamos aquí, es que hay estadísticas para mostrar
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <header className="mb-12">
@@ -79,21 +82,19 @@ export default function ProgresoPage() {
         <p className="text-lg text-secondary mt-2">Analiza tu rendimiento y descubre tus puntos fuertes y débiles.</p>
       </header>
 
-      {/* Tarjeta de Resumen General */}
       <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 text-center mb-8">
         <h2 className="text-xl font-semibold text-dark">Porcentaje de Aciertos General</h2>
         <p className="text-6xl font-bold text-primary mt-2">{stats.media_general}%</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Gráfico de Rendimiento por Oposición */}
         <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
           <h2 className="text-xl font-semibold text-dark mb-4">Rendimiento por Oposición</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={stats.stats_por_oposicion} layout="vertical" margin={{ top: 5, right: 30, left: 100, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis type="number" domain={[0, 100]} unit="%" />
-              <YAxis dataKey="oposicion" type="category" width={150} />
+              <YAxis dataKey="oposicion" type="category" width={150} tick={{ fontSize: 12 }} />
               <Tooltip formatter={(value) => `${value}%`} />
               <Legend />
               <Bar dataKey="media" name="Aciertos" fill="#007bff" />
@@ -101,7 +102,6 @@ export default function ProgresoPage() {
           </ResponsiveContainer>
         </div>
 
-        {/* Gráfico de Temas Destacados */}
         <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
           <h2 className="text-xl font-semibold text-dark mb-4">Temas Más Destacados</h2>
            <ul className="space-y-3 mt-4">
