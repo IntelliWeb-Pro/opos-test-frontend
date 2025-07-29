@@ -13,7 +13,8 @@ body::before {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-image: url('https://www.xtrafondos.com/wallpapers/montanas-en-bosque-minimalista-flat-3306.jpg');
+  /* --- CORRECCIÓN: Usamos la nueva URL de la imagen --- */
+  background-image: url('https://storage.googleapis.com/gemini-prod/images/331e3427-24ea-4573-82c5-5511d73e0c2f.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
