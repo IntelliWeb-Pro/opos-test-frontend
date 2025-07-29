@@ -26,7 +26,8 @@ const useScrollAnimation = () => {
       ([entry]) => {
         if (entry.isIntersecting) {
           entry.target.classList.remove('opacity-0');
-          entry.target.classList.add('animate-fade-in-up');
+          // CORRECCIÓN: Usamos la nueva animación 'animate-fade-in'
+          entry.target.classList.add('animate-fade-in');
         }
       },
       {
@@ -78,6 +79,7 @@ export default function HomePage() {
   // Asignamos una referencia a cada sección para animarla
   const heroRef = useScrollAnimation();
   const categoriesRef = useScrollAnimation();
+  const oposicionesRef = useScrollAnimation();
   const testimonialsRef = useScrollAnimation();
 
   useEffect(() => {
@@ -119,7 +121,7 @@ export default function HomePage() {
       </section>
 
       {/* --- Sección de Oposiciones --- */}
-      <section className="py-16 bg-white">
+      <section ref={oposicionesRef} className="py-16 bg-white opacity-0" style={{ animationDelay: '200ms' }}>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center mb-12 text-dark">Oposiciones más preparadas</h2>
           
@@ -129,15 +131,14 @@ export default function HomePage() {
             <p className="text-center text-red-600">Error al cargar los datos: {error}</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {oposiciones.map((opo, index) => (
-                <div key={opo.id} style={{ animationDelay: `${index * 50}ms` }} className="opacity-0 animate-fade-in-up">
-                  <Link href={`/oposicion/${opo.id}`} className="block bg-light border border-gray-200 rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 h-full">
-                    <div className="p-5 flex flex-col h-full">
-                      <h3 className="text-md font-bold text-dark flex-grow">{opo.nombre}</h3>
-                      <p className="text-sm text-secondary mt-2">{opo.temas.length} temas</p>
-                    </div>
-                  </Link>
-                </div>
+              {oposiciones.map((opo) => (
+                // La animación individual ya no es necesaria, la controla el hook de la sección
+                <Link key={opo.id} href={`/oposicion/${opo.id}`} className="block bg-light border border-gray-200 rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 h-full">
+                  <div className="p-5 flex flex-col h-full">
+                    <h3 className="text-md font-bold text-dark flex-grow">{opo.nombre}</h3>
+                    <p className="text-sm text-secondary mt-2">{opo.temas.length} temas</p>
+                  </div>
+                </Link>
               ))}
             </div>
           )}
@@ -151,8 +152,8 @@ export default function HomePage() {
           <p className="text-lg text-center text-secondary mb-12">Nuestros opositores nos avalan.</p>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <div key={index} className="bg-white p-6 rounded-lg border border-gray-200 flex flex-col">
+            {testimonials.map((testimonial) => (
+              <div key={testimonial.name} className="bg-white p-6 rounded-lg border border-gray-200 flex flex-col">
                 <div className="flex items-center mb-4">
                   <div className="flex items-center">
                     {[...Array(testimonial.rating)].map((_, i) => <StarIcon key={i} className="w-5 h-5 text-yellow-400" />)}

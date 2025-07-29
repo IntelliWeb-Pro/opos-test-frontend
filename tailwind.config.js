@@ -8,29 +8,28 @@ module.exports = {
   ],
   theme: {
     extend: {
-      // Paleta de colores replicada de OpositaTest
       colors: {
-        'primary': '#007bff',      // Azul principal
+        'primary': '#007bff',
         'primary-hover': '#0069d9',
-        'secondary': '#6c757d',    // Gris secundario
-        'success': '#28a745',      // Verde para éxito
-        'light': '#f8f9fa',        // Fondo gris claro
-        'dark': '#343a40',         // Texto oscuro principal
+        'secondary': '#6c757d',
+        'success': '#28a745',
+        'light': '#f8f9fa',
+        'dark': '#343a40',
         'white': '#ffffff',
       },
-      // Familia de fuentes replicada
       fontFamily: {
         sans: ['"Open Sans"', 'sans-serif'],
       },
-      // Animaciones sutiles
+      // CORRECCIÓN: Definimos una animación de fundido más suave
       keyframes: {
-        fadeInUp: {
-          '0%': { opacity: '0', transform: 'translateY(20px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
         }
       },
       animation: {
-        'fade-in-up': 'fadeInUp 0.6s ease-out forwards',
+        // CORRECCIÓN: Creamos la nueva animación 'fade-in'
+        'fade-in': 'fadeIn 1s ease-in-out forwards',
       }
     },
   },
