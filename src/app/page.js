@@ -56,18 +56,6 @@ export default function HomePage() {
           <p className="mt-6 text-lg leading-8 text-secondary max-w-2xl mx-auto">
             Miles de preguntas actualizadas y justificadas para que practiques sin límites y consigas tu plaza.
           </p>
-          <div className="mt-10 flex items-center justify-center gap-x-6">
-            <div className="relative w-full max-w-md">
-              <input 
-                type="text" 
-                placeholder="Busca tu oposición..."
-                className="w-full pl-4 pr-12 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
-                <SearchIcon />
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -100,7 +88,7 @@ export default function HomePage() {
       {/* --- NUEVA SECCIÓN DE OPINIONES --- */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center mb-4 text-dark">No solo una plataforma, te acompañamos</h2>
+          <h2 className="text-3xl font-bold text-center mb-4 text-dark">Te acompañamos hacia el éxito</h2>
           <p className="text-lg text-center text-secondary mb-12">Nuestros opositores nos avalan.</p>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
