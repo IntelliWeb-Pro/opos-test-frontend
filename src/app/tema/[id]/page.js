@@ -23,9 +23,8 @@ export default function TestPage() {
   const [cargandoResultados, setCargandoResultados] = useState(false);
   const [datosCorreccion, setDatosCorreccion] = useState([]);
 
-  // --- FUNCIÓN TERMINAR TEST (CORREGIDA Y OPTIMIZADA) ---
   const terminarTest = useCallback(async () => {
-    if (testTerminado) return; // Evita ejecuciones múltiples
+    if (testTerminado) return;
 
     setTestTerminado(true);
     setCargandoResultados(true);
@@ -37,6 +36,7 @@ export default function TestPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids: idsPreguntas }),
       });
+      if (!responseCorreccion.ok) throw new Error('Fallo al obtener la corrección');
       const dataCorreccion = await responseCorreccion.json();
       setDatosCorreccion(dataCorreccion);
 
@@ -64,33 +64,36 @@ export default function TestPage() {
           }),
         });
         if (!saveResponse.ok) {
-          console.error("Error al guardar el resultado en el backend.");
+           const errorData = await saveResponse.json();
+           console.error("Error al guardar el resultado:", errorData);
+           throw new Error('El resultado no se pudo guardar.');
         }
       }
     } catch (error) {
       console.error("Error en terminarTest:", error);
-      setError("Error al obtener la corrección o guardar el resultado.");
+      setError(error.message);
     } finally {
       setCargandoResultados(false);
     }
   }, [preguntas, respuestasUsuario, user, token, params.id, testTerminado]);
 
-
   useEffect(() => {
     if (params.id) {
         setLoading(true);
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/preguntas/?tema=${params.id}`)
-          .then(res => res.json())
+          .then(res => {
+            if (!res.ok) throw new Error('No se pudieron cargar las preguntas para este tema.');
+            return res.json();
+          })
           .then(data => {
             setPreguntas(data);
             if (data.length > 0) { setTiempoRestante(data.length * TIEMPO_POR_PREGUNTA); }
             setLoading(false);
           })
-          .catch(err => { setError('No se pudieron cargar las preguntas.'); setLoading(false); });
+          .catch(err => { setError(err.message); setLoading(false); });
     }
   }, [params.id]);
 
-  // --- TEMPORIZADOR (CORREGIDO) ---
   useEffect(() => {
     if (tiempoRestante > 0 && !testTerminado) {
       const timer = setInterval(() => { setTiempoRestante(prev => prev - 1); }, 1000);
@@ -112,10 +115,9 @@ export default function TestPage() {
     if (preguntaActualIndex > 0) { setPreguntaActualIndex(preguntaActualIndex - 1); }
   };
 
-
   if (loading) return <p className="text-center mt-20">Cargando test...</p>;
-  if (error) return <p className="text-center mt-20 text-red-600">{error}</p>;
-  if (preguntas.length === 0) return <p className="text-center mt-20">No hay preguntas para este tema.</p>;
+  if (error && !testTerminado) return <p className="text-center mt-20 text-red-600">{error}</p>;
+  if (preguntas.length === 0 && !loading) return <p className="text-center mt-20">No hay preguntas para este tema.</p>;
   
   if (testTerminado) {
     if (cargandoResultados) { return <p className="text-center mt-20">Calculando resultados...</p>; }
@@ -123,10 +125,11 @@ export default function TestPage() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="bg-white p-8 rounded-lg shadow-md text-center mb-8 border border-gray-200">
           <h1 className="text-3xl font-bold text-dark">Resultados del Test</h1>
+          {error && <p className="bg-red-100 text-red-700 p-3 rounded my-4">{error}</p>}
           <p className="text-xl mt-4 text-secondary">Tu puntuación:</p>
           <p className="text-6xl font-bold my-4 text-primary">{puntuacion} / {preguntas.length}</p>
           <div className="flex justify-center space-x-4">
-            <Link href="/" className="mt-6 inline-block bg-secondary text-white px-6 py-2 rounded-md hover:bg-gray-600">Volver al inicio</Link>
+            <Link href="/progreso" className="mt-6 inline-block bg-secondary text-white px-6 py-2 rounded-md hover:bg-gray-600">Ver mi progreso</Link>
             <button onClick={() => window.location.reload()} className="mt-6 inline-block bg-primary text-white px-6 py-2 rounded-md hover:bg-primary-hover">Repetir Test</button>
           </div>
         </div>
