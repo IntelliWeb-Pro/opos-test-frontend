@@ -20,7 +20,6 @@ export default function LoginPage() {
     if (!success) {
       setError('Email o contraseña incorrectos.');
     }
-    // La redirección en caso de éxito la maneja el AuthContext
     setLoading(false);
   };
 

@@ -1,9 +1,17 @@
+import Link from 'next/link';
+
 export default function PagoCanceladoPage() {
   return (
-    <main className="text-center p-10">
-      <h1 className="text-3xl font-bold text-red-600">Pago cancelado</h1>
-      <p className="mt-4">El proceso de pago ha sido cancelado. Puedes intentarlo de nuevo cuando quieras.</p>
-      <a href="/precios" className="mt-6 inline-block bg-blue-600 text-white px-6 py-2 rounded">Ver planes</a>
-    </main>
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="mx-auto max-w-lg text-center">
+            <div className="bg-white p-8 rounded-lg shadow-md border border-gray-200">
+                <h1 className="text-3xl font-bold text-red-600">Pago Cancelado</h1>
+                <p className="mt-4 text-secondary">El proceso de pago ha sido cancelado. Tu suscripción no ha sido activada. Puedes volver a intentarlo cuando quieras.</p>
+                <Link href="/precios" className="mt-8 inline-block bg-primary text-white px-8 py-3 rounded-md hover:bg-primary-hover font-semibold">
+                    Ver planes de nuevo
+                </Link>
+            </div>
+        </div>
+    </div>
   );
 }

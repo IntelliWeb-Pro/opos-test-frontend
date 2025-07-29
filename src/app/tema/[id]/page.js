@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 
@@ -9,7 +9,6 @@ const TIEMPO_POR_PREGUNTA = 90;
 
 export default function TestPage() {
   const params = useParams();
-  const router = useRouter();
   const { user, token } = useAuth();
   
   const [preguntas, setPreguntas] = useState([]);
@@ -25,7 +24,6 @@ export default function TestPage() {
 
   const terminarTest = useCallback(async () => {
     if (testTerminado) return;
-
     setTestTerminado(true);
     setCargandoResultados(true);
     const idsPreguntas = preguntas.map(p => p.id);

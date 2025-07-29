@@ -25,14 +25,13 @@ export default function ProgresoPage() {
     })
       .then(res => {
         if (!res.ok) {
-          throw new Error('Error de red al cargar tu progreso.');
+          throw new Error('No se pudo cargar tu progreso. Es posible que aún no hayas completado ningún test.');
         }
         return res.json();
       })
       .then(data => {
-        // CORRECCIÓN: Comprobamos si la respuesta tiene datos o el mensaje de 'no hay resultados'
         if (data.message) {
-          setStats(null); // No hay estadísticas que mostrar
+          setStats(null);
         } else {
           setStats(data);
         }
@@ -49,7 +48,7 @@ export default function ProgresoPage() {
   if (!user) {
     return (
       <main className="text-center p-8 container mx-auto">
-        <div className="bg-white p-8 rounded-lg shadow-md mt-10">
+        <div className="bg-white p-8 rounded-lg shadow-md mt-10 border border-gray-200">
           <h1 className="text-2xl font-bold text-dark">Inicia sesión para ver tu progreso</h1>
           <Link href="/login" className="mt-4 inline-block bg-primary text-white px-6 py-2 rounded-md hover:bg-primary-hover">
             Iniciar Sesión
@@ -59,11 +58,10 @@ export default function ProgresoPage() {
     );
   }
   
-  // Si hay un error de red O si no hay estadísticas (stats es null)
   if (error || !stats) {
     return (
         <main className="text-center p-8 container mx-auto">
-            <div className="bg-white p-8 rounded-lg shadow-md mt-10">
+            <div className="bg-white p-8 rounded-lg shadow-md mt-10 border border-gray-200">
                 <h1 className="text-2xl font-bold text-dark">Aún no hay estadísticas</h1>
                 <p className="mt-2 text-secondary">{error || "Completa tu primer test para empezar a ver tu progreso."}</p>
                 <Link href="/" className="mt-4 inline-block bg-primary text-white px-6 py-2 rounded-md hover:bg-primary-hover">
@@ -74,10 +72,9 @@ export default function ProgresoPage() {
     )
   }
 
-  // Si llegamos aquí, es que hay estadísticas para mostrar
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <header className="mb-12">
+      <header className="mb-12 text-center">
         <h1 className="text-4xl font-bold text-dark">Dashboard de Progreso</h1>
         <p className="text-lg text-secondary mt-2">Analiza tu rendimiento y descubre tus puntos fuertes y débiles.</p>
       </header>
