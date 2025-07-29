@@ -30,8 +30,8 @@ export default function OposicionPage() {
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <header className="mb-12 text-center">
         <Link href="/" className="text-primary hover:underline text-sm">← Volver a todas las oposiciones</Link>
-        <h1 className="text-4xl font-bold text-dark mt-4">{oposicion.nombre}</h1>
-        <p className="text-lg text-secondary mt-2">Selecciona un bloque para empezar tu test</p>
+        <h1 className="text-4xl font-bold text-white mt-4">{oposicion.nombre}</h1>
+        <p className="text-lg text-white mt-2">Selecciona un bloque para empezar tu test</p>
       </header>
       
       <div className="bg-white p-6 sm:p-8 rounded-lg shadow-md border border-gray-200 max-w-4xl mx-auto">
