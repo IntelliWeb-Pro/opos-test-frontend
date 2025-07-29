@@ -12,7 +12,7 @@ function Navbar() {
 
   return (
     // 'fixed' asegura que la barra siempre esté visible en la parte superior
-    <header className="bg-transparent text-white sticky top-0 z-50 py-2">
+    <header className="bg-white text-white sticky top-0 z-50 py-2">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex-shrink-0">
