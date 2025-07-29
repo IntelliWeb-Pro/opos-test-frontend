@@ -4,20 +4,26 @@ import { useAuth } from '@/context/AuthContext';
 import { loadStripe } from '@stripe/stripe-js';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import Link from 'next/link';
 
+// Carga la instancia de Stripe con tu clave publicable desde las variables de entorno
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
 export default function PreciosPage() {
   const { user, token } = useAuth();
   const router = useRouter();
   const [isSubscribing, setIsSubscribing] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleSubscribe = async () => {
     if (!user) {
       router.push('/login');
       return;
     }
+
     setIsSubscribing(true);
+    setError(null);
+
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/create-checkout-session/`, {
         method: 'POST',
@@ -26,14 +32,28 @@ export default function PreciosPage() {
           'Authorization': `Bearer ${token}`,
         },
       });
-      if (!response.ok) { throw new Error('No se pudo crear la sesión de pago.'); }
+
+      if (!response.ok) {
+        throw new Error('No se pudo iniciar el proceso de pago. Inténtalo de nuevo.');
+      }
+
       const session = await response.json();
+      
       const stripe = await stripePromise;
-      const { error } = await stripe.redirectToCheckout({ sessionId: session.sessionId });
-      if (error) { console.error('Error de Stripe:', error); setIsSubscribing(false); }
-    } catch (error) {
-      console.error('Error al suscribirse:', error);
-      setIsSubscribing(false);
+      const { error } = await stripe.redirectToCheckout({
+        sessionId: session.sessionId,
+      });
+
+      if (error) {
+        console.error('Error de Stripe:', error);
+        setError(error.message);
+      }
+
+    } catch (err) {
+      console.error('Error al suscribirse:', err);
+      setError(err.message);
+    } finally {
+        setIsSubscribing(false);
     }
   };
 
@@ -54,6 +74,8 @@ export default function PreciosPage() {
           <li className="flex items-center"><span className="text-success mr-2">✔</span> Justificaciones detalladas</li>
           <li className="flex items-center"><span className="text-success mr-2">✔</span> Seguimiento de progreso</li>
         </ul>
+
+        {error && <p className="text-red-600 mt-4 text-sm">{error}</p>}
 
         <button 
           onClick={handleSubscribe} 
