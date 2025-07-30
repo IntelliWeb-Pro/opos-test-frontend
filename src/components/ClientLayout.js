@@ -16,17 +16,17 @@ function Navbar() {
           <div className="flex-shrink-0">
             <Link href="/" className="text-2xl font-bold text-primary">OposTest</Link>
           </div>
+          {/* Menú de Escritorio */}
           <div className="hidden md:flex items-center space-x-4">
             <Link href="/precios" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Precios</Link>
-            {user && (
-              <Link href="/progreso" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Mi Progreso</Link>
-            )}
+            {/* --- AÑADIMOS EL ENLACE A RANKING --- */}
+            {user && <Link href="/ranking" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Ranking</Link>}
+            {user && <Link href="/progreso" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Mi Progreso</Link>}
+            
             {user ? (
               <div className="flex items-center space-x-4">
                 <span className="text-gray-700 text-sm">Hola, {user.username}</span>
-                <button onClick={logout} className="bg-secondary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-600 transition-colors">
-                  Cerrar Sesión
-                </button>
+                <button onClick={logout} className="bg-secondary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-600 transition-colors">Cerrar Sesión</button>
               </div>
             ) : (
               <div className="flex items-center space-x-2">
@@ -35,6 +35,7 @@ function Navbar() {
               </div>
             )}
           </div>
+          {/* Botón de Hamburguesa */}
           <div className="md:hidden flex items-center">
             <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-primary focus:outline-none">
               <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">{isMenuOpen ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /> : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />}</svg>
@@ -42,10 +43,12 @@ function Navbar() {
           </div>
         </div>
       </div>
+      {/* Menú Desplegable Móvil */}
       {isMenuOpen && (
         <div className="md:hidden bg-white shadow-lg">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <Link href="/precios" className="text-gray-700 hover:text-primary block px-3 py-2 rounded-md text-base font-medium">Precios</Link>
+            {user && <Link href="/ranking" className="text-gray-700 hover:text-primary block px-3 py-2 rounded-md text-base font-medium">Ranking</Link>}
             {user && <Link href="/progreso" className="text-gray-700 hover:text-primary block px-3 py-2 rounded-md text-base font-medium">Mi Progreso</Link>}
             <hr className="my-2 border-gray-200" />
             {user ? (
@@ -66,6 +69,7 @@ function Navbar() {
   );
 }
 
+// ... (El resto del archivo: Footer y RootLayout no cambian)
 function Footer() {
     return (
         <footer className="bg-white mt-16">
@@ -78,7 +82,6 @@ function Footer() {
     )
 }
 
-// Este componente envuelve a los hijos con el proveedor de autenticación y la estructura visual
 export default function ClientLayout({ children }) {
     return (
         <AuthProvider>
