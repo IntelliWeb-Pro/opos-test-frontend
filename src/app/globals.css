@@ -30,6 +30,6 @@ body::after {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(62, 75, 88, 0.5); /* Un tono oscuro con 50% de opacidad */
+  background-color: rgba(61, 79, 97, 0.5); /* Un tono oscuro con 50% de opacidad */
   z-index: -1;
 }
