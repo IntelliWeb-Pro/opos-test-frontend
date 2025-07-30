@@ -97,7 +97,7 @@ export default function RankingPage() {
           {/* --- SECCIÓN DE POSICIÓN DEL USUARIO --- */}
           {rankingData.user_rank && (
             <div className="mt-16">
-                <h2 className="text-3xl font-bold text-center mb-6 text-dark">Tu Posición</h2>
+                <h2 className="text-3xl font-bold text-center mb-6 text-white">Tu Posición</h2>
                 <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-lg border-2 border-primary flex items-center justify-between">
                     <div className="flex items-center">
                         <div className="text-4xl font-bold text-primary mr-4">#{rankingData.user_rank.rank}</div>
