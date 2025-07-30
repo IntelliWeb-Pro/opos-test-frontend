@@ -5,7 +5,14 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Capa de la imagen de fondo desenfocada */
+/* --- CORRECCIÓN DEFINITIVA DEL FONDO --- */
+
+/* 1. Nos aseguramos de que el body no tenga un color de fondo sólido que tape la imagen */
+body {
+  background-color: transparent !important;
+}
+
+/* 2. Capa de la imagen de fondo desenfocada */
 body::before {
   content: '';
   position: fixed;
@@ -13,16 +20,15 @@ body::before {
   left: 0;
   width: 100vw;
   height: 100vh;
-  /* Usamos la imagen que te generé, que es minimalista y de carga rápida */
   background-image: url('https://storage.googleapis.com/gemini-prod/images/331e3427-24ea-4573-82c5-5511d73e0c2f.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  filter: blur(5px); /* Un desenfoque sutil */
-  z-index: -2;
+  filter: blur(5px);
+  z-index: -2; /* La capa más profunda */
 }
 
-/* Capa de oscurecimiento para mejorar el contraste */
+/* 3. Capa de oscurecimiento para mejorar el contraste */
 body::after {
   content: '';
   position: fixed;
@@ -30,6 +36,6 @@ body::after {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(50, 69, 88, 0.3); /* Un tono oscuro con 50% de opacidad */
-  z-index: -1;
+  background-color: rgba(20, 25, 30, 0.5); /* Tono oscuro con 50% de opacidad */
+  z-index: -1; /* Se sitúa entre el fondo y el contenido */
 }
