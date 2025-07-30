@@ -23,3 +23,13 @@ body::before {
 }
 
 /* Capa de oscurecimiento para mejorar el contraste */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(50, 69, 88, 0.3); /* Un tono oscuro con 50% de opacidad */
+  z-index: -1;
+}
