@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'next/navigation';
+// Importamos 'useSearchParams' para leer los parámetros de la URL
+import { useParams, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 
@@ -9,6 +10,7 @@ const TIEMPO_POR_PREGUNTA = 90;
 
 export default function TestPage() {
   const params = useParams();
+  const searchParams = useSearchParams(); // Hook para leer "?modo=repaso"
   const { user, token } = useAuth();
   
   const [preguntas, setPreguntas] = useState([]);
@@ -39,17 +41,24 @@ export default function TestPage() {
       setDatosCorreccion(dataCorreccion);
 
       let correctas = 0;
+      const aciertosIds = [];
+      const fallosIds = [];
+
       dataCorreccion.forEach(preguntaCorregida => {
         const respuestaUsuario = respuestasUsuario[preguntaCorregida.id];
         const respuestaCorrecta = preguntaCorregida.respuestas.find(r => r.es_correcta);
         if (respuestaUsuario && respuestaCorrecta && respuestaUsuario === respuestaCorrecta.id) {
           correctas++;
+          aciertosIds.push(preguntaCorregida.id);
+        } else {
+          fallosIds.push(preguntaCorregida.id);
         }
       });
       setPuntuacion(correctas);
 
       if (user && token) {
-        const saveResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/resultados/`, {
+        // --- ENVIAMOS LA LISTA DE ACIERTOS Y FALLOS ---
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/resultados/`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -59,28 +68,35 @@ export default function TestPage() {
             tema: params.id,
             puntuacion: correctas,
             total_preguntas: preguntas.length,
+            aciertos: aciertosIds,
+            fallos: fallosIds,
           }),
         });
-        if (!saveResponse.ok) {
-           const errorData = await saveResponse.json();
-           console.error("Error al guardar el resultado:", errorData);
-           throw new Error('El resultado no se pudo guardar.');
-        }
       }
     } catch (error) {
       console.error("Error en terminarTest:", error);
-      setError(error.message);
+      setError("Error al obtener la corrección o guardar el resultado.");
     } finally {
       setCargandoResultados(false);
     }
   }, [preguntas, respuestasUsuario, user, token, params.id, testTerminado]);
 
   useEffect(() => {
-    if (params.id) {
+    if (params.id && token) { // Aseguramos que hay token para el modo repaso
         setLoading(true);
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/preguntas/?tema=${params.id}`)
+        const modo = searchParams.get('modo');
+        let apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/preguntas/?tema=${params.id}`;
+
+        // --- LÓGICA PARA ELEGIR LA API CORRECTA ---
+        if (modo === 'repaso') {
+            apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/preguntas/repaso/?tema=${params.id}`;
+        }
+        
+        fetch(apiUrl, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
           .then(res => {
-            if (!res.ok) throw new Error('No se pudieron cargar las preguntas para este tema.');
+            if (!res.ok) throw new Error('No se pudieron cargar las preguntas.');
             return res.json();
           })
           .then(data => {
@@ -89,9 +105,13 @@ export default function TestPage() {
             setLoading(false);
           })
           .catch(err => { setError(err.message); setLoading(false); });
+    } else if (!token) {
+        setLoading(false);
+        setError("Necesitas iniciar sesión para hacer un test.");
     }
-  }, [params.id]);
+  }, [params.id, searchParams, token]);
 
+  // ... (El resto del archivo, incluyendo el temporizador y el renderizado, no cambia)
   useEffect(() => {
     if (tiempoRestante > 0 && !testTerminado) {
       const timer = setInterval(() => { setTiempoRestante(prev => prev - 1); }, 1000);
@@ -114,9 +134,10 @@ export default function TestPage() {
   };
 
   if (loading) return <p className="text-center mt-20">Cargando test...</p>;
-  if (error && !testTerminado) return <p className="text-center mt-20 text-red-600">{error}</p>;
-  if (preguntas.length === 0 && !loading) return <p className="text-center mt-20">No hay preguntas para este tema.</p>;
+  if (error) return <p className="text-center mt-20 text-red-600">{error}</p>;
+  if (preguntas.length === 0 && !loading) return <p className="text-center mt-20">No tienes preguntas falladas en este tema para repasar. ¡Buen trabajo!</p>;
   
+  // ... (El resto del return con la vista del test y la corrección no cambia)
   if (testTerminado) {
     if (cargandoResultados) { return <p className="text-center mt-20">Calculando resultados...</p>; }
     return (
