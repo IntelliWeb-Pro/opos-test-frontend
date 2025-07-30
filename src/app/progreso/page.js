@@ -3,11 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
-// Importamos los componentes para los gráficos
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 
-// Colores para el gráfico circular
-const PIE_COLORS = ['#007bff', '#dc3545']; // Azul para aciertos, Rojo para fallos
+const PIE_COLORS = ['#007bff', '#dc3545'];
 
 export default function ProgresoPage() {
   const { user, token } = useAuth();
@@ -22,40 +20,28 @@ export default function ProgresoPage() {
     }
 
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/estadisticas/`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: { 'Authorization': `Bearer ${token}` },
     })
       .then(res => {
-        if (!res.ok) {
-          throw new Error('No se pudo cargar tu progreso. Es posible que aún no hayas completado ningún test.');
-        }
+        if (!res.ok) { throw new Error('No se pudo cargar tu progreso. Es posible que aún no hayas completado ningún test.'); }
         return res.json();
       })
       .then(data => {
-        if (data.message) {
-          setStats(null);
-        } else {
-          setStats(data);
-        }
+        if (data.message) { setStats(null); } 
+        else { setStats(data); }
         setLoading(false);
       })
-      .catch(err => {
-        setError(err.message);
-        setLoading(false);
-      });
+      .catch(err => { setError(err.message); setLoading(false); });
   }, [token]);
 
-  if (loading) return <p className="text-center mt-20">Cargando tus estadísticas...</p>;
+  if (loading) return <p className="text-center mt-20">Analizando tu progreso...</p>;
   
   if (!user) {
     return (
       <main className="text-center p-8 container mx-auto">
         <div className="bg-white p-8 rounded-lg shadow-md mt-10 border border-gray-200">
           <h1 className="text-2xl font-bold text-dark">Inicia sesión para ver tu progreso</h1>
-          <Link href="/login" className="mt-4 inline-block bg-primary text-white px-6 py-2 rounded-md hover:bg-primary-hover">
-            Iniciar Sesión
-          </Link>
+          <Link href="/login" className="mt-4 inline-block bg-primary text-white px-6 py-2 rounded-md hover:bg-primary-hover">Iniciar Sesión</Link>
         </div>
       </main>
     );
@@ -67,9 +53,7 @@ export default function ProgresoPage() {
             <div className="bg-white p-8 rounded-lg shadow-md mt-10 border border-gray-200">
                 <h1 className="text-2xl font-bold text-dark">Aún no hay estadísticas</h1>
                 <p className="mt-2 text-secondary">{error || "Completa tu primer test para empezar a ver tu progreso."}</p>
-                <Link href="/" className="mt-4 inline-block bg-primary text-white px-6 py-2 rounded-md hover:bg-primary-hover">
-                    Empezar un test
-                </Link>
+                <Link href="/" className="mt-4 inline-block bg-primary text-white px-6 py-2 rounded-md hover:bg-primary-hover">Empezar un test</Link>
             </div>
         </main>
     )
@@ -83,17 +67,40 @@ export default function ProgresoPage() {
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <header className="mb-12 text-center">
-        <h1 className="text-4xl font-bold text-white">Dashboard de Progreso</h1>
-        <p className="text-lg text-white mt-2">Analiza tu rendimiento y descubre tus puntos fuertes y débiles.</p>
+        <h1 className="text-4xl font-bold text-dark">Dashboard de Progreso</h1>
+        <p className="text-lg text-secondary mt-2">Analiza tu rendimiento y descubre tus puntos fuertes y débiles.</p>
       </header>
 
+      {/* --- NUEVA SECCIÓN DE PUNTOS DÉBILES --- */}
+      {stats.puntos_debiles && stats.puntos_debiles.length > 0 && (
+        <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-lg shadow-md mb-8">
+            <h2 className="text-2xl font-bold text-red-800">Temas a Reforzar</h2>
+            <p className="text-red-700 mt-1">Estos son los temas con tu porcentaje de aciertos más bajo. ¡Concéntrate en ellos!</p>
+            <ul className="space-y-3 mt-4">
+                {stats.puntos_debiles.map((item) => (
+                    <li key={item.tema_id} className="flex flex-col sm:flex-row justify-between items-center p-3 bg-white rounded-md border">
+                        <div>
+                            <p className="font-semibold text-dark">{item.tema}</p>
+                            <p className="text-sm text-secondary">{item.oposicion}</p>
+                        </div>
+                        <div className="flex items-center mt-2 sm:mt-0">
+                            <span className="font-bold text-lg text-red-600 mr-4">{item.media}%</span>
+                            <Link href={`/tema/${item.tema_id}`} className="bg-primary text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-primary-hover transition-colors">
+                                Hacer Test
+                            </Link>
+                        </div>
+                    </li>
+                ))}
+            </ul>
+        </div>
+      )}
+
+      {/* --- GRÁFICOS (como antes) --- */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-        {/* Tarjeta de Resumen General */}
         <div className="lg:col-span-1 bg-white p-6 rounded-lg shadow-md border border-gray-200 text-center flex flex-col justify-center">
             <h2 className="text-xl font-semibold text-dark">Aciertos General</h2>
             <p className="text-6xl font-bold text-primary mt-2">{stats.media_general}%</p>
         </div>
-        {/* Gráfico Circular de Aciertos/Fallos */}
         <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-md border border-gray-200">
             <h2 className="text-xl font-semibold text-dark mb-4 text-center">Resumen Total</h2>
             <ResponsiveContainer width="100%" height={250}>
@@ -109,7 +116,6 @@ export default function ProgresoPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Gráfico de Rendimiento por Oposición */}
         <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
           <h2 className="text-xl font-semibold text-dark mb-4">Rendimiento por Oposición</h2>
           <ResponsiveContainer width="100%" height={300}>
@@ -122,8 +128,6 @@ export default function ProgresoPage() {
             </BarChart>
           </ResponsiveContainer>
         </div>
-
-        {/* Gráfico de Evolución de Notas */}
         <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
           <h2 className="text-xl font-semibold text-dark mb-4">Evolución de Resultados (Últimos Tests)</h2>
            <ResponsiveContainer width="100%" height={300}>
