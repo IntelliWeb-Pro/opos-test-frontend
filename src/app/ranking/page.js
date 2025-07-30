@@ -7,7 +7,7 @@ import Link from 'next/link';
 // --- Iconos para el Podio ---
 const MedalIcon = ({ color }) => (
     <svg className={`w-10 h-10 ${color}`} viewBox="0 0 20 20" fill="currentColor">
-        <path fillRule="evenodd" d="M10 2a.75.75 0 01.75.75v3.313c.395.196.77.453 1.109.76l2.34-1.352a.75.75 0 01.938.938l-1.352 2.34c.307.338.564.713.76 1.109h3.313a.75.75 0 010 1.5h-3.313c-.196.395-.453.77-.76 1.109l1.352 2.34a.75.75 0 01-.938.938l-2.34-1.352c-.338.307-.713.564-1.109.76v3.313a.75.75 0 01-1.5 0v-3.313c-.395-.196-.77-.453-1.109-.76l-2.34 1.352a.75.75 0 01-.938-.938l1.352-2.34c-.307-.338-.564-.713-.76-1.109H3.25a.75.75 0 010-1.5h3.313c.196-.395.453-.77.76-1.109l-1.352-2.34a.75.75 0 01.938-.938l2.34 1.352c.338-.307.713-.564 1.109-.76V2.75A.75.75 0 0110 2zM8.5 10a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z" clipRule="evenodd" />
+        <path fillRule="evenodd" d="M10 2a.75.75 0 01.75.75v3.313c.395.196.77.453 1.109.76l2.34-1.352a.75.75 0 01.938.938l-1.352 2.34c.307.338.564.713.76 1.109h3.313a.75.75 0 010 1.5h-3.313c-.196.395-.453.77-.76 1.109l1.352 2.34a.75.75 0 01-.938.938l-2.34-1.352c-.338.307-.713.564-1.109.76v3.313a.75.75 0 01-1.5 0v-3.313c-.395-.196-.77-.453-1.109-.76l-2.34 1.352a.75.75 0 01-.938-.938l1.352-2.34c-.307-.338-.564-.713-.76-1.109H3.25a.75.75 0 010-1.5h3.313c.196-.395.453-.77.76-1.109l-1.352-2.34a.75.75 0 01.938-.938l2.34 1.352c.338-.307.713.564 1.109-.76V2.75A.75.75 0 0110 2zM8.5 10a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z" clipRule="evenodd" />
     </svg>
 );
 
@@ -19,7 +19,7 @@ const podiumStyles = [
 
 export default function RankingPage() {
   const { user, token } = useAuth();
-  const [ranking, setRanking] = useState([]);
+  const [rankingData, setRankingData] = useState({ podium: [], user_rank: null });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -41,7 +41,7 @@ export default function RankingPage() {
         return res.json();
       })
       .then(data => {
-        setRanking(data);
+        setRankingData(data);
         setLoading(false);
       })
       .catch(err => {
@@ -69,29 +69,51 @@ export default function RankingPage() {
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <header className="mb-12 text-center">
-        <h1 className="text-4xl font-bold text-white">Podio de la Semana</h1>
-        <p className="text-lg text-white mt-2">Los 3 opositores con el mejor porcentaje de aciertos (Lunes a Domingo).</p>
+        <h1 className="text-4xl font-bold text-dark">Podio de la Semana</h1>
+        <p className="text-lg text-secondary mt-2">Los 3 opositores con el mejor porcentaje de aciertos (Lunes a Domingo).</p>
       </header>
 
-      {error || ranking.length === 0 ? (
+      {error || rankingData.podium.length === 0 ? (
         <div className="bg-white p-8 rounded-lg shadow-md text-center border border-gray-200">
             <h2 className="text-2xl font-bold text-dark">Ranking en construcción</h2>
             <p className="mt-2 text-secondary">{error || "Aún no hay suficientes datos para generar el ranking de esta semana. ¡Sigue practicando!"}</p>
         </div>
       ) : (
-        <div className="flex flex-col md:flex-row items-end justify-center gap-4">
-            {podiumStyles.map((style, index) => {
-                const userData = ranking[style.rank - 1];
-                return userData ? (
-                    <div key={style.rank} className={`w-full md:w-1/4 bg-white p-6 rounded-lg shadow-lg border border-gray-200 text-center ${style.order} flex flex-col justify-end ${style.height}`}>
-                        <MedalIcon color={style.color} />
-                        <h3 className="text-2xl font-bold text-dark mt-4">{userData.username}</h3>
-                        <p className="text-4xl font-extrabold text-primary mt-2">{userData.porcentaje_aciertos}%</p>
+        <>
+          <div className="flex flex-col md:flex-row items-end justify-center gap-4">
+              {podiumStyles.map((style) => {
+                  const userData = rankingData.podium[style.rank - 1];
+                  return userData ? (
+                      <div key={style.rank} className={`w-full md:w-1/4 bg-white p-6 rounded-lg shadow-lg border border-gray-200 text-center ${style.order} flex flex-col justify-end ${style.height}`}>
+                          <MedalIcon color={style.color} />
+                          <h3 className="text-2xl font-bold text-dark mt-4">{userData.username}</h3>
+                          <p className="text-4xl font-extrabold text-primary mt-2">{userData.porcentaje_aciertos}%</p>
+                          <p className="text-secondary">de aciertos</p>
+                      </div>
+                  ) : null;
+              })}
+          </div>
+
+          {/* --- SECCIÓN DE POSICIÓN DEL USUARIO --- */}
+          {rankingData.user_rank && (
+            <div className="mt-16">
+                <h2 className="text-3xl font-bold text-center mb-6 text-dark">Tu Posición</h2>
+                <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-lg border-2 border-primary flex items-center justify-between">
+                    <div className="flex items-center">
+                        <div className="text-4xl font-bold text-primary mr-4">#{rankingData.user_rank.rank}</div>
+                        <div>
+                            <p className="text-xl font-bold text-dark">{rankingData.user_rank.username}</p>
+                            <p className="text-secondary">¡Sigue así!</p>
+                        </div>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-3xl font-extrabold text-primary">{rankingData.user_rank.porcentaje_aciertos}%</p>
                         <p className="text-secondary">de aciertos</p>
                     </div>
-                ) : null;
-            })}
-        </div>
+                </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
