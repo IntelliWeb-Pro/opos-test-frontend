@@ -67,8 +67,8 @@ export default function ProgresoPage() {
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <header className="mb-12 text-center">
-        <h1 className="text-4xl font-bold text-dark">Dashboard de Progreso</h1>
-        <p className="text-lg text-secondary mt-2">Analiza tu rendimiento y descubre tus puntos fuertes y débiles.</p>
+        <h1 className="text-4xl font-bold text-white">Dashboard de Progreso</h1>
+        <p className="text-lg text-white mt-2">Analiza tu rendimiento y descubre tus puntos fuertes y débiles.</p>
       </header>
 
       {/* --- NUEVA SECCIÓN DE PUNTOS DÉBILES --- */}
