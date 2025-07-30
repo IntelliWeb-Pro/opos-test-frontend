@@ -69,8 +69,8 @@ export default function RankingPage() {
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <header className="mb-12 text-center">
-        <h1 className="text-4xl font-bold text-dark">Podio de la Semana</h1>
-        <p className="text-lg text-secondary mt-2">Los 3 opositores con el mejor porcentaje de aciertos (Lunes a Domingo).</p>
+        <h1 className="text-4xl font-bold text-white">Podio de la Semana</h1>
+        <p className="text-lg text-white mt-2">Los 3 opositores con el mejor porcentaje de aciertos (Lunes a Domingo).</p>
       </header>
 
       {error || rankingData.podium.length === 0 ? (
