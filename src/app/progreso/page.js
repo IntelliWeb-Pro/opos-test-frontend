@@ -3,7 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+// Importamos los componentes para los gráficos
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
+
+// Colores para el gráfico circular
+const PIE_COLORS = ['#007bff', '#dc3545']; // Azul para aciertos, Rojo para fallos
 
 export default function ProgresoPage() {
   const { user, token } = useAuth();
@@ -19,7 +23,6 @@ export default function ProgresoPage() {
 
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/estadisticas/`, {
       headers: {
-        'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
     })
@@ -72,19 +75,41 @@ export default function ProgresoPage() {
     )
   }
 
+  const pieData = [
+      { name: 'Aciertos', value: stats.resumen_aciertos.aciertos },
+      { name: 'Fallos', value: stats.resumen_aciertos.fallos },
+  ];
+
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <header className="mb-12 text-center">
-        <h1 className="text-4xl font-bold text-white">Dashboard de Progreso</h1>
-        <p className="text-lg text-white mt-2">Analiza tu rendimiento y descubre tus puntos fuertes y débiles.</p>
+        <h1 className="text-4xl font-bold text-dark">Dashboard de Progreso</h1>
+        <p className="text-lg text-secondary mt-2">Analiza tu rendimiento y descubre tus puntos fuertes y débiles.</p>
       </header>
 
-      <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 text-center mb-8">
-        <h2 className="text-xl font-semibold text-dark">Porcentaje de Aciertos General</h2>
-        <p className="text-6xl font-bold text-primary mt-2">{stats.media_general}%</p>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        {/* Tarjeta de Resumen General */}
+        <div className="lg:col-span-1 bg-white p-6 rounded-lg shadow-md border border-gray-200 text-center flex flex-col justify-center">
+            <h2 className="text-xl font-semibold text-dark">Aciertos General</h2>
+            <p className="text-6xl font-bold text-primary mt-2">{stats.media_general}%</p>
+        </div>
+        {/* Gráfico Circular de Aciertos/Fallos */}
+        <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-md border border-gray-200">
+            <h2 className="text-xl font-semibold text-dark mb-4 text-center">Resumen Total</h2>
+            <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                    <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                        {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip formatter={(value) => `${value} preguntas`} />
+                    <Legend />
+                </PieChart>
+            </ResponsiveContainer>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Gráfico de Rendimiento por Oposición */}
         <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
           <h2 className="text-xl font-semibold text-dark mb-4">Rendimiento por Oposición</h2>
           <ResponsiveContainer width="100%" height={300}>
@@ -93,25 +118,24 @@ export default function ProgresoPage() {
               <XAxis type="number" domain={[0, 100]} unit="%" />
               <YAxis dataKey="oposicion" type="category" width={150} tick={{ fontSize: 12 }} />
               <Tooltip formatter={(value) => `${value}%`} />
-              <Legend />
               <Bar dataKey="media" name="Aciertos" fill="#007bff" />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
+        {/* Gráfico de Evolución de Notas */}
         <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-          <h2 className="text-xl font-semibold text-dark mb-4">Temas Más Destacados</h2>
-           <ul className="space-y-3 mt-4">
-              {stats.stats_por_tema.slice(0, 5).map((item, index) => (
-                <li key={index} className="flex justify-between items-center p-3 bg-light rounded-md">
-                  <div>
-                    <p className="font-semibold text-dark">{item.tema}</p>
-                    <p className="text-sm text-secondary">{item.oposicion}</p>
-                  </div>
-                  <span className="font-bold text-lg text-success">{item.media}%</span>
-                </li>
-              ))}
-            </ul>
+          <h2 className="text-xl font-semibold text-dark mb-4">Evolución de Resultados (Últimos Tests)</h2>
+           <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={stats.historico_resultados} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="fecha" />
+                    <YAxis domain={[0, 100]} unit="%" />
+                    <Tooltip formatter={(value) => `${value}%`} />
+                    <Legend />
+                    <Line type="monotone" dataKey="nota" name="Nota Media" stroke="#28a745" strokeWidth={2} />
+                </LineChart>
+           </ResponsiveContainer>
         </div>
       </div>
     </div>
