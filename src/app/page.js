@@ -121,7 +121,7 @@ export default function HomePage() {
       >
         <div className="px-4">
           <h1 className="text-5xl md:text-6xl font-extrabold text-white drop-shadow-lg">
-            La preparación de test que necesitas para tu oposición
+          Test administrativo del estado y auxiliar   
           </h1>
           <p className="text-xl md:text-2xl mt-6 max-w-3xl mx-auto text-white drop-shadow-md">
             Miles de preguntas actualizadas y justificadas para que practiques sin límites y consigas tu plaza.
