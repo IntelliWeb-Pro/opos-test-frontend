@@ -14,7 +14,7 @@ function Navbar() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex-shrink-0">
-            <Link href="/" className="text-2xl font-bold text-primary">OposTest</Link>
+            <Link href="/" className="text-2xl font-bold text-primary">TestEstado</Link>
           </div>
           {/* Menú de Escritorio */}
           <div className="hidden md:flex items-center space-x-4">
@@ -75,7 +75,7 @@ function Footer() {
         <footer className="bg-white mt-16">
             <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 border-t">
                 <p className="text-center text-sm text-gray-500">
-                    © {new Date().getFullYear()} OposTest. Todos los derechos reservados.
+                    © {new Date().getFullYear()} TestEstado. Todos los derechos reservados.
                 </p>
             </div>
         </footer>

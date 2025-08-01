@@ -3,7 +3,7 @@ import ClientLayout from "@/components/ClientLayout"; // Importamos nuestro nuev
 
 // --- METADATA PARA EL TÍTULO DE LA PESTAÑA ---
 export const metadata = {
-  title: "OposTest", // <-- TÍTULO CORREGIDO
+  title: "TestEstado", // <-- TÍTULO CORREGIDO
   description: "La mejor plataforma para tus tests de oposición",
 };
 
