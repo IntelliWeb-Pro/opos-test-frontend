@@ -28,8 +28,8 @@ export default function AuxiliarAdministrativoPage() {
     return (
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <header className="mb-12 text-center">
-                <h1 className="text-4xl font-bold text-dark">Auxiliar Administrativo del Estado (C2)</h1>
-                <p className="text-lg text-secondary mt-2">La guía definitiva para superar la oposición con éxito.</p>
+                <h1 className="text-4xl font-bold text-white">Auxiliar Administrativo del Estado (C2)</h1>
+                <p className="text-lg text-white mt-2">La guía definitiva para superar la oposición con éxito.</p>
             </header>
             
             <div className="bg-light p-8 rounded-lg shadow-inner mb-12 text-center">
