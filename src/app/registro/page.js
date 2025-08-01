@@ -6,8 +6,8 @@ import Link from 'next/link';
 export default function RegistroPage() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
-  const [password1, setpassword1] = useState('');
-  const [password2, setpassword2] = useState('');
+  const [password1, setPassword1] = useState(''); // <-- CAMBIO REALIZADO
+  const [password2, setPassword2] = useState('');
   
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -19,7 +19,7 @@ export default function RegistroPage() {
     setSuccess(false);
     setLoading(true);
 
-    if (password1 !== password2) {
+    if (password1 !== password2) { // <-- CAMBIO REALIZADO
       setError('Las contraseñas no coinciden.');
       setLoading(false);
       return;
@@ -32,7 +32,7 @@ export default function RegistroPage() {
         body: JSON.stringify({
           username: username,
           email: email,
-          password1: password1,
+          password1: password1, // <-- CAMBIO REALIZADO
           password2: password2,
         }),
       });
@@ -40,7 +40,7 @@ export default function RegistroPage() {
       if (!response.ok) {
         const errorData = await response.json();
         const errorMessages = Object.entries(errorData).map(([key, value]) => {
-            const cleanKey = key.replace('password11', 'contraseña').replace('username', 'usuario');
+            const cleanKey = key.replace('password1', 'contraseña').replace('username', 'usuario');
             return `${cleanKey}: ${value.join(', ')}`;
         }).join(' ');
         throw new Error(errorMessages);
@@ -90,17 +90,28 @@ export default function RegistroPage() {
               <div>
                 <label className="block text-gray-700 font-semibold mb-2" htmlFor="password1">Contraseña</label>
                 <input
-                  type="password1" id="password1" value={password1} onChange={(e) => setpassword1(e.target.value)}
+                  type="password" id="password1" value={password1} onChange={(e) => setPassword1(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required
                 />
               </div>
               <div>
                 <label className="block text-gray-700 font-semibold mb-2" htmlFor="password2">Confirmar Contraseña</label>
                 <input
-                  type="password1" id="password2" value={password2} onChange={(e) => setpassword2(e.target.value)}
+                  type="password" id="password2" value={password2} onChange={(e) => setPassword2(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required
                 />
               </div>
+
+              {/* --- CASILLA DE ACEPTACIÓN AÑADIDA --- */}
+              <div className="pt-2">
+                <label className="flex items-center">
+                  <input type="checkbox" className="form-checkbox h-5 w-5 text-primary" required />
+                  <span className="ml-2 text-sm text-secondary">
+                    He leído y acepto la <Link href="/politica-privacidad" className="text-primary hover:underline" target="_blank">Política de Privacidad</Link> y los <Link href="/terminos-condiciones" className="text-primary hover:underline" target="_blank">Términos y Condiciones</Link>.
+                  </span>
+                </label>
+              </div>
+
               <button 
                 type="submit" 
                 disabled={loading}

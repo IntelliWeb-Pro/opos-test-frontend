@@ -75,6 +75,16 @@ export default function PreciosPage() {
           <li className="flex items-center"><span className="text-success mr-2">✔</span> Seguimiento de progreso</li>
         </ul>
 
+        {/* --- CASILLA DE DESISTIMIENTO AÑADIDA --- */}
+        <div className="mt-6 text-left">
+            <label className="flex items-start">
+              <input type="checkbox" className="form-checkbox h-5 w-5 text-primary mt-1" required />
+              <span className="ml-2 text-xs text-secondary">
+                Entiendo y acepto que, al iniciar la suscripción, comenzaré a disfrutar del contenido digital y, por tanto, pierdo mi derecho de desistimiento de 14 días según lo estipulado en los <Link href="/terminos-condiciones" className="text-primary hover:underline" target="_blank">Términos y Condiciones</Link>.
+              </span>
+            </label>
+        </div>
+
         {error && <p className="text-red-600 mt-4 text-sm">{error}</p>}
 
         <button 

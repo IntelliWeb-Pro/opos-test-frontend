@@ -19,7 +19,6 @@ function Navbar() {
           {/* Menú de Escritorio */}
           <div className="hidden md:flex items-center space-x-4">
             <Link href="/precios" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Precios</Link>
-            {/* --- AÑADIMOS EL ENLACE A RANKING --- */}
             {user && <Link href="/ranking" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Ranking</Link>}
             {user && <Link href="/progreso" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Mi Progreso</Link>}
             
@@ -69,11 +68,18 @@ function Navbar() {
   );
 }
 
-// ... (El resto del archivo: Footer y RootLayout no cambian)
+// --- Componente de Footer con los enlaces legales ---
 function Footer() {
     return (
         <footer className="bg-white mt-16">
             <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 border-t">
+                {/* --- ENLACES LEGALES AÑADIDOS --- */}
+                <div className="flex justify-center space-x-6 mb-4 text-sm text-secondary">
+                    <Link href="/aviso-legal" className="hover:text-primary">Aviso Legal</Link>
+                    <Link href="/politica-privacidad" className="hover:text-primary">Política de Privacidad</Link>
+                    <Link href="/politica-cookies" className="hover:text-primary">Política de Cookies</Link>
+                    <Link href="/terminos-condiciones" className="hover:text-primary">Términos y Condiciones</Link>
+                </div>
                 <p className="text-center text-sm text-gray-500">
                     © {new Date().getFullYear()} TestEstado. Todos los derechos reservados.
                 </p>
