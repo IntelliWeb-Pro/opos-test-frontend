@@ -18,9 +18,12 @@ function Navbar() {
           </div>
           {/* Menú de Escritorio */}
           <div className="hidden md:flex items-center space-x-4">
+            {/* --- AÑADIMOS EL ENLACE AL BLOG --- */}
+            <Link href="/blog" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Blog</Link>
             <Link href="/precios" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Precios</Link>
             {user && <Link href="/ranking" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Ranking</Link>}
             {user && <Link href="/progreso" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Mi Progreso</Link>}
+            {user && <Link href="/refuerzo" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Refuerzo</Link>}
             
             {user ? (
               <div className="flex items-center space-x-4">
@@ -46,9 +49,11 @@ function Navbar() {
       {isMenuOpen && (
         <div className="md:hidden bg-white shadow-lg">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <Link href="/blog" className="text-gray-700 hover:text-primary block px-3 py-2 rounded-md text-base font-medium">Blog</Link>
             <Link href="/precios" className="text-gray-700 hover:text-primary block px-3 py-2 rounded-md text-base font-medium">Precios</Link>
             {user && <Link href="/ranking" className="text-gray-700 hover:text-primary block px-3 py-2 rounded-md text-base font-medium">Ranking</Link>}
             {user && <Link href="/progreso" className="text-gray-700 hover:text-primary block px-3 py-2 rounded-md text-base font-medium">Mi Progreso</Link>}
+            {user && <Link href="/refuerzo" className="text-gray-700 hover:text-primary block px-3 py-2 rounded-md text-base font-medium">Refuerzo</Link>}
             <hr className="my-2 border-gray-200" />
             {user ? (
               <>
@@ -68,12 +73,11 @@ function Navbar() {
   );
 }
 
-// --- Componente de Footer con los enlaces legales ---
+// ... (El resto del archivo: Footer y RootLayout no cambian)
 function Footer() {
     return (
         <footer className="bg-white mt-16">
             <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 border-t">
-                {/* --- ENLACES LEGALES AÑADIDOS --- */}
                 <div className="flex justify-center space-x-6 mb-4 text-sm text-secondary">
                     <Link href="/aviso-legal" className="hover:text-primary">Aviso Legal</Link>
                     <Link href="/politica-privacidad" className="hover:text-primary">Política de Privacidad</Link>
