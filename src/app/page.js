@@ -103,19 +103,11 @@ export default function HomePage() {
         if (!response.ok) { throw new Error('La respuesta de la red no fue correcta'); }
         return response.json();
       })
-      .then(data => { 
-        // --- FILTRAMOS PARA MOSTRAR SOLO LAS DOS OPOSICIONES PRINCIPALES ---
-        const oposPrincipales = [
-            "Auxiliar Administrativo del Estado (C2)",
-            "Administrativo de la Administración del Estado (C1)"
-        ];
-        const filteredData = data.filter(opo => oposPrincipales.includes(opo.nombre));
-        setOposiciones(filteredData); 
-        setLoading(false);
-      })
+      .then(data => { setOposiciones(data); setLoading(false); })
       .catch(error => { setError(error.message); setLoading(false); });
   }, []); 
 
+  const categoriesRef = useScrollAnimation();
   const oposicionesRef = useScrollAnimation();
   const testimonialsRef = useScrollAnimation();
   const faqRef = useScrollAnimation();
@@ -148,26 +140,38 @@ export default function HomePage() {
       {/* --- Contenido Principal que aparecerá progresivamente --- */}
       <div className="relative z-20 bg-light">
         
+        {/* --- Sección de Categorías --- */}
+        <section ref={categoriesRef} className="py-16 opacity-0">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {categories.map((category) => (
+                <div key={category.name} className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 text-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                  <div className="text-4xl">{category.icon}</div>
+                  <h3 className="mt-4 text-lg font-bold text-dark">{category.name}</h3>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* --- Sección de Oposiciones --- */}
         <section ref={oposicionesRef} className="py-16 bg-white opacity-0" style={{ animationDelay: '150ms' }}>
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl font-bold text-center mb-12 text-dark">Oposiciones Destacadas</h2>
+            <h2 className="text-3xl font-bold text-center mb-12 text-dark">Oposiciones más preparadas</h2>
             {loading ? (
               <p className="text-center">Cargando...</p>
             ) : error ? (
               <p className="text-center text-red-600">{error}</p>
             ) : (
-              <div className="flex justify-center">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-4xl">
-                  {oposiciones.map((opo) => (
-                    <Link key={opo.id} href={`/oposicion/${opo.id}`} className="block bg-light border border-gray-200 rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 h-full">
-                      <div className="p-5 flex flex-col h-full">
-                        <h3 className="text-md font-bold text-dark flex-grow">{opo.nombre}</h3>
-                        <p className="text-sm text-secondary mt-2">{opo.temas.length} temas</p>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {oposiciones.map((opo) => (
+                  <Link key={opo.id} href={`/oposicion/${opo.id}`} className="block bg-light border border-gray-200 rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 h-full">
+                    <div className="p-5 flex flex-col h-full">
+                      <h3 className="text-md font-bold text-dark flex-grow">{opo.nombre}</h3>
+                      <p className="text-sm text-secondary mt-2">{opo.temas.length} temas</p>
+                    </div>
+                  </Link>
+                ))}
               </div>
             )}
           </div>
