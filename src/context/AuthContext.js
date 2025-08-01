@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
   // CAMBIO: Envolvemos la función en useCallback
   const fetchUser = useCallback(async (authToken) => {
     try {
-      const response = await fetch('https://opos-test-backend.onrender.com/api/auth/user/', { // Usamos la URL de producción
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/user/`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await fetch('https://opos-test-backend.onrender.com/api/auth/login/', { // Usamos la URL de producción
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
