@@ -117,7 +117,7 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section
-        className="h-screen w-full fixed top-0 left-0 flex items-center justify-center text-center bg-gradient-to-b from-blue-700 to-blue-500"
+        className="h-screen w-full fixed top-0 left-0 flex items-center justify-center text-center bg-gradient-to-b"
         style={{ opacity: heroOpacity, pointerEvents: heroOpacity === 0 ? 'none' : 'auto', zIndex: 1 }}
       >
         <div className="px-4">
