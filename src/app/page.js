@@ -68,100 +68,129 @@ const FAQItem = ({ question, answer }) => {
   );
 };
 
-const OposicionesList = ({ oposiciones }) => {
-  if (oposiciones.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-xl text-gray-600">⚠️ Actualmente no hay oposiciones disponibles. Vuelve pronto o contacta con soporte.</p>
-      </div>
-    );
-  }
-  return (
-    <>
-      <div className={`grid gap-6 ${oposiciones.length === 1 ? 'grid-cols-1 max-w-md mx-auto' : 'grid-cols-1 md:grid-cols-2'}`}>
-        {oposiciones.map((opo) => (
-          <div key={opo.id} className="bg-white p-6 rounded-xl shadow-lg">
-            <h3 className="text-2xl font-bold text-blue-700 mb-2">{opo.nombre}</h3>
-            <p className="text-gray-600 mb-4">Accede a tests específicos, estadísticas detalladas y mucho más.</p>
-            <Link href={`/oposiciones/${opo.slug}`} legacyBehavior>
-              <a className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Ver más</a>
-            </Link>
-          </div>
-        ))}
-      </div>
-      <CTASection />
-    </>
-  );
-};
-
-const CTASection = () => {
-  const ref = useScrollAnimation();
-  return (
-    <div ref={ref} className="opacity-0 mt-16 bg-blue-700 text-white py-12 px-6 rounded-2xl text-center animate-fade-in-up">
-      <h2 className="text-3xl font-bold mb-4">¿Listo para comenzar?</h2>
-      <p className="text-lg mb-6">Accede a miles de preguntas y mejora tus resultados con TestEstado.</p>
-      <Link href="/registro" legacyBehavior>
-        <a className="inline-block bg-white text-blue-700 font-semibold px-6 py-3 rounded-xl hover:bg-gray-100 transition">Probar gratis</a>
-      </Link>
-    </div>
-  );
-};
-
 export default function HomePage() {
   const [oposiciones, setOposiciones] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [heroOpacity, setHeroOpacity] = useState(1);
 
   useEffect(() => {
-    const fetchOposiciones = async () => {
-      try {
-        const res = await fetch('/api/oposiciones');
-        const data = await res.json();
-        setOposiciones(data);
-      } catch (error) {
-        console.error('Error al cargar oposiciones:', error);
-        setOposiciones([]);
-      } finally {
-        setLoading(false);
-      }
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY;
+      const screenHeight = window.innerHeight;
+      const newOpacity = Math.max(0, 1 - (scrollPosition / (screenHeight * 0.7)));
+      setHeroOpacity(newOpacity);
     };
-
-    fetchOposiciones();
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    fetch(process.env.NEXT_PUBLIC_API_URL + '/api/oposiciones/')
+      .then(response => {
+        if (!response.ok) throw new Error('La respuesta de la red no fue correcta');
+        return response.json();
+      })
+      .then(data => {
+        const filteredData = data.filter(opo =>
+          opo.nombre.includes("Auxiliar Administrativo del Estado") ||
+          opo.nombre.includes("Administrativo de la Administración del Estado")
+        );
+        setOposiciones(filteredData);
+        setLoading(false);
+      })
+      .catch(error => { setError(error.message); setLoading(false); });
+  }, []);
+
+  const oposicionesRef = useScrollAnimation();
+  const testimonialsRef = useScrollAnimation();
+  const faqRef = useScrollAnimation();
+
   return (
-    <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-4xl font-extrabold mb-8 text-center">Explora las oposiciones disponibles</h1>
-      {loading ? (
-        <p className="text-center text-gray-500">Cargando oposiciones...</p>
-      ) : (
-        <OposicionesList oposiciones={oposiciones} />
-      )}
+    <div>
+      <Head>
+        <title>TestEstado - Plataforma Nº1 para Opositores en España</title>
+        <meta name="description" content="Practica con miles de preguntas tipo test actualizadas y justificadas para tus oposiciones. Auxiliar Administrativo, Administrativo del Estado y más." />
+        <meta name="keywords" content="oposiciones, test oposiciones, auxiliar administrativo, administrativo del estado, correos, policía, guardia civil, test online, preguntas justificadas, preparación de oposiciones" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </Head>
 
-      <section className="mt-16">
-        <h2 className="text-3xl font-bold text-center mb-8">Lo que opinan nuestros usuarios</h2>
-        <div className="grid gap-6 md:grid-cols-2">
-          {testimonials.map((t, i) => (
-            <div key={i} className="bg-white p-6 rounded-xl shadow-md">
-              <div className="flex items-center mb-2">
-                {[...Array(t.rating)].map((_, i) => (
-                  <StarIcon key={i} className="h-5 w-5 text-yellow-400 mr-1" />
-                ))}
-              </div>
-              <p className="text-gray-700 italic">"{t.text}"</p>
-              <p className="mt-2 text-sm text-gray-500">— {t.name}, {t.opo}</p>
+      {/* Hero Section */}
+      <section
+        className="h-screen w-full fixed top-0 left-0 flex items-center justify-center text-center bg-gradient-to-b from-blue-700 to-blue-500"
+        style={{ opacity: heroOpacity, pointerEvents: heroOpacity === 0 ? 'none' : 'auto', zIndex: 1 }}
+      >
+        <div className="px-4">
+          <h1 className="text-5xl md:text-6xl font-extrabold text-white drop-shadow-lg">
+            La preparación de test que necesitas para tu oposición
+          </h1>
+          <p className="text-xl md:text-2xl mt-6 max-w-3xl mx-auto text-white drop-shadow-md">
+            Miles de preguntas actualizadas y justificadas para que practiques sin límites y consigas tu objetivo.
+          </p>
+          <blockquote className="mt-8 italic text-white/90 max-w-2xl mx-auto">
+            <p>&quot;Somos lo que hacemos repetidamente. La excelencia, entonces, no es un acto, sino un hábito.&quot;</p>
+            <cite className="mt-2 block not-italic font-semibold">- Aristóteles</cite>
+          </blockquote>
+        </div>
+      </section>
+
+      <div className="h-screen"></div>
+
+      <div className="relative z-20 bg-light">
+        <section ref={oposicionesRef} className="py-16 bg-light opacity-0 px-4" style={{ animationDelay: '200ms' }}>
+          <div className="container mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              <Link href="/auxiliar-administrativo" className="block bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-dark">Auxiliar Administrativo del Estado (C2)</h3>
+                  <p className="text-sm text-secondary mt-2">Accede a la guía y empieza a practicar.</p>
+                </div>
+              </Link>
+              <Link href="/administrativo" className="block bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-dark">Administrativo de la Administración del Estado (C1)</h3>
+                  <p className="text-sm text-secondary mt-2">Descubre todo sobre la oposición.</p>
+                </div>
+              </Link>
             </div>
-          ))}
-        </div>
-      </section>
+          </div>
+        </section>
 
-      <section className="mt-16">
-        <h2 className="text-3xl font-bold text-center mb-8">Preguntas frecuentes</h2>
-        <div className="max-w-2xl mx-auto">
-          {faqData.map((faq, i) => (
-            <FAQItem key={i} question={faq.q} answer={faq.a} />
-          ))}
-        </div>
-      </section>
-    </main>
+        <section ref={testimonialsRef} className="py-16 bg-light opacity-0 px-4" style={{ animationDelay: '150ms' }}>
+          <div className="container mx-auto">
+            <h2 className="text-3xl font-bold text-center mb-4 text-dark">Te acompañamos en tu camino al éxito</h2>
+            <p className="text-lg text-center text-secondary mb-12">Nuestros opositores nos avalan.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {testimonials.map((testimonial) => (
+                <div key={testimonial.name} className="bg-white p-6 rounded-lg border border-gray-200 flex flex-col">
+                  <div className="flex items-center mb-4">
+                    <div className="flex items-center">
+                      {[...Array(testimonial.rating)].map((_, i) => <StarIcon key={i} className="w-5 h-5 text-yellow-400" />)}
+                      {[...Array(5 - testimonial.rating)].map((_, i) => <StarIcon key={i} className="w-5 h-5 text-gray-300" />)}
+                    </div>
+                  </div>
+                  <p className="text-dark flex-grow">&quot;{testimonial.text}&quot;</p>
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <p className="font-bold text-dark">{testimonial.name}</p>
+                    <p className="text-sm text-secondary">{testimonial.opo}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section ref={faqRef} className="py-16 bg-white opacity-0 px-4" style={{ animationDelay: '150ms' }}>
+          <div className="container mx-auto max-w-4xl">
+            <h2 className="text-3xl font-bold text-center mb-12 text-dark">Preguntas Frecuentes</h2>
+            <div className="space-y-2">
+              {faqData.map((faq, index) => (
+                <FAQItem key={index} question={faq.q} answer={faq.a} />
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
   );
 }
