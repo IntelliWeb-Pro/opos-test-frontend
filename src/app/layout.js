@@ -1,17 +1,16 @@
 import "./globals.css";
-import ClientLayout from "@/components/ClientLayout"; // Importamos nuestro nuevo componente
+import ClientLayout from "@/components/ClientLayout";
 
-// --- METADATA PARA EL TÍTULO DE LA PESTAÑA ---
+// --- METADATA OPTIMIZADA PARA SEO ---
 export const metadata = {
-  title: "TestEstado", // <-- TÍTULO CORREGIDO
-  description: "La mejor plataforma para tus tests de oposición",
+  title: "TestEstado | Tests para Oposiciones de Administrativo C1 y C2",
+  description: "Prepara tu oposición con miles de tests online para Administrativo del Estado (C1) y Auxiliar Administrativo (C2). Preguntas de examen, justificaciones y seguimiento. ¡Prueba gratis!",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="es">
       <body className="font-sans bg-light">
-        {/* Usamos nuestro componente de cliente para envolver el contenido */}
         <ClientLayout>
           {children}
         </ClientLayout>

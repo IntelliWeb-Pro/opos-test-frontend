@@ -142,28 +142,29 @@ export default function HomePage() {
         {/* --- SECCIÓN DE CATEGORÍAS ELIMINADA --- */}
 
         {/* --- Sección de Oposiciones --- */}
-      <section ref={oposicionesRef} className="py-16 bg-light opacity-0" style={{ animationDelay: '200ms' }}>
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-center">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-4xl w-full">
-              {/* Tarjeta para Auxiliar Administrativo */}
-              <Link href="/auxiliar-administrativo" className="block bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 h-full">
-                <div className="p-6 flex flex-col h-full">
-                  <h3 className="text-xl font-bold text-dark flex-grow">Auxiliar Administrativo del Estado (C2)</h3>
-                  <p className="text-sm text-secondary mt-2">Accede a la guía y empieza a practicar.</p>
+        <section ref={oposicionesRef} className="py-16 bg-white opacity-0" style={{ animationDelay: '150ms' }}>
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl font-bold text-center mb-12 text-dark">Oposiciones Destacadas</h2>
+            {loading ? (
+              <p className="text-center">Cargando...</p>
+            ) : error ? (
+              <p className="text-center text-red-600">{error}</p>
+            ) : (
+              <div className="flex justify-center">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-4xl">
+                  {oposiciones.map((opo) => (
+                    <Link key={opo.id} href={`/oposicion/${opo.id}`} className="block bg-light border border-gray-200 rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 h-full">
+                      <div className="p-5 flex flex-col h-full">
+                        <h3 className="text-md font-bold text-dark flex-grow">{opo.nombre}</h3>
+                        <p className="text-sm text-secondary mt-2">{opo.temas.length} temas</p>
+                      </div>
+                    </Link>
+                  ))}
                 </div>
-              </Link>
-              {/* Tarjeta para Administrativo */}
-              <Link href="/administrativo" className="block bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 h-full">
-                <div className="p-6 flex flex-col h-full">
-                  <h3 className="text-xl font-bold text-dark flex-grow">Administrativo de la Administración del Estado (C1)</h3>
-                  <p className="text-sm text-secondary mt-2">Descubre todo sobre la oposición.</p>
-                </div>
-              </Link>
-            </div>
+              </div>
+            )}
           </div>
-        </div>
-      </section>
+        </section>
 
         {/* --- Sección de Opiniones --- */}
         <section ref={testimonialsRef} className="py-16 bg-light opacity-0" style={{ animationDelay: '150ms' }}>
