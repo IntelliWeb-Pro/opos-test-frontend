@@ -113,6 +113,7 @@ export default function HomePage() {
         <meta name="description" content="Practica con miles de preguntas tipo test actualizadas y justificadas para tus oposiciones. Auxiliar Administrativo, Administrativo del Estado y más." />
         <meta name="keywords" content="oposiciones, test oposiciones, auxiliar administrativo, administrativo del estado, correos, policía, guardia civil, test online, preguntas justificadas, preparación de oposiciones" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="google-site-verification" content="QifipcQtlrOz5cEDwHXz1cBaBFJ7V5gJHFN_Mt-vggE" />
       </Head>
 
       {/* Hero Section */}
