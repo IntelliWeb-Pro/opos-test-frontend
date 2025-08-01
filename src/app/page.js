@@ -96,11 +96,11 @@ export default function HomePage() {
         return response.json();
       })
       .then(data => { 
-        // --- FILTRAMOS PARA MOSTRAR SOLO LAS DOS OPOSICIONES PRINCIPALES ---
-        const filteredData = data.filter(opo => 
-            opo.nombre.includes("Auxiliar Administrativo del Estado") || 
-            opo.nombre.includes("Administrativo de la Administración del Estado")
-        );
+        const oposPrincipales = [
+            "Auxiliar Administrativo del Estado (C2)",
+            "Administrativo de la Administración del Estado (C1)"
+        ];
+        const filteredData = data.filter(opo => oposPrincipales.includes(opo.nombre));
         setOposiciones(filteredData); 
         setLoading(false);
       })
@@ -125,7 +125,6 @@ export default function HomePage() {
           <p className="text-xl md:text-2xl mt-6 max-w-3xl mx-auto text-white drop-shadow-md">
             Miles de preguntas actualizadas y justificadas para que practiques sin límites y consigas tu objetivo.
           </p>
-          {/* --- FRASE INSPIRADORA AÑADIDA --- */}
           <blockquote className="mt-8 italic text-white/90 max-w-2xl mx-auto">
             <p>&quot;Somos lo que hacemos repetidamente. La excelencia, entonces, no es un acto, sino un hábito.&quot;</p>
             <cite className="mt-2 block not-italic font-semibold">- Aristóteles</cite>
@@ -139,8 +138,6 @@ export default function HomePage() {
       {/* --- Contenido Principal que aparecerá progresivamente --- */}
       <div className="relative z-20 bg-light">
         
-        {/* --- SECCIÓN DE CATEGORÍAS ELIMINADA --- */}
-
         {/* --- Sección de Oposiciones --- */}
         <section ref={oposicionesRef} className="py-16 bg-white opacity-0" style={{ animationDelay: '150ms' }}>
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -150,7 +147,6 @@ export default function HomePage() {
             ) : error ? (
               <p className="text-center text-red-600">{error}</p>
             ) : (
-              // --- Centramos la cuadrícula para que se vea bien con 2 elementos ---
               <div className="flex justify-center">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-4xl">
                   {oposiciones.map((opo) => (
