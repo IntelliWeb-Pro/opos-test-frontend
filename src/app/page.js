@@ -68,7 +68,6 @@ const FAQItem = ({ question, answer }) => {
   );
 };
 
-// 🔽 INSERTAMOS LA SECCIÓN SI NO HAY OPOSICIONES DISPONIBLES
 const OposicionesList = ({ oposiciones }) => {
   if (oposiciones.length === 0) {
     return (
@@ -78,16 +77,91 @@ const OposicionesList = ({ oposiciones }) => {
     );
   }
   return (
-    <div className={`grid gap-6 ${oposiciones.length === 1 ? 'grid-cols-1 max-w-md mx-auto' : 'grid-cols-1 md:grid-cols-2'}`}>
-      {oposiciones.map((opo) => (
-        <div key={opo.id} className="bg-white p-6 rounded-xl shadow-lg">
-          <h3 className="text-2xl font-bold text-blue-700 mb-2">{opo.nombre}</h3>
-          <p className="text-gray-600 mb-4">Accede a tests específicos, estadísticas detalladas y mucho más.</p>
-          <Link href={`/oposiciones/${opo.slug}`}>
-            <a className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Ver más</a>
-          </Link>
-        </div>
-      ))}
+    <>
+      <div className={`grid gap-6 ${oposiciones.length === 1 ? 'grid-cols-1 max-w-md mx-auto' : 'grid-cols-1 md:grid-cols-2'}`}>
+        {oposiciones.map((opo) => (
+          <div key={opo.id} className="bg-white p-6 rounded-xl shadow-lg">
+            <h3 className="text-2xl font-bold text-blue-700 mb-2">{opo.nombre}</h3>
+            <p className="text-gray-600 mb-4">Accede a tests específicos, estadísticas detalladas y mucho más.</p>
+            <Link href={`/oposiciones/${opo.slug}`} legacyBehavior>
+              <a className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Ver más</a>
+            </Link>
+          </div>
+        ))}
+      </div>
+      <CTASection />
+    </>
+  );
+};
+
+const CTASection = () => {
+  const ref = useScrollAnimation();
+  return (
+    <div ref={ref} className="opacity-0 mt-16 bg-blue-700 text-white py-12 px-6 rounded-2xl text-center animate-fade-in-up">
+      <h2 className="text-3xl font-bold mb-4">¿Listo para comenzar?</h2>
+      <p className="text-lg mb-6">Accede a miles de preguntas y mejora tus resultados con TestEstado.</p>
+      <Link href="/registro" legacyBehavior>
+        <a className="inline-block bg-white text-blue-700 font-semibold px-6 py-3 rounded-xl hover:bg-gray-100 transition">Probar gratis</a>
+      </Link>
     </div>
   );
 };
+
+export default function HomePage() {
+  const [oposiciones, setOposiciones] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchOposiciones = async () => {
+      try {
+        const res = await fetch('/api/oposiciones');
+        const data = await res.json();
+        setOposiciones(data);
+      } catch (error) {
+        console.error('Error al cargar oposiciones:', error);
+        setOposiciones([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOposiciones();
+  }, []);
+
+  return (
+    <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <h1 className="text-4xl font-extrabold mb-8 text-center">Explora las oposiciones disponibles</h1>
+      {loading ? (
+        <p className="text-center text-gray-500">Cargando oposiciones...</p>
+      ) : (
+        <OposicionesList oposiciones={oposiciones} />
+      )}
+
+      <section className="mt-16">
+        <h2 className="text-3xl font-bold text-center mb-8">Lo que opinan nuestros usuarios</h2>
+        <div className="grid gap-6 md:grid-cols-2">
+          {testimonials.map((t, i) => (
+            <div key={i} className="bg-white p-6 rounded-xl shadow-md">
+              <div className="flex items-center mb-2">
+                {[...Array(t.rating)].map((_, i) => (
+                  <StarIcon key={i} className="h-5 w-5 text-yellow-400 mr-1" />
+                ))}
+              </div>
+              <p className="text-gray-700 italic">"{t.text}"</p>
+              <p className="mt-2 text-sm text-gray-500">— {t.name}, {t.opo}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-16">
+        <h2 className="text-3xl font-bold text-center mb-8">Preguntas frecuentes</h2>
+        <div className="max-w-2xl mx-auto">
+          {faqData.map((faq, i) => (
+            <FAQItem key={i} question={faq.q} answer={faq.a} />
+          ))}
+        </div>
+      </section>
+    </main>
+  );
+}
