@@ -8,6 +8,9 @@ export default function RegistroPage() {
   const [email, setEmail] = useState('');
   const [password1, setPassword1] = useState(''); // <-- CAMBIO REALIZADO
   const [password2, setPassword2] = useState('');
+  // --- AÑADIMOS ESTADOS PARA LOS NUEVOS CAMPOS ---
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -34,6 +37,8 @@ export default function RegistroPage() {
           email: email,
           password1: password1, // <-- CAMBIO REALIZADO
           password2: password2,
+          first_name: firstName, // <-- Enviamos el nombre
+          last_name: lastName,   // <-- Enviamos los apellidos
         }),
       });
 
@@ -73,6 +78,24 @@ export default function RegistroPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && <p className="bg-red-100 text-red-700 p-3 rounded text-sm">{error}</p>}
               
+              {/* --- NUEVOS CAMPOS DE NOMBRE Y APELLIDOS --- */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="w-full">
+                  <label className="block text-gray-700 font-semibold mb-2" htmlFor="firstName">Nombre</label>
+                  <input
+                    type="text" id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required
+                  />
+                </div>
+                <div className="w-full">
+                  <label className="block text-gray-700 font-semibold mb-2" htmlFor="lastName">Apellidos</label>
+                  <input
+                    type="text" id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="block text-gray-700 font-semibold mb-2" htmlFor="username">Nombre de usuario</label>
                 <input
@@ -88,6 +111,7 @@ export default function RegistroPage() {
                 />
               </div>
               <div>
+                {/* --- CAMBIOS REALIZADOS AQUÍ --- */}
                 <label className="block text-gray-700 font-semibold mb-2" htmlFor="password1">Contraseña</label>
                 <input
                   type="password" id="password1" value={password1} onChange={(e) => setPassword1(e.target.value)}
@@ -102,7 +126,6 @@ export default function RegistroPage() {
                 />
               </div>
 
-              {/* --- CASILLA DE ACEPTACIÓN AÑADIDA --- */}
               <div className="pt-2">
                 <label className="flex items-center">
                   <input type="checkbox" className="form-checkbox h-5 w-5 text-primary" required />
