@@ -45,12 +45,6 @@ export default function OposicionPage() {
                   <Link href={`/tema/${tema.id}`} className="text-center bg-primary text-white px-3 py-2 rounded-md text-sm font-semibold hover:bg-primary-hover transition-colors">
                     Test Gratis
                   </Link>
-                  <button disabled className="text-center bg-gray-300 text-white px-3 py-2 rounded-md text-sm font-semibold cursor-not-allowed" title="Próximamente">
-                    Test Examen
-                  </button>
-                  <button disabled className="text-center bg-gray-300 text-white px-3 py-2 rounded-md text-sm font-semibold cursor-not-allowed" title="Próximamente">
-                    Test Repaso
-                  </button>
                 </div>
               </div>
             </li>
