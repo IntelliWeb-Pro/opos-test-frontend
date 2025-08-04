@@ -31,8 +31,8 @@ export default function AdministrativoPage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
             {/* --- ESTRUCTURA VISUAL RESTAURADA --- */}
             <header className="mb-12 text-center">
-                <h1 className="text-4xl font-bold text-dark">Administrativo de la Administración del Estado (C1)</h1>
-                <p className="text-lg text-secondary mt-2">Toda la información que necesitas para conseguir tu plaza.</p>
+                <h1 className="text-4xl font-bold text-white">Administrativo de la Administración del Estado (C1)</h1>
+                <p className="text-lg text-white mt-2">Toda la información que necesitas para conseguir tu plaza.</p>
             </header>
             
             {/* --- SECCIÓN DE BOTONES DE ACCIÓN (AHORA FUNCIONAL) --- */}
