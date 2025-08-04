@@ -6,9 +6,8 @@ import Link from 'next/link';
 export default function RegistroPage() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
-  const [password1, setPassword1] = useState(''); // <-- CAMBIO REALIZADO
+  const [password1, setPassword1] = useState('');
   const [password2, setPassword2] = useState('');
-  // --- AÑADIMOS ESTADOS PARA LOS NUEVOS CAMPOS ---
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   
@@ -22,7 +21,7 @@ export default function RegistroPage() {
     setSuccess(false);
     setLoading(true);
 
-    if (password1 !== password2) { // <-- CAMBIO REALIZADO
+    if (password1 !== password2) {
       setError('Las contraseñas no coinciden.');
       setLoading(false);
       return;
@@ -35,20 +34,28 @@ export default function RegistroPage() {
         body: JSON.stringify({
           username: username,
           email: email,
-          password1: password1, // <-- CAMBIO REALIZADO
+          password1: password1,
           password2: password2,
-          first_name: firstName, // <-- Enviamos el nombre
-          last_name: lastName,   // <-- Enviamos los apellidos
+          first_name: firstName,
+          last_name: lastName,
         }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        const errorMessages = Object.entries(errorData).map(([key, value]) => {
-            const cleanKey = key.replace('password1', 'contraseña').replace('username', 'usuario');
-            return `${cleanKey}: ${value.join(', ')}`;
-        }).join(' ');
-        throw new Error(errorMessages);
+        // --- GESTIÓN DE ERRORES MEJORADA ---
+        const contentType = response.headers.get('content-type');
+        // Si el servidor responde con un error en formato JSON, lo mostramos
+        if (contentType && contentType.indexOf('application/json') !== -1) {
+            const errorData = await response.json();
+            const errorMessages = Object.entries(errorData).map(([key, value]) => {
+                const cleanKey = key.replace('password1', 'contraseña').replace('username', 'usuario');
+                return `${cleanKey}: ${value.join(', ')}`;
+            }).join(' ');
+            throw new Error(errorMessages);
+        } else {
+            // Si el servidor responde con cualquier otra cosa (como un error 500 en HTML), mostramos un mensaje genérico
+            throw new Error('El servidor ha encontrado un problema. Por favor, inténtalo de nuevo más tarde.');
+        }
       }
 
       setSuccess(true);
@@ -69,7 +76,7 @@ export default function RegistroPage() {
           {success ? (
             <div className="text-center">
               <p className="text-success font-semibold">¡Registro completado con éxito!</p>
-              <p className="mt-2 text-secondary">Ya puedes acceder a la plataforma.</p>
+              <p className="mt-2 text-secondary">Revisa tu email para confirmar tu cuenta.</p>
               <Link href="/login" className="mt-4 inline-block w-full bg-primary text-white py-2 rounded-lg hover:bg-primary-hover transition-colors font-semibold">
                 Ir a Iniciar Sesión
               </Link>
@@ -78,7 +85,6 @@ export default function RegistroPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && <p className="bg-red-100 text-red-700 p-3 rounded text-sm">{error}</p>}
               
-              {/* --- NUEVOS CAMPOS DE NOMBRE Y APELLIDOS --- */}
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="w-full">
                   <label className="block text-gray-700 font-semibold mb-2" htmlFor="firstName">Nombre</label>
@@ -111,7 +117,6 @@ export default function RegistroPage() {
                 />
               </div>
               <div>
-                {/* --- CAMBIOS REALIZADOS AQUÍ --- */}
                 <label className="block text-gray-700 font-semibold mb-2" htmlFor="password1">Contraseña</label>
                 <input
                   type="password" id="password1" value={password1} onChange={(e) => setPassword1(e.target.value)}
