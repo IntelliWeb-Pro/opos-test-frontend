@@ -16,11 +16,10 @@ export default function AuxiliarAdministrativoPage() {
     const [oposicion, setOposicion] = useState(null);
 
     useEffect(() => {
-        // Buscamos la oposición de Auxiliar C2 para obtener su ID
         fetch(process.env.NEXT_PUBLIC_API_URL + '/api/oposiciones/')
           .then(res => res.json())
           .then(data => {
-            const auxAdmin = data.find(opo => opo.nombre.includes("Auxiliar Adm. Estado (C2)"));
+            const auxAdmin = data.find(opo => opo.nombre.includes("Auxiliar Administrativo del Estado"));
             setOposicion(auxAdmin);
           });
     }, []);
@@ -28,22 +27,29 @@ export default function AuxiliarAdministrativoPage() {
     return (
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <header className="mb-12 text-center">
-                <h1 className="text-4xl font-bold text-white">Auxiliar Administrativo del Estado (C2)</h1>
-                <p className="text-lg text-white mt-2">La guía definitiva para superar la oposición con éxito.</p>
+                <h1 className="text-4xl font-bold text-dark">Auxiliar Administrativo del Estado (C2)</h1>
+                <p className="text-lg text-secondary mt-2">La guía definitiva para superar la oposición con éxito.</p>
             </header>
             
+            {/* --- SECCIÓN DE BOTONES DE ACCIÓN --- */}
             <div className="bg-light p-8 rounded-lg shadow-inner mb-12 text-center">
-                <h2 className="text-2xl font-bold text-dark">¿Listo para practicar?</h2>
-                <p className="mt-2 text-secondary">Accede a miles de preguntas actualizadas y asegura tu éxito.</p>
-                {oposicion ? (
-                    <Link href={`/oposicion/${oposicion.id}`} className="mt-4 inline-block bg-success text-white px-8 py-3 rounded-md text-lg font-semibold hover:bg-green-600 transition-colors">
-                        Realizar Test
-                    </Link>
-                ) : (
-                    <div className="mt-4 inline-block bg-gray-400 text-white px-8 py-3 rounded-md text-lg font-semibold cursor-not-allowed">
-                        Cargando...
-                    </div>
-                )}
+                <h2 className="text-2xl font-bold text-dark">Elige tu modo de práctica</h2>
+                <div className="mt-4 flex flex-col sm:flex-row justify-center gap-4">
+                    {oposicion ? (
+                        <Link href={`/oposicion/${oposicion.id}`} className="inline-block bg-primary text-white px-8 py-3 rounded-md text-lg font-semibold hover:bg-primary-hover transition-colors">
+                            Practicar por Temas
+                        </Link>
+                    ) : (
+                        <div className="inline-block bg-gray-400 text-white px-8 py-3 rounded-md text-lg font-semibold cursor-not-allowed">Cargando...</div>
+                    )}
+                    {oposicion ? (
+                         <Link href={`/examen-oficial/${oposicion.id}`} className="inline-block bg-success text-white px-8 py-3 rounded-md text-lg font-semibold hover:bg-green-600 transition-colors">
+                            Simulacro de Examen
+                        </Link>
+                    ) : (
+                        <div className="inline-block bg-gray-400 text-white px-8 py-3 rounded-md text-lg font-semibold cursor-not-allowed">Cargando...</div>
+                    )}
+                </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
