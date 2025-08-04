@@ -30,8 +30,8 @@ export default function OposicionPage() {
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <header className="mb-12 text-center">
         <Link href="/" className="text-primary hover:underline text-sm">← Volver a todas las oposiciones</Link>
-        <h1 className="text-4xl font-bold text-white mt-4">{oposicion.nombre}</h1>
-        <p className="text-lg text-white mt-2">Selecciona un bloque para empezar tu test</p>
+        <h1 className="text-4xl font-bold text-dark mt-4">{oposicion.nombre}</h1>
+        <p className="text-lg text-secondary mt-2">Selecciona un bloque y un modo de práctica</p>
       </header>
       
       <div className="bg-white p-6 sm:p-8 rounded-lg shadow-md border border-gray-200 max-w-4xl mx-auto">
@@ -39,15 +39,18 @@ export default function OposicionPage() {
           {oposicion.temas.map(tema => (
             <li key={tema.id} className="bg-light p-4 rounded-lg border border-gray-200">
               <div className="flex flex-col sm:flex-row justify-between items-center">
-                <span className="text-lg text-dark font-semibold text-center sm:text-left">{tema.nombre}</span>
-                <div className="flex space-x-2 mt-3 sm:mt-0">
-                  {/* --- NUEVO BOTÓN DE REPASO --- */}
-                  <Link href={`/tema/${tema.id}?modo=repaso`} className="text-center bg-secondary text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-gray-600 transition-colors">
-                    Repaso (Falladas)
+                <span className="text-lg text-dark font-semibold text-center sm:text-left mb-4 sm:mb-0">{tema.nombre}</span>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full sm:w-auto">
+                  {/* --- BOTONERA DE MODOS DE TEST --- */}
+                  <Link href={`/tema/${tema.id}`} className="text-center bg-primary text-white px-3 py-2 rounded-md text-sm font-semibold hover:bg-primary-hover transition-colors">
+                    Test Gratis
                   </Link>
-                  <Link href={`/tema/${tema.id}`} className="text-center bg-primary text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-primary-hover transition-colors">
-                    Test Normal
-                  </Link>
+                  <button disabled className="text-center bg-gray-300 text-white px-3 py-2 rounded-md text-sm font-semibold cursor-not-allowed" title="Próximamente">
+                    Test Examen
+                  </button>
+                  <button disabled className="text-center bg-gray-300 text-white px-3 py-2 rounded-md text-sm font-semibold cursor-not-allowed" title="Próximamente">
+                    Test Repaso
+                  </button>
                 </div>
               </div>
             </li>
