@@ -7,8 +7,8 @@ export default function RegistroPage() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   // --- CORRECCIÓN: Nombres de variables y funciones estandarizados ---
-  const [password, setPassword] = useState('');
-  const [password2, setPassword2] = useState('');
+  const [password1, setpassword1] = useState('');
+  const [password2, setpassword2] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   
@@ -22,7 +22,7 @@ export default function RegistroPage() {
     setSuccess(false);
     setLoading(true);
 
-    if (password !== password2) {
+    if (password1 !== password2) {
       setError('Las contraseñas no coinciden.');
       setLoading(false);
       return;
@@ -35,7 +35,7 @@ export default function RegistroPage() {
         body: JSON.stringify({
           username: username,
           email: email,
-          password: password, // El backend espera 'password' y 'password2' para la validación
+          password1: password1, // El backend espera 'password1' y 'password2' para la validación
           password2: password2,
           first_name: firstName,
           last_name: lastName,
@@ -46,7 +46,7 @@ export default function RegistroPage() {
         const errorData = await response.json();
         // --- CORRECCIÓN: Lógica de errores mejorada para ser más clara ---
         const errorMessages = Object.entries(errorData).map(([key, value]) => {
-            const cleanKey = key.replace('password2', 'Confirmar contraseña').replace('password', 'Contraseña').replace('username', 'Usuario');
+            const cleanKey = key.replace('password2', 'Confirmar contraseña').replace('password1', 'Contraseña').replace('username', 'Usuario');
             return `${cleanKey}: ${value.join(', ')}`;
         }).join(' ');
         throw new Error(errorMessages || 'Error en los datos introducidos.');
@@ -111,17 +111,17 @@ export default function RegistroPage() {
                 />
               </div>
               <div>
-                <label className="block text-gray-700 font-semibold mb-2" htmlFor="password">Contraseña</label>
-                {/* --- CORRECCIÓN: type="password" y el id/htmlFor correctos --- */}
+                <label className="block text-gray-700 font-semibold mb-2" htmlFor="password1">Contraseña</label>
+                {/* --- CORRECCIÓN: type="password1" y el id/htmlFor correctos --- */}
                 <input
-                  type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)}
+                  type="password1" id="password1" value={password1} onChange={(e) => setpassword1(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required
                 />
               </div>
               <div>
                 <label className="block text-gray-700 font-semibold mb-2" htmlFor="password2">Confirmar Contraseña</label>
                 <input
-                  type="password" id="password2" value={password2} onChange={(e) => setPassword2(e.target.value)}
+                  type="password1" id="password2" value={password2} onChange={(e) => setpassword2(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required
                 />
               </div>
