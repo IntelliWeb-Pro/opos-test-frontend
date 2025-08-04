@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
+// Componente para una tarjeta de información (sin cambios)
 const InfoCard = ({ title, children }) => (
     <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
         <h3 className="text-xl font-bold text-primary mb-3">{title}</h3>
@@ -16,6 +17,7 @@ export default function AuxiliarAdministrativoPage() {
     const [oposicion, setOposicion] = useState(null);
 
     useEffect(() => {
+        // Buscamos la oposición de Auxiliar C2 para obtener su ID
         fetch(process.env.NEXT_PUBLIC_API_URL + '/api/oposiciones/')
           .then(res => res.json())
           .then(data => {
@@ -26,12 +28,13 @@ export default function AuxiliarAdministrativoPage() {
 
     return (
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            {/* --- ESTRUCTURA VISUAL ORIGINAL RESTAURADA --- */}
             <header className="mb-12 text-center">
                 <h1 className="text-4xl font-bold text-dark">Auxiliar Administrativo del Estado (C2)</h1>
                 <p className="text-lg text-secondary mt-2">La guía definitiva para superar la oposición con éxito.</p>
             </header>
             
-            {/* --- SECCIÓN DE BOTONES DE ACCIÓN --- */}
+            {/* --- SECCIÓN DE BOTONES DE ACCIÓN (ACTUALIZADA) --- */}
             <div className="bg-light p-8 rounded-lg shadow-inner mb-12 text-center">
                 <h2 className="text-2xl font-bold text-dark">Elige tu modo de práctica</h2>
                 <div className="mt-4 flex flex-col sm:flex-row justify-center gap-4">
@@ -52,6 +55,7 @@ export default function AuxiliarAdministrativoPage() {
                 </div>
             </div>
 
+            {/* --- ESTRUCTURA VISUAL ORIGINAL RESTAURADA --- */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <InfoCard title="Requisitos">
                     <ul className="list-disc pl-5">

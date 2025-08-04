@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
+// Componente para una tarjeta de información (sin cambios)
 const InfoCard = ({ title, children }) => (
     <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
         <h3 className="text-xl font-bold text-primary mb-3">{title}</h3>
@@ -13,6 +14,7 @@ const InfoCard = ({ title, children }) => (
 );
 
 export default function AdministrativoPage() {
+    // --- LÓGICA AÑADIDA PARA OBTENER EL ID DE LA OPOSICIÓN ---
     const [oposicion, setOposicion] = useState(null);
 
     useEffect(() => {
@@ -27,12 +29,13 @@ export default function AdministrativoPage() {
 
     return (
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            {/* --- ESTRUCTURA VISUAL RESTAURADA --- */}
             <header className="mb-12 text-center">
                 <h1 className="text-4xl font-bold text-dark">Administrativo de la Administración del Estado (C1)</h1>
                 <p className="text-lg text-secondary mt-2">Toda la información que necesitas para conseguir tu plaza.</p>
             </header>
             
-            {/* --- SECCIÓN DE BOTONES DE ACCIÓN --- */}
+            {/* --- SECCIÓN DE BOTONES DE ACCIÓN (AHORA FUNCIONAL) --- */}
             <div className="bg-light p-8 rounded-lg shadow-inner mb-12 text-center">
                 <h2 className="text-2xl font-bold text-dark">Elige tu modo de práctica</h2>
                 <div className="mt-4 flex flex-col sm:flex-row justify-center gap-4">
@@ -53,6 +56,7 @@ export default function AdministrativoPage() {
                 </div>
             </div>
 
+            {/* --- ESTRUCTURA VISUAL RESTAURADA --- */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <InfoCard title="Requisitos">
                     <ul className="list-disc pl-5">
