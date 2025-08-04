@@ -87,8 +87,8 @@ export default function ProgresoPage() {
 
       <header className="mb-12 text-center">
         {/* CORRECCIÓN: El texto se cambia a 'text-dark' para que sea visible sobre fondo claro */}
-        <h1 className="text-4xl font-bold text-dark">Dashboard de Progreso</h1>
-        <p className="text-lg text-secondary mt-2">Analiza tu rendimiento y descubre tus puntos fuertes y débiles.</p>
+        <h1 className="text-4xl font-bold text-white">Dashboard de Progreso</h1>
+        <p className="text-lg text-white mt-2">Analiza tu rendimiento y descubre tus puntos fuertes y débiles.</p>
       </header>
 
       {stats.puntos_debiles?.length > 0 && (
