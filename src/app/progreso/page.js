@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
+import IAChat from '@/components/IAChat'; // <-- LÍNEA AÑADIDA
 
 const PIE_COLORS = ['#007bff', '#dc3545'];
 
@@ -66,6 +67,10 @@ export default function ProgresoPage() {
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="mb-10">
+        <IAChat />
+      </div>
+
       <header className="mb-12 text-center">
         <h1 className="text-4xl font-bold text-white">Dashboard de Progreso</h1>
         <p className="text-lg text-white mt-2">Analiza tu rendimiento y descubre tus puntos fuertes y débiles.</p>
