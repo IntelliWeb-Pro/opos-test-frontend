@@ -7,7 +7,8 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
-import IAChat from '@/components/IAChat';
+
+// Se ha eliminado la importación de IAChat
 
 const PIE_COLORS = ['#007bff', '#dc3545'];
 
@@ -82,13 +83,12 @@ export default function ProgresoPage() {
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="mb-10">
-        <IAChat />
-      </div>
+      {/* Se ha eliminado el div que contenía el componente IAChat */}
 
       <header className="mb-12 text-center">
-        <h1 className="text-4xl font-bold text-white">Dashboard de Progreso</h1>
-        <p className="text-lg text-white mt-2">Analiza tu rendimiento y descubre tus puntos fuertes y débiles.</p>
+        {/* CORRECCIÓN: El texto se cambia a 'text-dark' para que sea visible sobre fondo claro */}
+        <h1 className="text-4xl font-bold text-dark">Dashboard de Progreso</h1>
+        <p className="text-lg text-secondary mt-2">Analiza tu rendimiento y descubre tus puntos fuertes y débiles.</p>
       </header>
 
       {stats.puntos_debiles?.length > 0 && (
