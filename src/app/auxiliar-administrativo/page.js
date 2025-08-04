@@ -21,7 +21,7 @@ export default function AuxiliarAdministrativoPage() {
         fetch(process.env.NEXT_PUBLIC_API_URL + '/api/oposiciones/')
           .then(res => res.json())
           .then(data => {
-            const auxAdmin = data.find(opo => opo.nombre.includes("Auxiliar Administrativo del Estado"));
+            const auxAdmin = data.find(opo => opo.nombre.includes("Auxiliar Adm. Estado (C2)"));
             setOposicion(auxAdmin);
           });
     }, []);
