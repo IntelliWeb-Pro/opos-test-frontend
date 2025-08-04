@@ -6,7 +6,8 @@ import Link from 'next/link';
 export default function RegistroPage() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
-  const [password1, setPassword1] = useState('');
+  // --- CORRECCIÓN: Nombres de variables y funciones estandarizados ---
+  const [password, setPassword] = useState('');
   const [password2, setPassword2] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -21,7 +22,7 @@ export default function RegistroPage() {
     setSuccess(false);
     setLoading(true);
 
-    if (password1 !== password2) {
+    if (password !== password2) {
       setError('Las contraseñas no coinciden.');
       setLoading(false);
       return;
@@ -34,7 +35,7 @@ export default function RegistroPage() {
         body: JSON.stringify({
           username: username,
           email: email,
-          password1: password1,
+          password: password, // El backend espera 'password' y 'password2' para la validación
           password2: password2,
           first_name: firstName,
           last_name: lastName,
@@ -42,20 +43,13 @@ export default function RegistroPage() {
       });
 
       if (!response.ok) {
-        // --- GESTIÓN DE ERRORES MEJORADA ---
-        const contentType = response.headers.get('content-type');
-        // Si el servidor responde con un error en formato JSON, lo mostramos
-        if (contentType && contentType.indexOf('application/json') !== -1) {
-            const errorData = await response.json();
-            const errorMessages = Object.entries(errorData).map(([key, value]) => {
-                const cleanKey = key.replace('password1', 'contraseña').replace('username', 'usuario');
-                return `${cleanKey}: ${value.join(', ')}`;
-            }).join(' ');
-            throw new Error(errorMessages);
-        } else {
-            // Si el servidor responde con cualquier otra cosa (como un error 500 en HTML), mostramos un mensaje genérico
-            throw new Error('El servidor ha encontrado un problema. Por favor, inténtalo de nuevo más tarde.');
-        }
+        const errorData = await response.json();
+        // --- CORRECCIÓN: Lógica de errores mejorada para ser más clara ---
+        const errorMessages = Object.entries(errorData).map(([key, value]) => {
+            const cleanKey = key.replace('password2', 'Confirmar contraseña').replace('password', 'Contraseña').replace('username', 'Usuario');
+            return `${cleanKey}: ${value.join(', ')}`;
+        }).join(' ');
+        throw new Error(errorMessages || 'Error en los datos introducidos.');
       }
 
       setSuccess(true);
@@ -117,9 +111,10 @@ export default function RegistroPage() {
                 />
               </div>
               <div>
-                <label className="block text-gray-700 font-semibold mb-2" htmlFor="password1">Contraseña</label>
+                <label className="block text-gray-700 font-semibold mb-2" htmlFor="password">Contraseña</label>
+                {/* --- CORRECCIÓN: type="password" y el id/htmlFor correctos --- */}
                 <input
-                  type="password" id="password1" value={password1} onChange={(e) => setPassword1(e.target.value)}
+                  type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required
                 />
               </div>
