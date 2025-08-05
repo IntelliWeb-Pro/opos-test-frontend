@@ -32,7 +32,7 @@ export default function RegistroPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: email,
-          password: password1, // El backend espera 'password' y 'password2'
+          password1: password1, // El backend espera 'password' y 'password2'
           password2: password2,
           first_name: firstName,
           last_name: lastName,
@@ -43,7 +43,7 @@ export default function RegistroPage() {
         // Mejoramos la gestión de errores
         const errorData = await response.json();
         const errorMessages = Object.entries(errorData).map(([key, value]) => {
-            const cleanKey = key.replace('password2', 'Confirmar contraseña').replace('password', 'Contraseña').replace('email', 'Email');
+            const cleanKey = key.replace('password2', 'Confirmar contraseña').replace('password1', 'Contraseña').replace('email', 'Email');
             return `${cleanKey}: ${value.join(', ')}`;
         }).join(' ');
         throw new Error(errorMessages || 'Error en los datos introducidos.');
