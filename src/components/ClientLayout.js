@@ -80,12 +80,12 @@ function Footer() {
     return (
         <footer className="bg-white mt-16">
             <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 border-t">
-                <div className="flex justify-center space-x-6 mb-4 text-sm text-secondary">
-                    <Link href="/aviso-legal" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Aviso Legal</Link>
-                    <Link href="/politica-privacidad" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Política de Privacidad</Link>
-                    <Link href="/politica-cookies" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Política de Cookies</Link>
-                    <Link href="/terminos-condiciones" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Términos y Condiciones</Link>
-                    <Link href="/contacto" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Contacto</Link>
+                <div className="flex justify-center space-x-4 mb-4 text-sm text-secondary">
+                    <Link href="/aviso-legal" className="hover:text-primary">Aviso Legal</Link>
+                    <Link href="/politica-privacidad" className="hover:text-primary">Política de Privacidad</Link>
+                    <Link href="/politica-cookies" className="hover:text-primary">Política de Cookies</Link>
+                    <Link href="/terminos-condiciones" className="hover:text-primary">Términos y Condiciones</Link>
+                    <Link href="/contacto" className="hover:text-primary">Contacto</Link>
                 </div>
                 <p className="text-center text-sm text-gray-500">
                     © {new Date().getFullYear()} TestEstado. Todos los derechos reservados.
