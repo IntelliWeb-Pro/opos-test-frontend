@@ -83,6 +83,7 @@ function Footer() {
                     <Link href="/politica-privacidad" className="hover:text-primary">Política de Privacidad</Link>
                     <Link href="/politica-cookies" className="hover:text-primary">Política de Cookies</Link>
                     <Link href="/terminos-condiciones" className="hover:text-primary">Términos y Condiciones</Link>
+                    <Link href="/contacto" className="hover:text-primary">Contacto</Link>
                 </div>
                 <p className="text-center text-sm text-gray-500">
                     © {new Date().getFullYear()} TestEstado. Todos los derechos reservados.
