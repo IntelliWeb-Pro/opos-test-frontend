@@ -5,8 +5,9 @@ import Link from 'next/link';
 
 export default function RegistroPage() {
   const [email, setEmail] = useState('');
-  const [password1, setpassword1] = useState('');
-  const [password2, setpassword2] = useState('');
+  // CORRECCIÓN: Renombramos el estado para que coincida con el campo esperado
+  const [password, setPassword] = useState('');
+  const [password2, setPassword2] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   
@@ -20,7 +21,7 @@ export default function RegistroPage() {
     setSuccess(false);
     setLoading(true);
 
-    if (password1 !== password2) {
+    if (password !== password2) {
       setError('Las contraseñas no coinciden.');
       setLoading(false);
       return;
@@ -32,7 +33,8 @@ export default function RegistroPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: email,
-          password1: password1, // El backend espera 'password1' y 'password2'
+          // CORRECCIÓN: Enviamos 'password' como espera el backend estándar
+          password: password,
           password2: password2,
           first_name: firstName,
           last_name: lastName,
@@ -40,10 +42,9 @@ export default function RegistroPage() {
       });
 
       if (!response.ok) {
-        // Mejoramos la gestión de errores
         const errorData = await response.json();
         const errorMessages = Object.entries(errorData).map(([key, value]) => {
-            const cleanKey = key.replace('password2', 'Confirmar contraseña').replace('password1', 'Contraseña').replace('email', 'Email');
+            const cleanKey = key.replace('password2', 'Confirmar contraseña').replace('password', 'Contraseña').replace('email', 'Email');
             return `${cleanKey}: ${value.join(', ')}`;
         }).join(' ');
         throw new Error(errorMessages || 'Error en los datos introducidos.');
@@ -52,6 +53,7 @@ export default function RegistroPage() {
       setSuccess(true);
 
     } catch (err) {
+      // Este catch ahora funcionará correctamente si el backend devuelve un error JSON
       setError(err.message || 'Ha ocurrido un error al registrar el usuario.');
     } finally {
       setLoading(false);
@@ -66,9 +68,9 @@ export default function RegistroPage() {
           
           {success ? (
             <div className="text-center">
-              <p className="text-success font-semibold">¡Registro completado con éxito!</p>
-              <p className="mt-2 text-secondary">Revisa tu email para confirmar tu cuenta.</p>
-              <Link href="/login" className="mt-4 inline-block w-full bg-primary text-white py-2 rounded-lg hover:bg-primary-hover transition-colors font-semibold">
+              <p className="text-green-600 font-semibold">¡Registro completado con éxito!</p>
+              <p className="mt-2 text-gray-600">Revisa tu email para confirmar tu cuenta.</p>
+              <Link href="/login" className="mt-4 inline-block w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors font-semibold">
                 Ir a Iniciar Sesión
               </Link>
             </div>
@@ -81,14 +83,14 @@ export default function RegistroPage() {
                   <label className="block text-gray-700 font-semibold mb-2" htmlFor="firstName">Nombre</label>
                   <input
                     type="text" id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required
                   />
                 </div>
                 <div className="w-full">
                   <label className="block text-gray-700 font-semibold mb-2" htmlFor="lastName">Apellidos</label>
                   <input
                     type="text" id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required
                   />
                 </div>
               </div>
@@ -97,30 +99,31 @@ export default function RegistroPage() {
                 <label className="block text-gray-700 font-semibold mb-2" htmlFor="email">Email</label>
                 <input
                   type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required
                 />
               </div>
               <div>
-                <label className="block text-gray-700 font-semibold mb-2" htmlFor="password1">Contraseña</label>
-                {/* --- CORRECCIÓN: El tipo de input debe ser 'password1' --- */}
+                <label className="block text-gray-700 font-semibold mb-2" htmlFor="password">Contraseña</label>
                 <input
-                  type="password1" id="password1" value={password1} onChange={(e) => setpassword1(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required
+                  // CORRECCIÓN: El tipo debe ser 'password'
+                  type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required
                 />
               </div>
               <div>
                 <label className="block text-gray-700 font-semibold mb-2" htmlFor="password2">Confirmar Contraseña</label>
                 <input
-                  type="password1" id="password2" value={password2} onChange={(e) => setpassword2(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required
+                  // CORRECCIÓN: El tipo debe ser 'password'
+                  type="password" id="password2" value={password2} onChange={(e) => setPassword2(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required
                 />
               </div>
 
               <div className="pt-2">
                 <label className="flex items-center">
-                  <input type="checkbox" className="form-checkbox h-5 w-5 text-primary" required />
-                  <span className="ml-2 text-sm text-secondary">
-                    He leído y acepto la <Link href="/politica-privacidad" className="text-primary hover:underline" target="_blank">Política de Privacidad</Link> y los <Link href="/terminos-condiciones" className="text-primary hover:underline" target="_blank">Términos y Condiciones</Link>.
+                  <input type="checkbox" className="form-checkbox h-5 w-5 text-blue-600" required />
+                  <span className="ml-2 text-sm text-gray-600">
+                    He leído y acepto la <Link href="/politica-privacidad" className="text-blue-600 hover:underline" target="_blank">Política de Privacidad</Link> y los <Link href="/terminos-condiciones" className="text-blue-600 hover:underline" target="_blank">Términos y Condiciones</Link>.
                   </span>
                 </label>
               </div>
@@ -128,7 +131,7 @@ export default function RegistroPage() {
               <button 
                 type="submit" 
                 disabled={loading}
-                className="w-full bg-primary text-white py-2.5 rounded-lg hover:bg-primary-hover transition-colors font-semibold disabled:bg-gray-400"
+                className="w-full bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:bg-gray-400"
               >
                 {loading ? 'Registrando...' : 'Registrarse'}
               </button>
