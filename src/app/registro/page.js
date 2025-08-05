@@ -4,9 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 
 export default function RegistroPage() {
-  const [username, setUsername] = useState('');
+  // --- Eliminamos el estado para 'username' ---
   const [email, setEmail] = useState('');
-  // --- CORRECCIÓN: Nombres de variables y funciones estandarizados ---
   const [password1, setpassword1] = useState('');
   const [password2, setpassword2] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -33,9 +32,9 @@ export default function RegistroPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: username,
+          // --- Ya no enviamos 'username' ---
           email: email,
-          password1: password1, // El backend espera 'password1' y 'password2' para la validación
+          password1: password1,
           password2: password2,
           first_name: firstName,
           last_name: lastName,
@@ -44,9 +43,8 @@ export default function RegistroPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        // --- CORRECCIÓN: Lógica de errores mejorada para ser más clara ---
         const errorMessages = Object.entries(errorData).map(([key, value]) => {
-            const cleanKey = key.replace('password2', 'Confirmar contraseña').replace('password1', 'Contraseña').replace('username', 'Usuario');
+            const cleanKey = key.replace('password1', 'contraseña');
             return `${cleanKey}: ${value.join(', ')}`;
         }).join(' ');
         throw new Error(errorMessages || 'Error en los datos introducidos.');
@@ -96,13 +94,8 @@ export default function RegistroPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-gray-700 font-semibold mb-2" htmlFor="username">Nombre de usuario</label>
-                <input
-                  type="text" id="username" value={username} onChange={(e) => setUsername(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required
-                />
-              </div>
+              {/* --- CAMPO DE USERNAME ELIMINADO --- */}
+
               <div>
                 <label className="block text-gray-700 font-semibold mb-2" htmlFor="email">Email</label>
                 <input
@@ -112,7 +105,6 @@ export default function RegistroPage() {
               </div>
               <div>
                 <label className="block text-gray-700 font-semibold mb-2" htmlFor="password1">Contraseña</label>
-                {/* --- CORRECCIÓN: type="password1" y el id/htmlFor correctos --- */}
                 <input
                   type="password1" id="password1" value={password1} onChange={(e) => setpassword1(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required
