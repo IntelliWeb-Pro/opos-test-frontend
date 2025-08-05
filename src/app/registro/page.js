@@ -5,8 +5,8 @@ import Link from 'next/link';
 
 export default function RegistroPage() {
   const [email, setEmail] = useState('');
-  // CORRECCIÓN: Renombramos el estado para que coincida con el campo esperado
-  const [password, setPassword] = useState('');
+  // CORRECCIÓN: Volvemos a usar los nombres de estado originales
+  const [password1, setPassword1] = useState('');
   const [password2, setPassword2] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -21,7 +21,7 @@ export default function RegistroPage() {
     setSuccess(false);
     setLoading(true);
 
-    if (password !== password2) {
+    if (password1 !== password2) {
       setError('Las contraseñas no coinciden.');
       setLoading(false);
       return;
@@ -33,8 +33,8 @@ export default function RegistroPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: email,
-          // CORRECCIÓN: Enviamos 'password' como espera el backend estándar
-          password: password,
+          // CORRECCIÓN: Enviamos 'password1' como el backend está requiriendo
+          password1: password1,
           password2: password2,
           first_name: firstName,
           last_name: lastName,
@@ -44,7 +44,8 @@ export default function RegistroPage() {
       if (!response.ok) {
         const errorData = await response.json();
         const errorMessages = Object.entries(errorData).map(([key, value]) => {
-            const cleanKey = key.replace('password2', 'Confirmar contraseña').replace('password', 'Contraseña').replace('email', 'Email');
+            // Adaptamos el mensaje de error para que muestre "Contraseña"
+            const cleanKey = key.replace('password2', 'Confirmar contraseña').replace('password1', 'Contraseña').replace('email', 'Email');
             return `${cleanKey}: ${value.join(', ')}`;
         }).join(' ');
         throw new Error(errorMessages || 'Error en los datos introducidos.');
@@ -53,7 +54,6 @@ export default function RegistroPage() {
       setSuccess(true);
 
     } catch (err) {
-      // Este catch ahora funcionará correctamente si el backend devuelve un error JSON
       setError(err.message || 'Ha ocurrido un error al registrar el usuario.');
     } finally {
       setLoading(false);
@@ -105,15 +105,13 @@ export default function RegistroPage() {
               <div>
                 <label className="block text-gray-700 font-semibold mb-2" htmlFor="password">Contraseña</label>
                 <input
-                  // CORRECCIÓN: El tipo debe ser 'password'
-                  type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)}
+                  type="password" id="password" value={password1} onChange={(e) => setPassword1(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required
                 />
               </div>
               <div>
                 <label className="block text-gray-700 font-semibold mb-2" htmlFor="password2">Confirmar Contraseña</label>
                 <input
-                  // CORRECCIÓN: El tipo debe ser 'password'
                   type="password" id="password2" value={password2} onChange={(e) => setPassword2(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required
                 />
