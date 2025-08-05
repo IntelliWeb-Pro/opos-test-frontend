@@ -56,11 +56,10 @@ function Navbar() {
             {user && <Link href="/refuerzo" className="text-gray-700 hover:text-primary block px-3 py-2 rounded-md text-base font-medium">Refuerzo</Link>}
             <hr className="my-2 border-gray-200" />
             {user ? (
-              <div className="flex items-center space-x-4">
-                {/* --- CORRECCIÓN: Usamos el nombre real si existe --- */}
-                <span className="text-gray-700 text-sm">Hola, {user.first_name || user.username}</span>
-                <button onClick={logout} className="bg-secondary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-600 transition-colors">Cerrar Sesión</button>
-              </div>
+              <>
+                <div className="px-3 py-2 text-gray-700">Hola, {user.username}</div>
+                <button onClick={logout} className="w-full text-left bg-secondary text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-gray-600">Cerrar Sesión</button>
+              </>
             ) : (
               <>
                 <Link href="/login" className="text-gray-700 hover:text-primary block px-3 py-2 rounded-md text-base font-medium">Iniciar Sesión</Link>
