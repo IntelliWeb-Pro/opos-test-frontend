@@ -32,7 +32,7 @@ export default function RegistroPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: email,
-          password: password1, // El backend espera 'password' y 'password2'
+          password1: password1, // El backend espera 'password' y 'password2'
           password2: password2,
           first_name: firstName,
           last_name: lastName,
