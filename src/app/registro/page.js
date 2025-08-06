@@ -7,8 +7,8 @@ import { useRouter } from 'next/navigation'; // Importa el router de Next.js
 export default function RegistroPage() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState(''); // Nombre de estado simplificado
-  const [password2, setPassword2] = useState('');
+  const [password1, setpassword1] = useState(''); // Nombre de estado simplificado
+  const [password2, setpassword2] = useState('');
   
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -22,7 +22,7 @@ export default function RegistroPage() {
     setSuccess(false);
     setLoading(true);
 
-    if (password !== password2) {
+    if (password1 !== password2) {
       setError('Las contraseñas no coinciden.');
       setLoading(false);
       return;
@@ -35,8 +35,8 @@ export default function RegistroPage() {
         body: JSON.stringify({
           username: username,
           email: email,
-          // El backend de dj-rest-auth espera 'password' y 'password2'
-          password: password, 
+          // El backend de dj-rest-auth espera 'password1' y 'password2'
+          password1: password1, 
           password2: password2,
         }),
       });
@@ -46,7 +46,7 @@ export default function RegistroPage() {
         // Mapeo de errores mejorado para ser más legible
         const errorMessages = Object.entries(errorData).map(([key, value]) => {
             let friendlyKey = key;
-            if (key === 'password') friendlyKey = 'Contraseña';
+            if (key === 'password1') friendlyKey = 'Contraseña';
             if (key === 'username') friendlyKey = 'Nombre de usuario';
             if (key === 'email') friendlyKey = 'Email';
             return `${friendlyKey}: ${value.join(', ')}`;
@@ -110,16 +110,16 @@ export default function RegistroPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-gray-700 font-semibold mb-2" htmlFor="password">Contraseña</label>
+                  <label className="block text-gray-700 font-semibold mb-2" htmlFor="password1">Contraseña</label>
                   <input
-                    type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)}
+                    type="password1" id="password1" value={password1} onChange={(e) => setpassword1(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required
                   />
                 </div>
                 <div>
                   <label className="block text-gray-700 font-semibold mb-2" htmlFor="password2">Confirmar Contraseña</label>
                   <input
-                    type="password" id="password2" value={password2} onChange={(e) => setPassword2(e.target.value)}
+                    type="password1" id="password2" value={password2} onChange={(e) => setpassword2(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required
                   />
                 </div>
