@@ -11,6 +11,17 @@ const InfoCard = ({ title, children }) => (
 );
 
 export default function AdministrativoPage() {
+  const [oposicion, setOposicion] = useState(null);
+  
+      useEffect(() => {
+          // Buscamos la oposición de Auxiliar C2 para obtener su ID
+          fetch(process.env.NEXT_PUBLIC_API_URL + '/api/oposiciones/')
+            .then(res => res.json())
+            .then(data => {
+              const Admin = data.find(opo => opo.nombre.includes("Administrativo de la Administración del Estado"));
+              setOposicion(Admin);
+            });
+      }, []);
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <header className="mb-12 text-center">
@@ -21,11 +32,16 @@ export default function AdministrativoPage() {
       <div className="bg-light p-8 rounded-lg shadow-inner mb-12 text-center">
         <h2 className="text-2xl font-bold text-dark">¿Listo para practicar?</h2>
         <p className="mt-2 text-secondary">Accede a miles de preguntas actualizadas y asegura tu éxito.</p>
-        {/* Este botón de momento no llevará a ningún sitio funcional */}
-        <Link href="#" className="mt-4 inline-block bg-success text-white px-8 py-3 rounded-md text-lg font-semibold hover:bg-green-600 transition-colors">
-          Realizar Test
-        </Link>
-      </div>
+        {oposicion ? (
+                    <Link href={`/oposicion/${oposicion.id}`} className="mt-4 inline-block bg-success text-white px-8 py-3 rounded-md text-lg font-semibold hover:bg-green-600 transition-colors">
+                        Realizar Test
+                    </Link>
+                ) : (
+                    <div className="mt-4 inline-block bg-gray-400 text-white px-8 py-3 rounded-md text-lg font-semibold cursor-not-allowed">
+                        Cargando...
+                    </div>
+                )}
+            </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         <InfoCard title="Requisitos">
