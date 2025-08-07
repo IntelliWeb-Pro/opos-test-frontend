@@ -76,10 +76,13 @@ export default function RegistroPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
+        // --- LÓGICA DE MANEJO DE ERRORES CORREGIDA ---
         const errorMessages = [];
         
+        // Recorremos cada campo del objeto de error que devuelve el backend
         for (const field in errorData) {
             if (errorData[field] && Array.isArray(errorData[field])) {
+                // Traducimos cada mensaje de error para ese campo
                 const translatedErrors = errorData[field].map(msg => translateErrorMessage(msg));
                 errorMessages.push(...translatedErrors);
             }
