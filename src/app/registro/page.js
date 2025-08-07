@@ -7,8 +7,12 @@ import { useRouter } from 'next/navigation';
 // Función de ayuda para traducir los errores comunes de Django al español
 const translateErrorMessage = (message) => {
     const translations = {
-        'User with this email already exists.': 'Ya existe un usuario con este correo electrónico.',
-        'A user with that username already exists.': 'Ya existe un usuario con este nombre de usuario.',
+        // Mensajes específicos que has solicitado
+        'A user with that username already exists.': 'Nombre de usuario existente',
+        'This e-mail address is already associated with another account.': 'Ya existe un usuario con este email',
+        'User with this email already exists.': 'Ya existe un usuario con este email', // Otra posible respuesta del backend
+
+        // Validaciones de contraseña
         'This password is too common.': 'Esta contraseña es demasiado común.',
         'The password is too similar to the username.': 'La contraseña se parece demasiado al nombre de usuario.',
         'This password is too short. It must contain at least 8 characters.': 'La contraseña es demasiado corta. Debe contener al menos 8 caracteres.',
@@ -55,23 +59,16 @@ export default function RegistroPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        // --- NUEVA LÓGICA DE MANEJO DE ERRORES DETALLADOS ---
+        // --- LÓGICA DE MANEJO DE ERRORES MEJORADA ---
         const errorMessages = [];
-        if (errorData.username) {
-            const translated = errorData.username.map(msg => translateErrorMessage(msg));
-            errorMessages.push(`Usuario: ${translated.join(' ')}`);
-        }
-        if (errorData.email) {
-            const translated = errorData.email.map(msg => translateErrorMessage(msg));
-            errorMessages.push(`Email: ${translated.join(' ')}`);
-        }
-        if (errorData.password1) {
-            const translated = errorData.password1.map(msg => translateErrorMessage(msg));
-            errorMessages.push(`Contraseña: ${translated.join(' ')}`);
-        }
-        if (errorData.password2) {
-            const translated = errorData.password2.map(msg => translateErrorMessage(msg));
-            errorMessages.push(`Confirmar Contraseña: ${translated.join(' ')}`);
+        
+        // Recorremos cada campo del objeto de error que devuelve el backend (username, email, etc.)
+        for (const field in errorData) {
+            if (errorData[field] && Array.isArray(errorData[field])) {
+                // Traducimos cada mensaje de error para ese campo
+                const translatedErrors = errorData[field].map(msg => translateErrorMessage(msg));
+                errorMessages.push(...translatedErrors);
+            }
         }
         
         if (errorMessages.length === 0) {
