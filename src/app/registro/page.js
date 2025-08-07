@@ -89,7 +89,7 @@ export default function RegistroPage() {
         }
         
         if (errorMessages.length === 0) {
-            errorMessages.push('Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo.');
+            errorMessages.push('Tu mail/username ya está en uso.');
         }
         
         throw new Error(errorMessages.join('\n'));
@@ -142,28 +142,47 @@ export default function RegistroPage() {
                 </div>
                 
                 <div className="relative">
-                  <label className="block text-gray-700 font-semibold mb-2" htmlFor="password1">Contraseña</label>
-                  <input
-                    type={showpassword1 ? 'text' : 'password1'}
-                    id="password1" value={password1} onChange={(e) => setpassword1(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required
-                  />
-                  <button type="button" onClick={() => setShowpassword1(!showpassword1)} className="absolute inset-y-0 right-0 top-7 pr-3 flex items-center">
-                     <EyeIcon show={showpassword1} />
-                  </button>
-                </div>
-                
-                <div className="relative">
-                  <label className="block text-gray-700 font-semibold mb-2" htmlFor="password2">Confirmar Contraseña</label>
-                  <input
-                    type={showpassword1 ? 'text' : 'password1'}
-                    id="password2" value={password2} onChange={(e) => setpassword2(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required
-                  />
-                   <button type="button" onClick={() => setShowpassword1(!showpassword1)} className="absolute inset-y-0 right-0 top-7 pr-3 flex items-center">
-                     <EyeIcon show={showpassword1} />
-                  </button>
-                </div>
+                    <label className="block text-gray-700 font-semibold mb-2" htmlFor="password1">
+                      Contraseña (No debe parecerse al username)
+                    </label>
+                    <input
+                      type={showPassword1 ? 'text' : 'password'}
+                      id="password1"
+                      value={password1}
+                      onChange={(e) => setPassword1(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword1(!showPassword1)}
+                      className="absolute inset-y-0 right-0 top-7 pr-3 flex items-center"
+                    >
+                      <EyeIcon show={showPassword1} />
+                    </button>
+                  </div>
+
+                  <div className="relative">
+                    <label className="block text-gray-700 font-semibold mb-2" htmlFor="password2">
+                      Confirmar Contraseña
+                    </label>
+                    <input
+                      type={showPassword2 ? 'text' : 'password'}
+                      id="password2"
+                      value={password2}
+                      onChange={(e) => setPassword2(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword2(!showPassword2)}
+                      className="absolute inset-y-0 right-0 top-7 pr-3 flex items-center"
+                    >
+                      <EyeIcon show={showPassword2} />
+                    </button>
+                  </div>
+
 
                 <div className="pt-2">
                   <label className="flex items-center">
