@@ -65,7 +65,7 @@ export default function RegistroPage() {
         body: JSON.stringify({
           username,
           email,
-          password: password1, // El backend espera 'password'
+          password1: password1, // <-- CORREGIDO: Se envía 'password1' como espera el backend
           password2: password2,
         }),
       });
