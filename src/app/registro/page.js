@@ -69,12 +69,7 @@ export default function RegistroPage() {
                 const translatedErrors = errorData[field].map(msg => translateErrorMessage(msg));
                 errorMessages.push(...translatedErrors);
             }
-        }
-        
-        if (errorMessages.length === 0) {
-            errorMessages.push('Los valores introducidos no son correctos. La contraseña no puede parecerse al nombre de usuario. Si es diferente, es posible que el nombre de usuario o el email estén en uso');
-        }
-        
+        }  
         throw new Error(errorMessages.join('\n'));
       }
 
