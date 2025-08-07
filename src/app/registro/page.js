@@ -2,19 +2,32 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation'; // Importa el router de Next.js
+import { useRouter } from 'next/navigation';
+
+// Función de ayuda para traducir los errores comunes de Django al español
+const translateErrorMessage = (message) => {
+    const translations = {
+        'User with this email already exists.': 'Ya existe un usuario con este correo electrónico.',
+        'A user with that username already exists.': 'Ya existe un usuario con este nombre de usuario.',
+        'This password is too common.': 'Esta contraseña es demasiado común.',
+        'The password is too similar to the username.': 'La contraseña se parece demasiado al nombre de usuario.',
+        'This password is too short. It must contain at least 8 characters.': 'La contraseña es demasiado corta. Debe contener al menos 8 caracteres.',
+        "The two password fields didn't match.": 'Las contraseñas no coinciden.',
+    };
+    return translations[message] || message;
+};
 
 export default function RegistroPage() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
-  const [password1, setpassword1] = useState(''); // Nombre de estado simplificado
+  const [password1, setpassword1] = useState('');
   const [password2, setpassword2] = useState('');
   
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   
-  const router = useRouter(); // Inicializa el router
+  const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,41 +46,46 @@ export default function RegistroPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: username,
-          email: email,
-          // El backend de dj-rest-auth espera 'password1' y 'password2'
-          password1: password1, 
-          password2: password2,
+          username,
+          email,
+          password1,
+          password2,
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        // Mapeo de errores mejorado para ser más legible
-        const errorMessages = Object.entries(errorData).map(([key, value]) => {
-            let friendlyKey = key;
-            if (key === 'password1') friendlyKey = 'Contraseña';
-            if (key === 'username') friendlyKey = 'Nombre de usuario';
-            if (key === 'email') friendlyKey = 'Email';
-            return `${friendlyKey}: ${value.join(', ')}`;
-        }).join('\n');
-        throw new Error(errorMessages);
+        // --- NUEVA LÓGICA DE MANEJO DE ERRORES DETALLADOS ---
+        const errorMessages = [];
+        if (errorData.username) {
+            const translated = errorData.username.map(msg => translateErrorMessage(msg));
+            errorMessages.push(`Usuario: ${translated.join(' ')}`);
+        }
+        if (errorData.email) {
+            const translated = errorData.email.map(msg => translateErrorMessage(msg));
+            errorMessages.push(`Email: ${translated.join(' ')}`);
+        }
+        if (errorData.password1) {
+            const translated = errorData.password1.map(msg => translateErrorMessage(msg));
+            errorMessages.push(`Contraseña: ${translated.join(' ')}`);
+        }
+        if (errorData.password2) {
+            const translated = errorData.password2.map(msg => translateErrorMessage(msg));
+            errorMessages.push(`Confirmar Contraseña: ${translated.join(' ')}`);
+        }
+        
+        if (errorMessages.length === 0) {
+            errorMessages.push('Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo.');
+        }
+        
+        throw new Error(errorMessages.join('\n'));
       }
 
-      // --- CAMBIO CLAVE: El registro fue exitoso ---
-      // 1. Guardamos el email para usarlo en la siguiente página
       localStorage.setItem('verificationEmail', email);
-      
-      // 2. Marcamos el éxito para cambiar la UI
       setSuccess(true);
-      
-      // 3. Opcional: Redirigir automáticamente después de unos segundos
-      // setTimeout(() => {
-      //   router.push('/verificar-cuenta');
-      // }, 3000);
 
     } catch (err) {
-      setError(err.message || 'Ha ocurrido un error al registrar el usuario.');
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -78,7 +96,6 @@ export default function RegistroPage() {
       <div className="mx-auto max-w-md">
         <div className="bg-white p-8 rounded-lg shadow-md border border-gray-200">
           
-          {/* --- CAMBIO CLAVE: Nueva vista de éxito --- */}
           {success ? (
             <div className="text-center">
               <h1 className="text-2xl font-bold mb-4 text-dark">¡Revisa tu correo!</h1>

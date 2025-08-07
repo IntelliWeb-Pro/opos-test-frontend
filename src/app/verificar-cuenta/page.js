@@ -4,6 +4,16 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+// Función de ayuda para traducir los errores comunes de Django al español
+const translateErrorMessage = (message) => {
+    const translations = {
+        'User account is already active.': 'Esta cuenta ya ha sido activada previamente.',
+        'The verification code has expired.': 'El código de verificación ha expirado. Por favor, solicita uno nuevo.',
+        'The code or email is incorrect.': 'El código o el email son incorrectos.',
+    };
+    return translations[message] || message;
+};
+
 export default function VerificarCuentaPage() {
   const [email, setEmail] = useState('');
   const [codigo, setCodigo] = useState('');
@@ -14,13 +24,12 @@ export default function VerificarCuentaPage() {
   
   const router = useRouter();
 
-  // Usamos useEffect para leer el email del localStorage cuando la página carga
   useEffect(() => {
     const storedEmail = localStorage.getItem('verificationEmail');
     if (storedEmail) {
       setEmail(storedEmail);
     }
-  }, []); // El array vacío asegura que esto solo se ejecute una vez, al montar el componente
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -37,23 +46,20 @@ export default function VerificarCuentaPage() {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/verify/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: email,
-          codigo: codigo,
-        }),
+        body: JSON.stringify({ email, codigo }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Ha ocurrido un error en la verificación.');
+        // --- LÓGICA DE MANEJO DE ERRORES DETALLADOS ---
+        const errorMessage = translateErrorMessage(data.error || 'Ha ocurrido un error en la verificación.');
+        throw new Error(errorMessage);
       }
 
-      // --- ¡ÉXITO! La cuenta ha sido activada ---
       setSuccess(true);
-      localStorage.removeItem('verificationEmail'); // Limpiamos el email del localStorage
+      localStorage.removeItem('verificationEmail');
 
-      // Redirigir al login después de 3 segundos
       setTimeout(() => {
         router.push('/login');
       }, 3000);

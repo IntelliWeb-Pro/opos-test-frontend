@@ -22,10 +22,10 @@ export default function RecuperarPasswordPage() {
         body: JSON.stringify({ email }),
       });
 
+      // Para esta vista, el backend siempre devuelve éxito por seguridad,
+      // así que solo necesitamos manejar errores de red o del servidor.
       if (!response.ok) {
-        const errorData = await response.json();
-        // Por seguridad, no revelamos si el email existe o no.
-        throw new Error('Ha ocurrido un error. Por favor, inténtalo de nuevo.');
+        throw new Error('No se pudo conectar con el servidor. Por favor, inténtalo de nuevo más tarde.');
       }
       
       setSuccess(true);

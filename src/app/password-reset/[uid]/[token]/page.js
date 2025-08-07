@@ -4,6 +4,20 @@ import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+// Función de ayuda para traducir los errores comunes de Django al español
+const translateErrorMessage = (message) => {
+    const translations = {
+        'Invalid token for given user.': 'El enlace de recuperación no es válido o ha expirado.',
+        'Not found.': 'El enlace de recuperación no es válido o ha expirado.',
+        'This password is too common.': 'Esta contraseña es demasiado común.',
+        'The password is too similar to the username.': 'La contraseña se parece demasiado al nombre de usuario.',
+        'This password is too short. It must contain at least 8 characters.': 'La contraseña es demasiado corta. Debe contener al menos 8 caracteres.',
+        "The two password fields didn't match.": 'Las contraseñas no coinciden.',
+    };
+    return translations[message] || message;
+};
+
+
 export default function ConfirmarResetPage() {
   const [new_password1, setNewPassword1] = useState('');
   const [new_password2, setNewPassword2] = useState('');
@@ -12,7 +26,7 @@ export default function ConfirmarResetPage() {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   
-  const params = useParams(); // Hook para leer los parámetros de la URL
+  const params = useParams();
   const router = useRouter();
 
   const handleSubmit = async (e) => {
@@ -42,14 +56,31 @@ export default function ConfirmarResetPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        // Intentamos dar un error más específico si es posible
-        let errorMessage = 'El enlace de recuperación no es válido o ha expirado.';
-        if (errorData.new_password2) {
-            errorMessage = `Contraseña: ${errorData.new_password2.join(' ')}`;
-        } else if (errorData.detail) {
-            errorMessage = errorData.detail;
+        // --- NUEVA LÓGICA DE MANEJO DE ERRORES DETALLADOS ---
+        const errorMessages = [];
+        if (errorData.new_password1) {
+            const translated = errorData.new_password1.map(msg => translateErrorMessage(msg));
+            errorMessages.push(`Nueva Contraseña: ${translated.join(' ')}`);
         }
-        throw new Error(errorMessage);
+        if (errorData.new_password2) {
+            const translated = errorData.new_password2.map(msg => translateErrorMessage(msg));
+            errorMessages.push(`Confirmar Contraseña: ${translated.join(' ')}`);
+        }
+        if (errorData.token) {
+            errorMessages.push('El enlace de recuperación no es válido o ha expirado.');
+        }
+        if (errorData.uid) {
+            errorMessages.push('El identificador de usuario no es válido.');
+        }
+        if (errorData.detail) {
+            errorMessages.push(translateErrorMessage(errorData.detail));
+        }
+        
+        if (errorMessages.length === 0) {
+            errorMessages.push('Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo.');
+        }
+        
+        throw new Error(errorMessages.join('\n'));
       }
       
       setSuccess(true);
@@ -80,7 +111,7 @@ export default function ConfirmarResetPage() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
-              {error && <p className="bg-red-100 text-red-700 p-3 rounded text-sm">{error}</p>}
+              {error && <p className="bg-red-100 text-red-700 p-3 rounded text-sm whitespace-pre-line">{error}</p>}
               
               <div>
                 <label className="block text-gray-700 font-semibold mb-2" htmlFor="new_password1">Nueva Contraseña</label>
