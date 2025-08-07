@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 // --- COMPONENTE DEL ICONO DE OJO ---
-// Un pequeño componente para el icono SVG, para no repetir código.
 const EyeIcon = ({ show }) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-gray-500">
         {show ? (
@@ -23,12 +22,9 @@ const EyeIcon = ({ show }) => (
 // Función de ayuda para traducir los errores comunes de Django al español
 const translateErrorMessage = (message) => {
     const translations = {
-        // Mensajes específicos que has solicitado
         'A user with that username already exists.': 'Nombre de usuario existente',
         'This e-mail address is already associated with another account.': 'Ya existe un usuario con este email',
-        'User with this email already exists.': 'Ya existe un usuario con este email', // Otra posible respuesta del backend
-
-        // Validaciones de contraseña
+        'User with this email already exists.': 'Ya existe un usuario con este email',
         'This password is too common.': 'Esta contraseña es demasiado común.',
         'The password is too similar to the username.': 'La contraseña se parece demasiado al nombre de usuario.',
         'This password is too short. It must contain at least 8 characters.': 'La contraseña es demasiado corta. Debe contener al menos 8 caracteres.',
@@ -40,13 +36,13 @@ const translateErrorMessage = (message) => {
 export default function RegistroPage() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
-  const [password1, setpassword1] = useState('');
-  const [password2, setpassword2] = useState('');
+  const [password1, setPassword1] = useState('');
+  const [password2, setPassword2] = useState('');
   
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [showpassword1, setShowpassword1] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   
   const router = useRouter();
 
@@ -69,27 +65,24 @@ export default function RegistroPage() {
         body: JSON.stringify({
           username,
           email,
-          password1,
-          password2,
+          password: password1, // El backend espera 'password'
+          password2: password2,
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        // --- LÓGICA DE MANEJO DE ERRORES CORREGIDA ---
         const errorMessages = [];
         
-        // Recorremos cada campo del objeto de error que devuelve el backend
         for (const field in errorData) {
             if (errorData[field] && Array.isArray(errorData[field])) {
-                // Traducimos cada mensaje de error para ese campo
                 const translatedErrors = errorData[field].map(msg => translateErrorMessage(msg));
                 errorMessages.push(...translatedErrors);
             }
         }
         
         if (errorMessages.length === 0) {
-            errorMessages.push('Tu mail/username ya está en uso.');
+            errorMessages.push('El username/email introducidos ya está en uso');
         }
         
         throw new Error(errorMessages.join('\n'));
@@ -142,47 +135,28 @@ export default function RegistroPage() {
                 </div>
                 
                 <div className="relative">
-                    <label className="block text-gray-700 font-semibold mb-2" htmlFor="password1">
-                      Contraseña (No debe parecerse al username)
-                    </label>
-                    <input
-                      type={showPassword1 ? 'text' : 'password'}
-                      id="password1"
-                      value={password1}
-                      onChange={(e) => setPassword1(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword1(!showPassword1)}
-                      className="absolute inset-y-0 right-0 top-7 pr-3 flex items-center"
-                    >
-                      <EyeIcon show={showPassword1} />
-                    </button>
-                  </div>
-
-                  <div className="relative">
-                    <label className="block text-gray-700 font-semibold mb-2" htmlFor="password2">
-                      Confirmar Contraseña
-                    </label>
-                    <input
-                      type={showPassword2 ? 'text' : 'password'}
-                      id="password2"
-                      value={password2}
-                      onChange={(e) => setPassword2(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword2(!showPassword2)}
-                      className="absolute inset-y-0 right-0 top-7 pr-3 flex items-center"
-                    >
-                      <EyeIcon show={showPassword2} />
-                    </button>
-                  </div>
-
+                  <label className="block text-gray-700 font-semibold mb-2" htmlFor="password1">Contraseña(La contraseña no debe parecerse al username)</label>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    id="password1" value={password1} onChange={(e) => setPassword1(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required
+                  />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 top-7 pr-3 flex items-center">
+                     <EyeIcon show={showPassword} />
+                  </button>
+                </div>
+                
+                <div className="relative">
+                  <label className="block text-gray-700 font-semibold mb-2" htmlFor="password2">Confirmar Contraseña</label>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    id="password2" value={password2} onChange={(e) => setPassword2(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required
+                  />
+                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 top-7 pr-3 flex items-center">
+                     <EyeIcon show={showPassword} />
+                  </button>
+                </div>
 
                 <div className="pt-2">
                   <label className="flex items-center">
