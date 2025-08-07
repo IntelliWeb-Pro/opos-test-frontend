@@ -52,7 +52,6 @@ export default function LoginPage() {
             >
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
-            // En tu formulario de login, debajo del campo de contraseña o del botón de login:
             <div className="text-sm text-center mt-4">
                <Link href="/recuperar-password" className="font-medium text-primary hover:underline">
                    ¿Has olvidado tu contraseña?
