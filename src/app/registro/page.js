@@ -72,7 +72,7 @@ export default function RegistroPage() {
         }
         
         if (errorMessages.length === 0) {
-            errorMessages.push('Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo.');
+            errorMessages.push('La contraseña introducida es demasiado parecida al nombre de usuario.');
         }
         
         throw new Error(errorMessages.join('\n'));
