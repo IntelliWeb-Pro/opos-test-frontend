@@ -135,7 +135,10 @@ export default function RegistroPage() {
                 </div>
                 
                 <div className="relative">
-                  <label className="block text-gray-700 font-semibold mb-2" htmlFor="password1">Contraseña(La contraseña no debe parecerse al username)</label>
+                  <label className="block text-gray-700 font-semibold mb-2" htmlFor="password1">
+                    Contraseña
+                    <span className="text-gray-400 font-normal text-xs ml-2">(La contraseña no debe parecerse al username)</span>
+                  </label>
                   <input
                     type={showPassword ? 'text' : 'password'}
                     id="password1" value={password1} onChange={(e) => setPassword1(e.target.value)}
