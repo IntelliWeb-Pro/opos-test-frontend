@@ -42,7 +42,14 @@ export default function ConfirmarResetPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || 'El enlace de recuperación no es válido o ha expirado.');
+        // Intentamos dar un error más específico si es posible
+        let errorMessage = 'El enlace de recuperación no es válido o ha expirado.';
+        if (errorData.new_password2) {
+            errorMessage = `Contraseña: ${errorData.new_password2.join(' ')}`;
+        } else if (errorData.detail) {
+            errorMessage = errorData.detail;
+        }
+        throw new Error(errorMessage);
       }
       
       setSuccess(true);
