@@ -1,16 +1,15 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-// Importamos 'useSearchParams' para leer los parámetros de la URL
 import { useParams, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 
-const TIEMPO_POR_PREGUNTA = 90;
+// Se ha eliminado la constante TIEMPO_POR_PREGUNTA
 
 export default function TestPage() {
   const params = useParams();
-  const searchParams = useSearchParams(); // Hook para leer "?modo=repaso"
+  const searchParams = useSearchParams();
   const { user, token } = useAuth();
   
   const [preguntas, setPreguntas] = useState([]);
@@ -20,9 +19,11 @@ export default function TestPage() {
   const [respuestasUsuario, setRespuestasUsuario] = useState({});
   const [testTerminado, setTestTerminado] = useState(false);
   const [puntuacion, setPuntuacion] = useState(0);
-  const [tiempoRestante, setTiempoRestante] = useState(0);
   const [cargandoResultados, setCargandoResultados] = useState(false);
   const [datosCorreccion, setDatosCorreccion] = useState([]);
+  
+  // --- CAMBIO CLAVE: De cuenta atrás a cronómetro ---
+  const [tiempoTranscurrido, setTiempoTranscurrido] = useState(0);
 
   const terminarTest = useCallback(async () => {
     if (testTerminado) return;
@@ -57,7 +58,6 @@ export default function TestPage() {
       setPuntuacion(correctas);
 
       if (user && token) {
-        // --- ENVIAMOS LA LISTA DE ACIERTOS Y FALLOS ---
         await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/resultados/`, {
           method: 'POST',
           headers: {
@@ -82,44 +82,45 @@ export default function TestPage() {
   }, [preguntas, respuestasUsuario, user, token, params.id, testTerminado]);
 
   useEffect(() => {
-    if (params.id && token) { // Aseguramos que hay token para el modo repaso
-        setLoading(true);
-        const modo = searchParams.get('modo');
-        let apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/preguntas/?tema=${params.id}`;
+    if (params.id && token) {
+      setLoading(true);
+      const modo = searchParams.get('modo');
+      let apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/preguntas/?tema=${params.id}`;
 
-        // --- LÓGICA PARA ELEGIR LA API CORRECTA ---
-        if (modo === 'repaso') {
-            apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/preguntas/repaso/?tema=${params.id}`;
-        }
-        
-        fetch(apiUrl, {
-            headers: { 'Authorization': `Bearer ${token}` }
+      if (modo === 'repaso') {
+          apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/preguntas/repaso/?tema=${params.id}`;
+      }
+      
+      fetch(apiUrl, {
+          headers: { 'Authorization': `Bearer ${token}` }
+      })
+        .then(res => {
+          if (!res.ok) throw new Error('No se pudieron cargar las preguntas.');
+          return res.json();
         })
-          .then(res => {
-            if (!res.ok) throw new Error('No se pudieron cargar las preguntas.');
-            return res.json();
-          })
-          .then(data => {
-            setPreguntas(data);
-            if (data.length > 0) { setTiempoRestante(data.length * TIEMPO_POR_PREGUNTA); }
-            setLoading(false);
-          })
-          .catch(err => { setError(err.message); setLoading(false); });
+        .then(data => {
+          setPreguntas(data);
+          // --- CAMBIO CLAVE: Ya no se establece un tiempo inicial ---
+          setLoading(false);
+        })
+        .catch(err => { setError(err.message); setLoading(false); });
     } else if (!token) {
         setLoading(false);
         setError("Necesitas iniciar sesión para hacer un test.");
     }
   }, [params.id, searchParams, token]);
 
-  // ... (El resto del archivo, incluyendo el temporizador y el renderizado, no cambia)
+  // --- CAMBIO CLAVE: Nueva lógica para el cronómetro ---
   useEffect(() => {
-    if (tiempoRestante > 0 && !testTerminado) {
-      const timer = setInterval(() => { setTiempoRestante(prev => prev - 1); }, 1000);
+    // El cronómetro solo se activa cuando las preguntas han cargado y el test no ha terminado.
+    if (!loading && !testTerminado && preguntas.length > 0) {
+      const timer = setInterval(() => {
+        setTiempoTranscurrido(prev => prev + 1); // Cuenta hacia arriba
+      }, 1000);
       return () => clearInterval(timer);
-    } else if (tiempoRestante <= 0 && !testTerminado && preguntas.length > 0) {
-      terminarTest();
     }
-  }, [tiempoRestante, testTerminado, preguntas, terminarTest]);
+  }, [loading, testTerminado, preguntas]);
+
 
   const handleSelectRespuesta = (preguntaId, respuestaId) => {
     setRespuestasUsuario({ ...respuestasUsuario, [preguntaId]: respuestaId });
@@ -137,7 +138,6 @@ export default function TestPage() {
   if (error) return <p className="text-center mt-20 text-red-600">{error}</p>;
   if (preguntas.length === 0 && !loading) return <p className="text-center mt-20">No tienes preguntas falladas en este tema para repasar. ¡Buen trabajo!</p>;
   
-  // ... (El resto del return con la vista del test y la corrección no cambia)
   if (testTerminado) {
     if (cargandoResultados) { return <p className="text-center mt-20">Calculando resultados...</p>; }
     return (
@@ -179,16 +179,18 @@ export default function TestPage() {
     );
   }
   
+  // --- CAMBIO CLAVE: Lógica para mostrar el cronómetro ---
+  const minutos = Math.floor(tiempoTranscurrido / 60);
+  const segundos = tiempoTranscurrido % 60;
   const preguntaActual = preguntas[preguntaActualIndex];
-  const minutos = Math.floor(tiempoRestante / 60);
-  const segundos = tiempoRestante % 60;
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="bg-white p-6 sm:p-8 rounded-lg shadow-md border border-gray-200">
         <div className="flex justify-between items-center mb-6">
           <span className="text-lg font-semibold text-dark">Pregunta {preguntaActualIndex + 1} de {preguntas.length}</span>
-          <span className="text-2xl font-bold text-red-600">{minutos}:{segundos < 10 ? '0' : ''}{segundos}</span>
+          {/* --- CAMBIO CLAVE: El cronómetro ya no es rojo --- */}
+          <span className="text-2xl font-bold text-dark">{minutos < 10 ? '0' : ''}{minutos}:{segundos < 10 ? '0' : ''}{segundos}</span>
         </div>
         <h2 className="text-2xl font-semibold text-dark mb-6">{preguntaActual.texto_pregunta}</h2>
         <div className="space-y-4">
