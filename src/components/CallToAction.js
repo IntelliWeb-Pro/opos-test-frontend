@@ -28,13 +28,13 @@ export default function CallToAction() {
           <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
             Tu plaza está más cerca que nunca.
           </h2>
-          <p className="mt-6 text-lg leading-8 text-gray-200">
+          <p className="mt-6 text-lg leading-8 text-white">
             Utilizamos la Inteligencia Artificial y expertos en derecho para diseñar los test que más rápidamente te acercan a tu objetivo. <span className="font-semibold text-white">Aprobar la oposición.</span>
           </p>
           <div className="mt-10 flex items-center justify-center gap-x-6">
             <Link
               href="/registro"
-              className="group inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-primary-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary transition-colors"
+              className="group inline-flex items-center justify-center rounded-md bg-white px-6 py-3 text-base font-semibold text-primary shadow-sm hover:bg-primary-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary transition-colors"
             >
               Empezar prueba gratuita
               <ArrowIcon />
