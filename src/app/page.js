@@ -3,12 +3,9 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
+import CallToAction from '@/components/CallToAction'; // Importamos el nuevo componente
 
-const StarIcon = ({ className }) => (
-  <svg className={className} fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-  </svg>
-);
+// El componente StarIcon y el array testimonials han sido eliminados.
 
 const useScrollAnimation = () => {
   const ref = useRef(null);
@@ -30,17 +27,6 @@ const useScrollAnimation = () => {
   }, []);
   return ref;
 };
-
-const testimonials = [
-  { name: 'Laura G.', opo: 'Administrativo del Estado', rating: 5, text: '¡Increíble! Las justificaciones en cada pregunta son oro puro. Aprobé gracias a la práctica constante en esta plataforma.' },
-  { name: 'Carlos M.', opo: 'Auxiliar Administrativo', rating: 5, text: 'La mejor herramienta que he probado. Los tests son idénticos a los oficiales y el seguimiento de progreso me ayudó a identificar mis puntos débiles.' },
-  { name: 'Sofía R.', opo: 'Administrativo del Estado', rating: 4, text: 'Muy completa. Me gustaría que tuviera más psicotécnicos, pero la parte de temario y ortografía es simplemente perfecta. La recomiendo.' },
-  { name: 'Javier L.', opo: 'Administrativo del Estado', rating: 5, text: 'Después de probar varias academias, me quedo con TestEstado. Directo al grano, sin paja. La app es rápida y funciona genial en el móvil.' },
-  { name: 'Isabel P.', opo: 'Auxiliar Administrativo', rating: 5, text: 'El modo de corrección al final del test es clave. Poder repasar todos los fallos con la ley delante me dio la confianza que necesitaba.' },
-  { name: 'David S.', opo: 'Auxiliar Administrativo', rating: 5, text: 'La cantidad de preguntas es abrumadora. Imposible que te pille una pregunta por sorpresa en el examen después de practicar aquí.' },
-  { name: 'Elena V.', opo: 'Administrativo del Estado', rating: 4, text: 'Muy útil para la parte de productos y servicios postales. El diseño es muy limpio y no te distrae, que es lo importante.' },
-  { name: 'Miguel A.', opo: 'Auxiliar Administrativo', rating: 5, text: 'Aprobé a la primera. No tengo dudas de que esta plataforma fue el 80% de mi éxito. Gracias por crear algo tan bueno y a un precio justo.' },
-];
 
 const faqData = [
   { q: '¿Hay tests gratuitos en TestEstado?', a: '¡Sí! Ofrecemos una prueba gratuita para que puedas experimentar la calidad de nuestra plataforma. Podrás realizar un número limitado de tests en la oposición que elijas para convencerte antes de suscribirte.' },
@@ -103,7 +89,7 @@ export default function HomePage() {
   }, []);
 
   const oposicionesRef = useScrollAnimation();
-  const testimonialsRef = useScrollAnimation();
+  // La ref para las reseñas ha sido eliminada.
   const faqRef = useScrollAnimation();
 
   return (
@@ -156,29 +142,8 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section ref={testimonialsRef} className="py-16 bg-light opacity-0 px-4" style={{ animationDelay: '150ms' }}>
-          <div className="container mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-4 text-dark">Te acompañamos en tu camino al éxito</h2>
-            <p className="text-lg text-center text-secondary mb-12">Nuestros opositores nos avalan.</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {testimonials.map((testimonial) => (
-                <div key={testimonial.name} className="bg-white p-6 rounded-lg border border-gray-200 flex flex-col">
-                  <div className="flex items-center mb-4">
-                    <div className="flex items-center">
-                      {[...Array(testimonial.rating)].map((_, i) => <StarIcon key={i} className="w-5 h-5 text-yellow-400" />)}
-                      {[...Array(5 - testimonial.rating)].map((_, i) => <StarIcon key={i} className="w-5 h-5 text-gray-300" />)}
-                    </div>
-                  </div>
-                  <p className="text-dark flex-grow">&quot;{testimonial.text}&quot;</p>
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <p className="font-bold text-dark">{testimonial.name}</p>
-                    <p className="text-sm text-secondary">{testimonial.opo}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        {/* --- SECCIÓN DE RESEÑAS REEMPLAZADA POR CALL TO ACTION --- */}
+        <CallToAction />
 
         <section ref={faqRef} className="py-16 bg-white opacity-0 px-4" style={{ animationDelay: '150ms' }}>
           <div className="container mx-auto max-w-4xl">
