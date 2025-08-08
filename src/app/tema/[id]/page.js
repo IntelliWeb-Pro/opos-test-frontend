@@ -100,7 +100,6 @@ export default function TestPage() {
         })
         .then(data => {
           setPreguntas(data);
-          // --- CAMBIO CLAVE: Ya no se establece un tiempo inicial ---
           setLoading(false);
         })
         .catch(err => { setError(err.message); setLoading(false); });
@@ -110,12 +109,10 @@ export default function TestPage() {
     }
   }, [params.id, searchParams, token]);
 
-  // --- CAMBIO CLAVE: Nueva lógica para el cronómetro ---
   useEffect(() => {
-    // El cronómetro solo se activa cuando las preguntas han cargado y el test no ha terminado.
     if (!loading && !testTerminado && preguntas.length > 0) {
       const timer = setInterval(() => {
-        setTiempoTranscurrido(prev => prev + 1); // Cuenta hacia arriba
+        setTiempoTranscurrido(prev => prev + 1);
       }, 1000);
       return () => clearInterval(timer);
     }
@@ -140,13 +137,24 @@ export default function TestPage() {
   
   if (testTerminado) {
     if (cargandoResultados) { return <p className="text-center mt-20">Calculando resultados...</p>; }
+    
+    // --- LÓGICA AÑADIDA PARA FORMATEAR EL TIEMPO FINAL ---
+    const minutosFinales = Math.floor(tiempoTranscurrido / 60);
+    const segundosFinales = tiempoTranscurrido % 60;
+
     return (
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="bg-white p-8 rounded-lg shadow-md text-center mb-8 border border-gray-200">
           <h1 className="text-3xl font-bold text-dark">Resultados del Test</h1>
           {error && <p className="bg-red-100 text-red-700 p-3 rounded my-4">{error}</p>}
           <p className="text-xl mt-4 text-secondary">Tu puntuación:</p>
-          <p className="text-6xl font-bold my-4 text-primary">{puntuacion} / {preguntas.length}</p>
+          <p className="text-6xl font-bold my-2 text-primary">{puntuacion} / {preguntas.length}</p>
+          
+          {/* --- ELEMENTO AÑADIDO PARA MOSTRAR EL TIEMPO TOTAL --- */}
+          <p className="text-lg mt-2 mb-4 text-secondary">
+            Tiempo total: <span className="font-bold text-dark">{minutosFinales < 10 ? '0' : ''}{minutosFinales}:{segundosFinales < 10 ? '0' : ''}{segundosFinales}</span>
+          </p>
+
           <div className="flex justify-center space-x-4">
             <Link href="/progreso" className="mt-6 inline-block bg-secondary text-white px-6 py-2 rounded-md hover:bg-gray-600">Ver mi progreso</Link>
             <button onClick={() => window.location.reload()} className="mt-6 inline-block bg-primary text-white px-6 py-2 rounded-md hover:bg-primary-hover">Repetir Test</button>
@@ -179,7 +187,6 @@ export default function TestPage() {
     );
   }
   
-  // --- CAMBIO CLAVE: Lógica para mostrar el cronómetro ---
   const minutos = Math.floor(tiempoTranscurrido / 60);
   const segundos = tiempoTranscurrido % 60;
   const preguntaActual = preguntas[preguntaActualIndex];
@@ -189,7 +196,6 @@ export default function TestPage() {
       <div className="bg-white p-6 sm:p-8 rounded-lg shadow-md border border-gray-200">
         <div className="flex justify-between items-center mb-6">
           <span className="text-lg font-semibold text-dark">Pregunta {preguntaActualIndex + 1} de {preguntas.length}</span>
-          {/* --- CAMBIO CLAVE: El cronómetro ya no es rojo --- */}
           <span className="text-2xl font-bold text-dark">{minutos < 10 ? '0' : ''}{minutos}:{segundos < 10 ? '0' : ''}{segundos}</span>
         </div>
         <h2 className="text-2xl font-semibold text-dark mb-6">{preguntaActual.texto_pregunta}</h2>
