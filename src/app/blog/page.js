@@ -47,7 +47,7 @@ export default function BlogListPage() {
             </Link>
           ))
         ) : (
-          <p className="text-center text-secondary">No hay artículos publicados en este momento.</p>
+          <p className="text-center text-white">No hay artículos publicados en este momento.</p>
         )}
       </div>
     </div>
