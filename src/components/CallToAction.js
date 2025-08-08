@@ -12,14 +12,24 @@ const ArrowIcon = () => (
 
 export default function CallToAction() {
   return (
-    <section className="bg-gray-50 py-20 sm:py-24">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    // --- CAMBIOS PRINCIPALES AQUÍ ---
+    // 1. Añadimos clases para la imagen de fondo y la hacemos relativa para el overlay.
+    <section 
+        className="relative bg-cover bg-center py-20 sm:py-24"
+        style={{ backgroundImage: "url('https://i.postimg.cc/bJjxZvk5/fondo-cara-particula-52683-26467-Pica.png')" }}
+    >
+      {/* 2. Añadimos un 'overlay' semitransparente para oscurecer el fondo y que el texto resalte */}
+      <div className="absolute inset-0 bg-gray-900/60"></div>
+
+      {/* 3. Hacemos el contenido relativo para que se posicione por encima del overlay */}
+      <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+          {/* 4. Cambiamos los colores del texto a blanco para mejorar el contraste */}
+          <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
             Tu plaza está más cerca que nunca.
           </h2>
-          <p className="mt-6 text-lg leading-8 text-gray-600">
-            Utilizamos la Inteligencia Artificial y expertos en derecho para diseñar los test que más rápidamente te acercan a tu objetivo. <span className="font-semibold text-primary">Aprobar la oposición.</span>
+          <p className="mt-6 text-lg leading-8 text-gray-200">
+            Utilizamos la Inteligencia Artificial y expertos en derecho para diseñar los test que más rápidamente te acercan a tu objetivo. <span className="font-semibold text-white">Aprobar la oposición.</span>
           </p>
           <div className="mt-10 flex items-center justify-center gap-x-6">
             <Link
