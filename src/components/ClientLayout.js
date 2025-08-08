@@ -24,7 +24,7 @@ function Navbar() {
             <Link href="/contacto" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Contacto</Link>
             {user && <Link href="/ranking" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Ranking</Link>}
             {user && <Link href="/progreso" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Mi Progreso</Link>}
-            {user && <Link href="/refuerzo" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Refuerzo</Link>}
+
             
             {user ? (
               <div className="flex items-center space-x-4">
@@ -55,7 +55,6 @@ function Navbar() {
             <Link href="/contacto" className="text-gray-700 hover:text-primary block px-3 py-2 rounded-md text-base font-medium">Contacto</Link>
             {user && <Link href="/ranking" className="text-gray-700 hover:text-primary block px-3 py-2 rounded-md text-base font-medium">Ranking</Link>}
             {user && <Link href="/progreso" className="text-gray-700 hover:text-primary block px-3 py-2 rounded-md text-base font-medium">Mi Progreso</Link>}
-            {user && <Link href="/refuerzo" className="text-gray-700 hover:text-primary block px-3 py-2 rounded-md text-base font-medium">Refuerzo</Link>}
             <hr className="my-2 border-gray-200" />
             {user ? (
               <>
