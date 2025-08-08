@@ -5,8 +5,6 @@ import Link from 'next/link';
 import Head from 'next/head';
 import CallToAction from '@/components/CallToAction'; // Importamos el nuevo componente
 
-// El componente StarIcon y el array testimonials han sido eliminados.
-
 const useScrollAnimation = () => {
   const ref = useRef(null);
   useEffect(() => {
@@ -78,18 +76,14 @@ export default function HomePage() {
         return response.json();
       })
       .then(data => {
-        const filteredData = data.filter(opo =>
-          opo.nombre.includes("Auxiliar Administrativo del Estado") ||
-          opo.nombre.includes("Administrativo de la Administración del Estado")
-        );
-        setOposiciones(filteredData);
+        // Guardamos todas las oposiciones, ya que ahora las renderizamos dinámicamente
+        setOposiciones(data);
         setLoading(false);
       })
       .catch(error => { setError(error.message); setLoading(false); });
   }, []);
 
   const oposicionesRef = useScrollAnimation();
-  // La ref para las reseñas ha sido eliminada.
   const faqRef = useScrollAnimation();
 
   return (
@@ -125,24 +119,22 @@ export default function HomePage() {
       <div className="relative z-20 bg-light">
         <section ref={oposicionesRef} className="py-16 bg-light opacity-0 px-4" style={{ animationDelay: '200ms' }}>
           <div className="container mx-auto">
+            {/* --- SECCIÓN MODIFICADA PARA USAR SLUGS --- */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              <Link href="/auxiliar-administrativo" className="block bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-dark">Auxiliar Administrativo del Estado (C2)</h3>
-                  <p className="text-sm text-secondary mt-2">Accede a la guía y empieza a practicar.</p>
-                </div>
-              </Link>
-              <Link href="/administrativo" className="block bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-dark">Administrativo de la Administración del Estado (C1)</h3>
-                  <p className="text-sm text-secondary mt-2">Descubre todo sobre la oposición.</p>
-                </div>
-              </Link>
+              {loading && <p>Cargando oposiciones...</p>}
+              {error && <p className="text-red-500">{error}</p>}
+              {oposiciones.map(opo => (
+                <Link key={opo.id} href={`/oposicion/${opo.slug}`} className="block bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-dark">{opo.nombre}</h3>
+                    <p className="text-sm text-secondary mt-2">Accede a la guía y empieza a practicar.</p>
+                  </div>
+                </Link>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* --- SECCIÓN DE RESEÑAS REEMPLAZADA POR CALL TO ACTION --- */}
         <CallToAction />
 
         <section ref={faqRef} className="py-16 bg-white opacity-0 px-4" style={{ animationDelay: '150ms' }}>
