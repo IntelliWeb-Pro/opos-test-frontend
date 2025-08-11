@@ -77,10 +77,10 @@ export default function OposicionGuiaPage() {
                 <Link href={`/temario/${oposicion.slug}`} className="w-full sm:w-auto text-center bg-primary text-white px-8 py-3 rounded-md text-lg font-semibold hover:bg-primary-hover transition-colors">
                     Realizar Test por Temas
                 </Link>
-                <button disabled className="w-full sm:w-auto text-center bg-gray-400 text-white px-8 py-3 rounded-md text-lg font-semibold cursor-not-allowed" title="Próximamente">
+                <button disabled className="w-full sm:w-auto text-center bg-[#FBEA95] text-[#D6A519] px-8 py-3 rounded-md text-lg font-semibold cursor-not-allowed" title="Próximamente">
                     Test Oficial de Examen
                 </button>
-                <button disabled className="w-full sm:w-auto text-center bg-gray-400 text-white px-8 py-3 rounded-md text-lg font-semibold cursor-not-allowed" title="Próximamente">
+                <button disabled className="w-full sm:w-auto text-center bg-[#FBEA95] text-[#D6A519] px-8 py-3 rounded-md text-lg font-semibold cursor-not-allowed" title="Próximamente">
                     Test de Repaso
                 </button>
             </div>
