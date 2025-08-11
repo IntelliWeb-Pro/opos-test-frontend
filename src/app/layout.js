@@ -1,6 +1,6 @@
 import "./globals.css";
 import ClientLayout from "@/components/ClientLayout";
-<meta name="apple-mobile-web-app-title" content="TestEstado" />
+
 // --- METADATA OPTIMIZADA PARA SEO ---
 export const metadata = {
   title: "TestEstado | Tests para Oposiciones de Administrativo C1 y C2",

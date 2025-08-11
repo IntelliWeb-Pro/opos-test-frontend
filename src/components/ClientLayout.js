@@ -3,10 +3,10 @@
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import Link from 'next/link';
 import { useState } from "react";
+import Head from 'next/head'; // <-- 1. IMPORTAMOS EL COMPONENTE HEAD
 
 // --- Componente de Navegación RESPONSIVO ---
 function Navbar() {
-  // --- OBTENEMOS EL ESTADO DE SUSCRIPCIÓN ---
   const { user, logout, isSubscribed } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -28,8 +28,6 @@ function Navbar() {
             {user ? (
               <div className="flex items-center space-x-4">
                 <span className="text-gray-700 text-sm">Hola, {user.username}</span>
-                {/* --- LÓGICA CONDICIONAL AÑADIDA --- */}
-                {/* Muestra el botón solo si el usuario ha iniciado sesión Y NO está suscrito */}
                 {!isSubscribed && (
                   <Link href="/precios" className="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-hover transition-colors">
                     Subscríbete
@@ -65,7 +63,6 @@ function Navbar() {
             {user ? (
               <>
                 <div className="px-3 py-2 text-gray-700">Hola, {user.username}</div>
-                {/* --- LÓGICA CONDICIONAL AÑADIDA --- */}
                 {!isSubscribed && (
                   <Link href="/precios" className="bg-primary text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-primary-hover">Subscríbete</Link>
                 )}
@@ -85,7 +82,6 @@ function Navbar() {
   );
 }
 
-// ... (El resto del archivo: Footer y RootLayout no cambian)
 function Footer() {
     return (
         <footer className="bg-white mt-16">
@@ -108,6 +104,17 @@ function Footer() {
 export default function ClientLayout({ children }) {
     return (
         <AuthProvider>
+            {/* --- 2. AÑADIMOS EL COMPONENTE HEAD --- */}
+            <Head>
+                <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+                <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+                <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+                <link rel="manifest" href="/site.webmanifest" />
+                <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#007bff" />
+                <meta name="msapplication-TileColor" content="#ffffff" />
+                <meta name="theme-color" content="#ffffff" />
+                <meta name="apple-mobile-web-app-title" content="TestEstado" />
+            </Head>
             <div className="flex flex-col min-h-screen">
                 <Navbar />
                 <main className="flex-grow">
