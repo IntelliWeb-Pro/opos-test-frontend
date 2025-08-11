@@ -17,8 +17,27 @@ const podiumStyles = [
     { rank: 3, color: 'text-yellow-600', height: 'h-40', order: 'order-3 md:order-3' },
 ];
 
+// --- NUEVO COMPONENTE: El overlay para usuarios no suscritos ---
+const PremiumOverlay = () => (
+    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm p-8 text-center rounded-lg">
+        <div className="bg-white p-8 rounded-lg shadow-xl border border-gray-200">
+            <h2 className="text-2xl font-bold text-dark">Accede al Ranking Completo</h2>
+            <p className="mt-2 text-secondary max-w-sm">
+                Conviértete en premium para ver tu posición y compararte con los mejores opositores de la semana.
+            </p>
+            <Link 
+                href="/precios" 
+                className="mt-6 inline-block bg-yellow-500 text-white px-8 py-3 rounded-md text-lg font-semibold hover:bg-yellow-600 transition-colors shadow-lg"
+            >
+                Subscríbete Ahora
+            </Link>
+        </div>
+    </div>
+);
+
 export default function RankingPage() {
-  const { user, token } = useAuth();
+  // --- Obtenemos el estado de la suscripción ---
+  const { user, token, isSubscribed } = useAuth();
   const [rankingData, setRankingData] = useState({ podium: [], user_rank: null });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -72,49 +91,58 @@ export default function RankingPage() {
         <h1 className="text-4xl font-bold text-white">Podio de la Semana</h1>
         <p className="text-lg text-white mt-2">Los 3 opositores con el mejor porcentaje de aciertos (Lunes a Domingo).</p>
       </header>
+      
+      {/* --- Contenedor Principal Relativo --- */}
+      <div className="relative">
+        
+        {/* --- LÓGICA CONDICIONAL: Mostramos el overlay si el usuario no está suscrito --- */}
+        {!isSubscribed && <PremiumOverlay />}
 
-      {error || rankingData.podium.length === 0 ? (
-        <div className="bg-white p-8 rounded-lg shadow-md text-center border border-gray-200">
-            <h2 className="text-2xl font-bold text-dark">Ranking en construcción</h2>
-            <p className="mt-2 text-secondary">{error || "Aún no hay suficientes datos para generar el ranking de esta semana. ¡Sigue practicando!"}</p>
-        </div>
-      ) : (
-        <>
-          <div className="flex flex-col md:flex-row items-end justify-center gap-4">
-              {podiumStyles.map((style) => {
-                  const userData = rankingData.podium[style.rank - 1];
-                  return userData ? (
-                      <div key={style.rank} className={`w-full md:w-1/4 bg-white p-6 rounded-lg shadow-lg border border-gray-200 text-center ${style.order} flex flex-col justify-end ${style.height}`}>
-                          <MedalIcon color={style.color} />
-                          <h3 className="text-2xl font-bold text-dark mt-4">{userData.username}</h3>
-                          <p className="text-4xl font-extrabold text-primary mt-2">{userData.porcentaje_aciertos}%</p>
-                          <p className="text-secondary">de aciertos</p>
-                      </div>
-                  ) : null;
-              })}
-          </div>
-
-          {/* --- SECCIÓN DE POSICIÓN DEL USUARIO --- */}
-          {rankingData.user_rank && (
-            <div className="mt-16">
-                <h2 className="text-3xl font-bold text-center mb-6 text-white">Tu Posición</h2>
-                <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-lg border-2 border-primary flex items-center justify-between">
-                    <div className="flex items-center">
-                        <div className="text-4xl font-bold text-primary mr-4">#{rankingData.user_rank.rank}</div>
-                        <div>
-                            <p className="text-xl font-bold text-dark">{rankingData.user_rank.username}</p>
-                            <p className="text-secondary">¡Sigue así!</p>
-                        </div>
-                    </div>
-                    <div className="text-right">
-                        <p className="text-3xl font-extrabold text-primary">{rankingData.user_rank.porcentaje_aciertos}%</p>
-                        <p className="text-secondary">de aciertos</p>
-                    </div>
+        {/* El contenido del ranking se desvanecerá si no es premium */}
+        <div className={!isSubscribed ? 'opacity-50' : ''}>
+            {error || rankingData.podium.length === 0 ? (
+              <div className="bg-white p-8 rounded-lg shadow-md text-center border border-gray-200">
+                  <h2 className="text-2xl font-bold text-dark">Ranking en construcción</h2>
+                  <p className="mt-2 text-secondary">{error || "Aún no hay suficientes datos para generar el ranking de esta semana. ¡Sigue practicando!"}</p>
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-col md:flex-row items-end justify-center gap-4">
+                    {podiumStyles.map((style) => {
+                        const userData = rankingData.podium[style.rank - 1];
+                        return userData ? (
+                            <div key={style.rank} className={`w-full md:w-1/4 bg-white p-6 rounded-lg shadow-lg border border-gray-200 text-center ${style.order} flex flex-col justify-end ${style.height}`}>
+                                <MedalIcon color={style.color} />
+                                <h3 className="text-2xl font-bold text-dark mt-4">{userData.username}</h3>
+                                <p className="text-4xl font-extrabold text-primary mt-2">{userData.porcentaje_aciertos}%</p>
+                                <p className="text-secondary">de aciertos</p>
+                            </div>
+                        ) : null;
+                    })}
                 </div>
-            </div>
-          )}
-        </>
-      )}
+
+                {rankingData.user_rank && (
+                  <div className="mt-16">
+                      <h2 className="text-3xl font-bold text-center mb-6 text-white">Tu Posición</h2>
+                      <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-lg border-2 border-primary flex items-center justify-between">
+                          <div className="flex items-center">
+                              <div className="text-4xl font-bold text-primary mr-4">#{rankingData.user_rank.rank}</div>
+                              <div>
+                                  <p className="text-xl font-bold text-dark">{rankingData.user_rank.username}</p>
+                                  <p className="text-secondary">¡Sigue así!</p>
+                              </div>
+                          </div>
+                          <div className="text-right">
+                              <p className="text-3xl font-extrabold text-primary">{rankingData.user_rank.porcentaje_aciertos}%</p>
+                              <p className="text-secondary">de aciertos</p>
+                          </div>
+                      </div>
+                  </div>
+                )}
+              </>
+            )}
+        </div>
+      </div>
     </div>
   );
 }
