@@ -98,8 +98,8 @@ export default function RankingPage() {
         {/* --- LÓGICA CONDICIONAL: Mostramos el overlay si el usuario no está suscrito --- */}
         {!isSubscribed && <PremiumOverlay />}
 
-        {/* --- CAMBIO CLAVE: El contenido del ranking se desvanecerá y se bloqueará si no es premium --- */}
-        <div className={!isSubscribed ? 'opacity-50 blur-sm pointer-events-none' : ''}>
+        {/* --- CAMBIO CLAVE: El contenido del ranking ahora solo se bloquea, el efecto visual lo hace el overlay --- */}
+        <div className={!isSubscribed ? 'pointer-events-none' : ''}>
             {error || rankingData.podium.length === 0 ? (
               <div className="bg-white p-8 rounded-lg shadow-md text-center border border-gray-200">
                   <h2 className="text-2xl font-bold text-dark">Ranking en construcción</h2>
