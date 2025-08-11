@@ -36,7 +36,6 @@ const PremiumOverlay = () => (
 );
 
 export default function RankingPage() {
-  // --- Obtenemos el estado de la suscripción ---
   const { user, token, isSubscribed } = useAuth();
   const [rankingData, setRankingData] = useState({ podium: [], user_rank: null });
   const [loading, setLoading] = useState(true);
@@ -86,20 +85,20 @@ export default function RankingPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <header className="mb-12 text-center">
-        <h1 className="text-4xl font-bold text-white">Podio de la Semana</h1>
-        <p className="text-lg text-white mt-2">Los 3 opositores con el mejor porcentaje de aciertos (Lunes a Domingo).</p>
-      </header>
+    // --- CAMBIO CLAVE: El contenedor principal ahora es el relativo ---
+    <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       
-      {/* --- Contenedor Principal Relativo --- */}
-      <div className="relative">
-        
-        {/* --- LÓGICA CONDICIONAL: Mostramos el overlay si el usuario no está suscrito --- */}
-        {!isSubscribed && <PremiumOverlay />}
+      {/* --- LÓGICA CONDICIONAL: Mostramos el overlay si el usuario no está suscrito --- */}
+      {!isSubscribed && <PremiumOverlay />}
 
-        {/* --- CAMBIO CLAVE: El contenido del ranking ahora solo se bloquea, el efecto visual lo hace el overlay --- */}
-        <div className={!isSubscribed ? 'pointer-events-none' : ''}>
+      {/* --- Este div ahora envuelve todo el contenido y aplica el efecto --- */}
+      <div className={!isSubscribed ? 'opacity-50 blur-sm pointer-events-none' : ''}>
+        <header className="mb-12 text-center">
+          <h1 className="text-4xl font-bold text-white">Podio de la Semana</h1>
+          <p className="text-lg text-white mt-2">Los 3 opositores con el mejor porcentaje de aciertos (Lunes a Domingo).</p>
+        </header>
+        
+        <div>
             {error || rankingData.podium.length === 0 ? (
               <div className="bg-white p-8 rounded-lg shadow-md text-center border border-gray-200">
                   <h2 className="text-2xl font-bold text-dark">Ranking en construcción</h2>
