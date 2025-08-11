@@ -5,12 +5,19 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 
-// Se ha eliminado la constante TIEMPO_POR_PREGUNTA
+// --- Componente para el aviso de contenido premium ---
+const PremiumNotice = () => (
+    <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 mb-8 rounded-r-lg shadow-sm" role="alert">
+        <p className="font-bold">Estás viendo una muestra de un tema Premium</p>
+        <p className="mt-1">Solo tienes acceso a 5 preguntas. <Link href="/precios" className="font-bold underline hover:text-yellow-900">Subscríbete ahora</Link> para desbloquear el test completo y todo nuestro contenido.</p>
+    </div>
+);
 
 export default function TestPage() {
   const params = useParams();
   const searchParams = useSearchParams();
-  const { user, token } = useAuth();
+  // --- 1. Obtenemos el estado de la suscripción ---
+  const { user, token, isSubscribed } = useAuth();
   
   const [preguntas, setPreguntas] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,9 +28,10 @@ export default function TestPage() {
   const [puntuacion, setPuntuacion] = useState(0);
   const [cargandoResultados, setCargandoResultados] = useState(false);
   const [datosCorreccion, setDatosCorreccion] = useState([]);
-  
-  // --- CAMBIO CLAVE: De cuenta atrás a cronómetro ---
   const [tiempoTranscurrido, setTiempoTranscurrido] = useState(0);
+  
+  // --- 2. Nuevo estado para guardar los datos del tema ---
+  const [tema, setTema] = useState(null);
 
   const terminarTest = useCallback(async () => {
     if (testTerminado) return;
@@ -85,24 +93,36 @@ export default function TestPage() {
     if (params.id && token) {
       setLoading(true);
       const modo = searchParams.get('modo');
-      let apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/preguntas/?tema=${params.id}`;
+      
+      // --- 3. Preparamos las dos llamadas a la API ---
+      const temaApiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/temas/${params.id}/`;
+      let preguntasApiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/preguntas/?tema=${params.id}`;
 
       if (modo === 'repaso') {
           apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/preguntas/repaso/?tema=${params.id}`;
       }
       
-      fetch(apiUrl, {
-          headers: { 'Authorization': `Bearer ${token}` }
+      // --- 4. Hacemos las dos llamadas a la vez ---
+      Promise.all([
+        fetch(temaApiUrl, { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch(preguntasApiUrl, { headers: { 'Authorization': `Bearer ${token}` } })
+      ])
+      .then(async ([temaRes, preguntasRes]) => {
+          if (!temaRes.ok) throw new Error('No se pudo cargar la información del tema.');
+          if (!preguntasRes.ok) throw new Error('No se pudieron cargar las preguntas.');
+          
+          const temaData = await temaRes.json();
+          const preguntasData = await preguntasRes.json();
+          
+          return { temaData, preguntasData };
       })
-        .then(res => {
-          if (!res.ok) throw new Error('No se pudieron cargar las preguntas.');
-          return res.json();
-        })
-        .then(data => {
-          setPreguntas(data);
+      .then(({ temaData, preguntasData }) => {
+          setTema(temaData);
+          setPreguntas(preguntasData);
           setLoading(false);
-        })
-        .catch(err => { setError(err.message); setLoading(false); });
+      })
+      .catch(err => { setError(err.message); setLoading(false); });
+
     } else if (!token) {
         setLoading(false);
         setError("Necesitas iniciar sesión para hacer un test.");
@@ -138,7 +158,6 @@ export default function TestPage() {
   if (testTerminado) {
     if (cargandoResultados) { return <p className="text-center mt-20">Calculando resultados...</p>; }
     
-    // --- LÓGICA AÑADIDA PARA FORMATEAR EL TIEMPO FINAL ---
     const minutosFinales = Math.floor(tiempoTranscurrido / 60);
     const segundosFinales = tiempoTranscurrido % 60;
 
@@ -150,7 +169,6 @@ export default function TestPage() {
           <p className="text-xl mt-4 text-secondary">Tu puntuación:</p>
           <p className="text-6xl font-bold my-2 text-primary">{puntuacion} / {preguntas.length}</p>
           
-          {/* --- ELEMENTO AÑADIDO PARA MOSTRAR EL TIEMPO TOTAL --- */}
           <p className="text-lg mt-2 mb-4 text-secondary">
             Tiempo total: <span className="font-bold text-dark">{minutosFinales < 10 ? '0' : ''}{minutosFinales}:{segundosFinales < 10 ? '0' : ''}{segundosFinales}</span>
           </p>
@@ -193,6 +211,9 @@ export default function TestPage() {
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* --- 5. Mostramos el aviso si es un tema premium y el usuario no está suscrito --- */}
+      {tema?.es_premium && !isSubscribed && <PremiumNotice />}
+
       <div className="bg-white p-6 sm:p-8 rounded-lg shadow-md border border-gray-200">
         <div className="flex justify-between items-center mb-6">
           <span className="text-lg font-semibold text-dark">Pregunta {preguntaActualIndex + 1} de {preguntas.length}</span>

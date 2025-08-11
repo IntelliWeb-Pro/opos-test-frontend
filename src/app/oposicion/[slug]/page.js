@@ -3,15 +3,23 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext'; // <-- 1. Importamos el contexto de autenticación
+
+// --- Componente para la etiqueta "Premium" ---
+const PremiumBadge = () => (
+    <span className="ml-2 text-xs font-semibold bg-yellow-400 text-yellow-800 px-2 py-0.5 rounded-full">
+        Premium
+    </span>
+);
 
 export default function OposicionPage() {
   const params = useParams();
+  const { isSubscribed } = useAuth(); // <-- 2. Obtenemos el estado de la suscripción del usuario
   const [oposicion, setOposicion] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // --- CAMBIO CLAVE: Usamos params.slug en lugar de params.id ---
     const slug = params.slug;
     if (slug) {
       fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/oposiciones/${slug}/`)
@@ -22,7 +30,7 @@ export default function OposicionPage() {
         .then(data => { setOposicion(data); setLoading(false); })
         .catch(error => { setError(error.message); setLoading(false); });
     }
-  }, [params.slug]); // La dependencia ahora es el slug
+  }, [params.slug]);
 
   if (loading) return <p className="text-center mt-20">Cargando temas...</p>;
   if (error) return <p className="text-center mt-20 text-red-600">Error: {error}</p>;
@@ -47,11 +55,22 @@ export default function OposicionPage() {
                     <div className="flex flex-col sm:flex-row justify-between items-center">
                       <span className="text-lg text-dark font-semibold text-center sm:text-left">
                         Tema {tema.numero}. {tema.nombre_oficial}
+                        {/* --- 3. Mostramos la etiqueta si el tema es premium --- */}
+                        {tema.es_premium && <PremiumBadge />}
                       </span>
                       <div className="flex space-x-2 mt-3 sm:mt-0">
-                        <Link href={`/tema/${tema.id}`} className="text-center bg-primary text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-primary-hover transition-colors">
-                          Realizar Test
-                        </Link>
+                        {/* --- 4. Lógica condicional para el botón --- */}
+                        {(!tema.es_premium || isSubscribed) ? (
+                          // Si el tema es GRATIS o el usuario ESTÁ suscrito
+                          <Link href={`/tema/${tema.id}`} className="text-center bg-primary text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-primary-hover transition-colors">
+                            Realizar Test
+                          </Link>
+                        ) : (
+                          // Si el tema es PREMIUM y el usuario NO está suscrito
+                          <Link href="/precios" className="text-center bg-yellow-500 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-yellow-600 transition-colors">
+                            Subscríbete
+                          </Link>
+                        )}
                       </div>
                     </div>
                   </li>
