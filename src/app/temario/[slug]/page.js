@@ -8,9 +8,10 @@ import Link from 'next/link';
 const InfoCard = ({ title, content, buttonLink, buttonText }) => (
     <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 flex flex-col">
         <h3 className="text-xl font-bold text-primary mb-3">{title}</h3>
-        {/* --- CAMBIO CLAVE: Usamos dangerouslySetInnerHTML --- */}
+        {/* --- CAMBIO CLAVE: Se eliminan las clases 'prose' y se usa un div simple --- */}
+        {/* Esto asegura que el HTML se renderice siempre, incluso sin el plugin de tipografía de Tailwind */}
         <div 
-            className="space-y-2 text-secondary flex-grow prose prose-sm max-w-none"
+            className="space-y-2 text-secondary flex-grow max-w-none"
             dangerouslySetInnerHTML={{ __html: content }}
         />
         {buttonLink && (
