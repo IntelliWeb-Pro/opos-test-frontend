@@ -27,7 +27,6 @@ const PremiumOverlay = () => (
 
 
 export default function ProgresoPage() {
-  // --- Obtenemos el estado de la suscripción ---
   const { user, token, isSubscribed } = useAuth();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -85,20 +84,20 @@ export default function ProgresoPage() {
   ];
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <header className="mb-12 text-center">
-        <h1 className="text-4xl font-bold text-white">Dashboard de Progreso</h1>
-        <p className="text-lg text-white mt-2">Analiza tu rendimiento y descubre tus puntos fuertes y débiles.</p>
-      </header>
-      
-      {/* --- Contenedor Principal Relativo --- */}
-      <div className="relative">
-        
-        {/* --- LÓGICA CONDICIONAL: Mostramos el overlay si el usuario no está suscrito --- */}
-        {!isSubscribed && <PremiumOverlay />}
+    // --- CAMBIO CLAVE: El contenedor principal ahora es el relativo ---
+    <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
-        {/* El contenido de las estadísticas se mantiene igual, pero se desvanecerá si no es premium */}
-        <div className={!isSubscribed ? 'opacity-50' : ''}>
+      {/* --- LÓGICA CONDICIONAL: Mostramos el overlay si el usuario no está suscrito --- */}
+      {!isSubscribed && <PremiumOverlay />}
+
+      {/* --- Este div ahora envuelve todo el contenido y aplica el efecto --- */}
+      <div className={!isSubscribed ? 'opacity-50 blur-sm pointer-events-none' : ''}>
+        <header className="mb-12 text-center">
+          <h1 className="text-4xl font-bold text-white">Dashboard de Progreso</h1>
+          <p className="text-lg text-white mt-2">Analiza tu rendimiento y descubre tus puntos fuertes y débiles.</p>
+        </header>
+        
+        <div>
             {stats.puntos_debiles && stats.puntos_debiles.length > 0 && (
               <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-lg shadow-md mb-8">
                   <h2 className="text-2xl font-bold text-red-800">Temas a Reforzar</h2>
