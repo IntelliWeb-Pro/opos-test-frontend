@@ -69,10 +69,10 @@ export default function PreciosPage() {
         </div>
 
         <ul className="text-left space-y-3 text-dark">
-          <li className="flex items-center"><span className="text-success mr-2">✔</span> Todas las oposiciones</li>
-          <li className="flex items-center"><span className="text-success mr-2">✔</span> Preguntas ilimitadas</li>
+          <li className="flex items-center"><span className="text-success mr-2">✔</span> Preguntas ilimitadas y actualizadas</li>
           <li className="flex items-center"><span className="text-success mr-2">✔</span> Justificaciones detalladas</li>
           <li className="flex items-center"><span className="text-success mr-2">✔</span> Seguimiento de progreso</li>
+          <li className="flex items-center"><span className="text-success mr-2">✔</span> Comparte con otros usuarios</li>
         </ul>
 
         {/* --- CASILLA DE DESISTIMIENTO AÑADIDA --- */}
