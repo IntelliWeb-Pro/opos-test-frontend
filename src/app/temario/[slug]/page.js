@@ -4,35 +4,42 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
-// --- Función de ayuda para decodificar HTML ---
-// Esta función convierte los códigos seguros (ej: &lt;) de nuevo a caracteres HTML (ej: <)
-const decodeHtml = (html) => {
-    if (typeof window === 'undefined') {
-        return html; // Evita errores en el servidor
-    }
-    const txt = document.createElement("textarea");
-    txt.innerHTML = html;
-    return txt.value;
-};
-
 // --- Componente para las tarjetas de información (modificado) ---
-const InfoCard = ({ title, content, buttonLink, buttonText }) => (
-    <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 flex flex-col">
-        <h3 className="text-xl font-bold text-primary mb-3">{title}</h3>
-        <div 
-            className="space-y-2 text-secondary flex-grow max-w-none"
-            // Ahora usamos la función 'decodeHtml' antes de renderizar
-            dangerouslySetInnerHTML={{ __html: decodeHtml(content) }}
-        />
-        {buttonLink && (
-            <div className="mt-4">
-                <a href={buttonLink} target="_blank" rel="noopener noreferrer" className="inline-block bg-gray-200 text-gray-800 px-4 py-2 rounded-md text-sm font-semibold hover:bg-gray-300 transition-colors">
-                    {buttonText || 'Ver más'}
-                </a>
-            </div>
-        )}
-    </div>
-);
+const InfoCard = ({ title, content, buttonLink, buttonText }) => {
+    // --- CAMBIO CLAVE: Usamos un estado y useEffect para decodificar en el cliente ---
+    const [decodedContent, setDecodedContent] = useState('');
+
+    useEffect(() => {
+        // Esta función convierte los códigos seguros (ej: &lt;) de nuevo a caracteres HTML (ej: <)
+        // y se ejecuta solo en el navegador para evitar errores de renderizado.
+        const decodeHtml = (html) => {
+            const txt = document.createElement("textarea");
+            txt.innerHTML = html;
+            return txt.value;
+        };
+        
+        if (content) {
+            setDecodedContent(decodeHtml(content));
+        }
+    }, [content]);
+
+    return (
+        <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 flex flex-col">
+            <h3 className="text-xl font-bold text-primary mb-3">{title}</h3>
+            <div 
+                className="space-y-2 text-secondary flex-grow max-w-none"
+                dangerouslySetInnerHTML={{ __html: decodedContent }}
+            />
+            {buttonLink && (
+                <div className="mt-4">
+                    <a href={buttonLink} target="_blank" rel="noopener noreferrer" className="inline-block bg-gray-200 text-gray-800 px-4 py-2 rounded-md text-sm font-semibold hover:bg-gray-300 transition-colors">
+                        {buttonText || 'Ver más'}
+                    </a>
+                </div>
+            )}
+        </div>
+    );
+};
 
 export default function OposicionGuiaPage() {
   const params = useParams();
