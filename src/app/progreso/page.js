@@ -7,8 +7,28 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 
 const PIE_COLORS = ['#007bff', '#dc3545'];
 
+// --- NUEVO COMPONENTE: El overlay para usuarios no suscritos ---
+const PremiumOverlay = () => (
+    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm p-8 text-center rounded-lg">
+        <div className="bg-white p-8 rounded-lg shadow-xl border border-gray-200">
+            <h2 className="text-2xl font-bold text-dark">Desbloquea tu Progreso Completo</h2>
+            <p className="mt-2 text-secondary max-w-sm">
+                Conviértete en premium para acceder a todas tus estadísticas, analizar tus puntos débiles y ver tu evolución.
+            </p>
+            <Link 
+                href="/precios" 
+                className="mt-6 inline-block bg-yellow-500 text-white px-8 py-3 rounded-md text-lg font-semibold hover:bg-yellow-600 transition-colors shadow-lg"
+            >
+                Subscríbete Ahora
+            </Link>
+        </div>
+    </div>
+);
+
+
 export default function ProgresoPage() {
-  const { user, token } = useAuth();
+  // --- Obtenemos el estado de la suscripción ---
+  const { user, token, isSubscribed } = useAuth();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -70,76 +90,84 @@ export default function ProgresoPage() {
         <h1 className="text-4xl font-bold text-white">Dashboard de Progreso</h1>
         <p className="text-lg text-white mt-2">Analiza tu rendimiento y descubre tus puntos fuertes y débiles.</p>
       </header>
+      
+      {/* --- Contenedor Principal Relativo --- */}
+      <div className="relative">
+        
+        {/* --- LÓGICA CONDICIONAL: Mostramos el overlay si el usuario no está suscrito --- */}
+        {!isSubscribed && <PremiumOverlay />}
 
-      {/* --- NUEVA SECCIÓN DE PUNTOS DÉBILES --- */}
-      {stats.puntos_debiles && stats.puntos_debiles.length > 0 && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-lg shadow-md mb-8">
-            <h2 className="text-2xl font-bold text-red-800">Temas a Reforzar</h2>
-            <p className="text-red-700 mt-1">Estos son los temas con tu porcentaje de aciertos más bajo. ¡Concéntrate en ellos!</p>
-            <ul className="space-y-3 mt-4">
-                {stats.puntos_debiles.map((item) => (
-                    <li key={item.tema_id} className="flex flex-col sm:flex-row justify-between items-center p-3 bg-white rounded-md border">
-                        <div>
-                            <p className="font-semibold text-dark">{item.tema}</p>
-                            <p className="text-sm text-secondary">{item.oposicion}</p>
-                        </div>
-                        <div className="flex items-center mt-2 sm:mt-0">
-                            <span className="font-bold text-lg text-red-600 mr-4">{item.media}%</span>
-                            <Link href={`/tema/${item.tema_id}`} className="bg-primary text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-primary-hover transition-colors">
-                                Hacer Test
-                            </Link>
-                        </div>
-                    </li>
-                ))}
-            </ul>
-        </div>
-      )}
+        {/* El contenido de las estadísticas se mantiene igual, pero se desvanecerá si no es premium */}
+        <div className={!isSubscribed ? 'opacity-50' : ''}>
+            {stats.puntos_debiles && stats.puntos_debiles.length > 0 && (
+              <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-lg shadow-md mb-8">
+                  <h2 className="text-2xl font-bold text-red-800">Temas a Reforzar</h2>
+                  <p className="text-red-700 mt-1">Estos son los temas con tu porcentaje de aciertos más bajo. ¡Concéntrate en ellos!</p>
+                  <ul className="space-y-3 mt-4">
+                      {stats.puntos_debiles.map((item) => (
+                          <li key={item.tema_id} className="flex flex-col sm:flex-row justify-between items-center p-3 bg-white rounded-md border">
+                              <div>
+                                  <p className="font-semibold text-dark">{item.tema}</p>
+                                  <p className="text-sm text-secondary">{item.oposicion}</p>
+                              </div>
+                              <div className="flex items-center mt-2 sm:mt-0">
+                                  <span className="font-bold text-lg text-red-600 mr-4">{item.media}%</span>
+                                  <Link href={`/tema/${item.tema_id}`} className="bg-primary text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-primary-hover transition-colors">
+                                      Hacer Test
+                                  </Link>
+                              </div>
+                          </li>
+                      ))}
+                  </ul>
+              </div>
+            )}
 
-      {/* --- GRÁFICOS (como antes) --- */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-        <div className="lg:col-span-1 bg-white p-6 rounded-lg shadow-md border border-gray-200 text-center flex flex-col justify-center">
-            <h2 className="text-xl font-semibold text-dark">Aciertos General</h2>
-            <p className="text-6xl font-bold text-primary mt-2">{stats.media_general}%</p>
-        </div>
-        <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-md border border-gray-200">
-            <h2 className="text-xl font-semibold text-dark mb-4 text-center">Resumen Total</h2>
-            <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                    <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
-                        {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />)}
-                    </Pie>
-                    <Tooltip formatter={(value) => `${value} preguntas`} />
-                    <Legend />
-                </PieChart>
-            </ResponsiveContainer>
-        </div>
-      </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+              <div className="lg:col-span-1 bg-white p-6 rounded-lg shadow-md border border-gray-200 text-center flex flex-col justify-center">
+                  <h2 className="text-xl font-semibold text-dark">Aciertos General</h2>
+                  <p className="text-6xl font-bold text-primary mt-2">{stats.media_general}%</p>
+              </div>
+              <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                  <h2 className="text-xl font-semibold text-dark mb-4 text-center">Resumen Total</h2>
+                  <ResponsiveContainer width="100%" height={250}>
+                      <PieChart>
+                          <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                              {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />)}
+                          </Pie>
+                          <Tooltip formatter={(value) => `${value} preguntas`} />
+                          <Legend />
+                      </PieChart>
+                  </ResponsiveContainer>
+              </div>
+            </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-          <h2 className="text-xl font-semibold text-dark mb-4">Rendimiento por Oposición</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={stats.stats_por_oposicion} layout="vertical" margin={{ top: 5, right: 30, left: 100, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis type="number" domain={[0, 100]} unit="%" />
-              <YAxis dataKey="oposicion" type="category" width={150} tick={{ fontSize: 12 }} />
-              <Tooltip formatter={(value) => `${value}%`} />
-              <Bar dataKey="media" name="Aciertos" fill="#007bff" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-          <h2 className="text-xl font-semibold text-dark mb-4">Evolución de Resultados (Últimos Tests)</h2>
-           <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={stats.historico_resultados} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                <h2 className="text-xl font-semibold text-dark mb-4">Rendimiento por Oposición</h2>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={stats.stats_por_oposicion} layout="vertical" margin={{ top: 5, right: 30, left: 100, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="fecha" />
-                    <YAxis domain={[0, 100]} unit="%" />
+                    <XAxis type="number" domain={[0, 100]} unit="%" />
+                    <YAxis dataKey="oposicion" type="category" width={150} tick={{ fontSize: 12 }} />
                     <Tooltip formatter={(value) => `${value}%`} />
-                    <Legend />
-                    <Line type="monotone" dataKey="nota" name="Nota Media" stroke="#28a745" strokeWidth={2} />
-                </LineChart>
-           </ResponsiveContainer>
+                    <Bar dataKey="media" name="Aciertos" fill="#007bff" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                <h2 className="text-xl font-semibold text-dark mb-4">Evolución de Resultados (Últimos Tests)</h2>
+                  <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={stats.historico_resultados} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="fecha" />
+                          <YAxis domain={[0, 100]} unit="%" />
+                          <Tooltip formatter={(value) => `${value}%`} />
+                          <Legend />
+                          <Line type="monotone" dataKey="nota" name="Nota Media" stroke="#28a745" strokeWidth={2} />
+                      </LineChart>
+                  </ResponsiveContainer>
+              </div>
+            </div>
         </div>
       </div>
     </div>
