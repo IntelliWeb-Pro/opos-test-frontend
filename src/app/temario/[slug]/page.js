@@ -3,46 +3,18 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext'; // <-- 1. Importamos el contexto de autenticación
 
-// --- Componente para las tarjetas de información (modificado) ---
-const InfoCard = ({ title, content, buttonLink, buttonText }) => {
-    // --- CAMBIO CLAVE: Usamos un estado y useEffect para decodificar en el cliente ---
-    const [decodedContent, setDecodedContent] = useState('');
+// --- Componente para la etiqueta "Premium" ---
+const PremiumBadge = () => (
+    <span className="ml-2 text-xs font-semibold bg-yellow-400 text-yellow-800 px-2 py-0.5 rounded-full">
+        Premium
+    </span>
+);
 
-    useEffect(() => {
-        // Esta función convierte los códigos seguros (ej: &lt;) de nuevo a caracteres HTML (ej: <)
-        // y se ejecuta solo en el navegador para evitar errores de renderizado.
-        const decodeHtml = (html) => {
-            const txt = document.createElement("textarea");
-            txt.innerHTML = html;
-            return txt.value;
-        };
-        
-        if (content) {
-            setDecodedContent(decodeHtml(content));
-        }
-    }, [content]);
-
-    return (
-        <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 flex flex-col">
-            <h3 className="text-xl font-bold text-primary mb-3">{title}</h3>
-            <div 
-                className="space-y-2 text-secondary flex-grow max-w-none"
-                dangerouslySetInnerHTML={{ __html: decodedContent }}
-            />
-            {buttonLink && (
-                <div className="mt-4">
-                    <a href={buttonLink} target="_blank" rel="noopener noreferrer" className="inline-block bg-gray-200 text-gray-800 px-4 py-2 rounded-md text-sm font-semibold hover:bg-gray-300 transition-colors">
-                        {buttonText || 'Ver más'}
-                    </a>
-                </div>
-            )}
-        </div>
-    );
-};
-
-export default function OposicionGuiaPage() {
+export default function OposicionPage() {
   const params = useParams();
+  const { isSubscribed } = useAuth(); // <-- 2. Obtenemos el estado de la suscripción del usuario
   const [oposicion, setOposicion] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -60,51 +32,54 @@ export default function OposicionGuiaPage() {
     }
   }, [params.slug]);
 
-  if (loading) return <p className="text-center mt-20">Cargando guía de la oposición...</p>;
+  if (loading) return <p className="text-center mt-20">Cargando temas...</p>;
   if (error) return <p className="text-center mt-20 text-red-600">Error: {error}</p>;
   if (!oposicion) return <p className="text-center mt-20">No se encontró la oposición.</p>;
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <header className="mb-12 text-center">
-            <h1 className="text-4xl font-bold text-white">{oposicion.nombre}</h1>
-            <p className="text-lg text-white mt-2 max-w-3xl mx-auto">
-                {oposicion.descripcion_general || 'Aquí encontrarás toda la información clave para preparar y superar tu oposición con éxito.'}
-            </p>
-        </header>
-        
-        <div className="bg-light p-8 rounded-lg shadow-inner mb-12 text-center">
-            <h2 className="text-2xl font-bold text-dark">Elige tu modo de preparación</h2>
-            <p className="mt-2 text-secondary">Practica por temas, enfréntate a simulacros de examen o repasa tus puntos débiles.</p>
-            <div className="mt-6 flex flex-col sm:flex-row justify-center items-center gap-4">
-                <Link href={`/temario/${oposicion.slug}`} className="w-full sm:w-auto text-center bg-primary text-white px-8 py-3 rounded-md text-lg font-semibold hover:bg-primary-hover transition-colors">
-                    Realizar Test por Temas
-                </Link>
-                <button disabled className="w-full sm:w-auto text-center bg-gray-400 text-white px-8 py-3 rounded-md text-lg font-semibold cursor-not-allowed" title="Próximamente">
-                    Test Oficial de Examen
-                </button>
-                <button disabled className="w-full sm:w-auto text-center bg-gray-400 text-white px-8 py-3 rounded-md text-lg font-semibold cursor-not-allowed" title="Próximamente">
-                    Test de Repaso
-                </button>
+      <header className="mb-12 text-center">
+        <Link href="/" className="text-primary hover:underline text-sm">← Volver a todas las oposiciones</Link>
+        <h1 className="text-4xl font-bold text-white mt-4">{oposicion.nombre}</h1>
+        <p className="text-lg text-white mt-2">Selecciona un tema para empezar tu test</p>
+      </header>
+      
+      <div className="bg-white p-6 sm:p-8 rounded-lg shadow-md border border-gray-200 max-w-4xl mx-auto">
+        <div className="space-y-8">
+          {oposicion.bloques.map(bloque => (
+            <div key={bloque.id}>
+              <h2 className="text-2xl font-bold text-dark mb-4 border-b pb-2">Bloque {bloque.numero}: {bloque.nombre}</h2>
+              <ul className="space-y-4">
+                {bloque.temas.map(tema => (
+                  <li key={tema.id} className="bg-light p-4 rounded-lg border border-gray-200">
+                    <div className="flex flex-col sm:flex-row justify-between items-center">
+                      <span className="text-lg text-dark font-semibold text-center sm:text-left">
+                        Tema {tema.numero}. {tema.nombre_oficial}
+                        {/* --- 3. Mostramos la etiqueta si el tema es premium --- */}
+                        {tema.es_premium && <PremiumBadge />}
+                      </span>
+                      <div className="flex space-x-2 mt-3 sm:mt-0">
+                        {/* --- 4. Lógica condicional para el botón --- */}
+                        {(!tema.es_premium || isSubscribed) ? (
+                          // Si el tema es GRATIS o el usuario ESTÁ suscrito
+                          <Link href={`/tema/${tema.id}`} className="text-center bg-primary text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-primary-hover transition-colors">
+                            Realizar Test
+                          </Link>
+                        ) : (
+                          // Si el tema es PREMIUM y el usuario NO está suscrito
+                          <Link href="/precios" className="text-center bg-yellow-500 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-yellow-600 transition-colors">
+                            Subscríbete
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </div>
+          ))}
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <InfoCard 
-                title="Última Convocatoria"
-                content={oposicion.info_convocatoria || 'Información no disponible.'}
-                buttonLink={oposicion.url_boe}
-                buttonText="Ver Convocatoria en BOE"
-            />
-            <InfoCard 
-                title="Requisitos"
-                content={oposicion.requisitos || 'Información no disponible.'}
-            />
-            <InfoCard 
-                title="Destino y Promoción"
-                content={oposicion.info_adicional || 'Información no disponible.'}
-            />
-        </div>
+      </div>
     </div>
   );
 }
