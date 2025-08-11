@@ -4,22 +4,39 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
-// --- Componente para las tarjetas de información ---
-const InfoCard = ({ title, children, buttonLink, buttonText }) => (
-    <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 flex flex-col">
-        <h3 className="text-xl font-bold text-primary mb-3">{title}</h3>
-        <div className="space-y-2 text-secondary flex-grow">
-            {children}
+// --- Componente para las tarjetas de información (modificado) ---
+const InfoCard = ({ title, content, buttonLink, buttonText }) => {
+    const [decodedContent, setDecodedContent] = useState('');
+
+    useEffect(() => {
+        const decodeHtml = (html) => {
+            if (typeof window === 'undefined' || !html) return '';
+            const txt = document.createElement("textarea");
+            txt.innerHTML = html;
+            return txt.value;
+        };
+        
+        setDecodedContent(decodeHtml(content));
+    }, [content]);
+
+    return (
+        <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 flex flex-col">
+            <h3 className="text-xl font-bold text-primary mb-3">{title}</h3>
+            {/* --- CAMBIO CLAVE: Usamos la clase 'prose' para dar estilo al HTML --- */}
+            <div 
+                className="prose prose-sm max-w-none text-secondary flex-grow"
+                dangerouslySetInnerHTML={{ __html: decodedContent }}
+            />
+            {buttonLink && (
+                <div className="mt-4">
+                    <a href={buttonLink} target="_blank" rel="noopener noreferrer" className="inline-block bg-gray-200 text-gray-800 px-4 py-2 rounded-md text-sm font-semibold hover:bg-gray-300 transition-colors">
+                        {buttonText || 'Ver más'}
+                    </a>
+                </div>
+            )}
         </div>
-        {buttonLink && (
-            <div className="mt-4">
-                <a href={buttonLink} target="_blank" rel="noopener noreferrer" className="inline-block bg-gray-200 text-gray-800 px-4 py-2 rounded-md text-sm font-semibold hover:bg-gray-300 transition-colors">
-                    {buttonText || 'Ver más'}
-                </a>
-            </div>
-        )}
-    </div>
-);
+    );
+};
 
 export default function OposicionGuiaPage() {
   const params = useParams();
@@ -72,17 +89,18 @@ export default function OposicionGuiaPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <InfoCard 
                 title="Última Convocatoria"
+                content={oposicion.info_convocatoria || 'Información no disponible.'}
                 buttonLink={oposicion.url_boe}
                 buttonText="Ver Convocatoria en BOE"
-            >
-                <p>{oposicion.info_convocatoria || 'Información sobre las plazas, fechas clave y detalles de la última convocatoria oficial publicada en el Boletín Oficial del Estado.'}</p>
-            </InfoCard>
-            <InfoCard title="Requisitos">
-                <p>{oposicion.requisitos || 'Descubre los requisitos de nacionalidad, edad, titulación y capacidad que necesitas cumplir para poder presentarte a esta oposición.'}</p>
-            </InfoCard>
-            <InfoCard title="Destino y Promoción">
-                <p>{oposicion.info_adicional || 'Al ser una oposición nacional, se puede obtener destino en las dependencias de la Administración del Estado de cualquier capital de España o municipio importante. Los que consigan las mejores calificaciones podrán elegir, en su caso, destino. Quien obtenga la plaza fuera de su capital o provincia de residencia podrá obtener destino en ella, con el paso del tiempo, cuando cuente con suficientes puntos en el concurso de traslados. Por otra parte, el aspirante que obtenga su plaza, puede acceder a cuerpos superiores cada 2 años (es lo que se denomina promoción interna), siempre que tenga la titulación requerida y supere las pruebas selectivas.'}</p>
-            </InfoCard>
+            />
+            <InfoCard 
+                title="Requisitos"
+                content={oposicion.requisitos || 'Información no disponible.'}
+            />
+            <InfoCard 
+                title="Destino y Promoción"
+                content={oposicion.info_adicional || 'Información no disponible.'}
+            />
         </div>
     </div>
   );
