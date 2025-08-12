@@ -8,10 +8,18 @@ import Link from 'next/link';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
+// ⬇️ Mapa directo a las variables de entorno públicas por plan
+const PRICE_IDS = {
+  bronce:  process.env.NEXT_PUBLIC_STRIPE_PRICE_BRONCE,
+  plata:   process.env.NEXT_PUBLIC_STRIPE_PRICE_PLATA,
+  oro:     process.env.NEXT_PUBLIC_STRIPE_PRICE_ORO,
+  platino: process.env.NEXT_PUBLIC_STRIPE_PRICE_PLATINO,
+};
+
 const PLANS = [
-  { key: 'bronce', name: 'Bronce', pay: '1 mes', total: 6.99, perMonth: 6.99 },
-  { key: 'plata', name: 'Plata', pay: '3 meses', total: 15.99, perMonth: 5.33 },
-  { key: 'oro', name: 'Oro', pay: '6 meses', total: 22.99, perMonth: 3.83 },
+  { key: 'bronce',  name: 'Bronce',  pay: '1 mes',  total: 6.99,  perMonth: 6.99 },
+  { key: 'plata',   name: 'Plata',   pay: '3 meses', total: 15.99, perMonth: 5.33 },
+  { key: 'oro',     name: 'Oro',     pay: '6 meses', total: 22.99, perMonth: 3.83 },
   { key: 'platino', name: 'Platino', pay: '12 meses', total: 39.99, perMonth: 3.33 },
 ];
 
@@ -22,25 +30,37 @@ export default function PreciosPage() {
   const router = useRouter();
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [error, setError] = useState(null);
-  const [selected, setSelected] = useState('bronce');
 
   const handleSubscribe = async (planKey) => {
     if (!user) {
       router.push('/login');
       return;
     }
+
+    // ⬇️ Validamos que exista el price para ese plan en las envs públicas
+    const priceId = PRICE_IDS[planKey];
+    if (!priceId) {
+      setError(`Plan no disponible: falta configurar la variable para "${planKey}".`);
+      return;
+    }
+
     setIsSubscribing(true);
     setError(null);
+
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/create-checkout-session/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          // Mantengo tu header de auth tal cual
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ plan: planKey || selected }),
-        });
+        // ⬇️ Enviamos ambos: 'plan' (retrocompatibilidad) y 'price_id' (directo por env)
+        body: JSON.stringify({ plan: planKey, price_id: priceId }),
+      });
+
       if (!response.ok) throw new Error('No se pudo iniciar el proceso de pago. Inténtalo de nuevo.');
+
       const session = await response.json();
       const stripe = await stripePromise;
       const { error } = await stripe.redirectToCheckout({ sessionId: session.sessionId });
@@ -71,10 +91,10 @@ export default function PreciosPage() {
           <tbody>
             {PLANS.map(p => (
               <tr key={p.key} className="border-t">
-                <td className="px-4 py-3 font-semibold text-white mb-8">{p.name}</td>
-                <td className="px-4 py-3 text-white mb-8">{p.pay}</td>
-                <td className="px-4 py-3 font-bold text-white mb-8">{eur(p.total)}</td>
-                <td className="px-4 py-3 text-white mb-8">{eur(p.perMonth)}/m</td>
+                <td className="px-4 py-3 font-semibold text-white">{p.name}</td>
+                <td className="px-4 py-3 text-white">{p.pay}</td>
+                <td className="px-4 py-3 font-bold text-white">{eur(p.total)}</td>
+                <td className="px-4 py-3 text-white">{eur(p.perMonth)}/m</td>
                 <td className="px-4 py-3">
                   <button
                     onClick={() => handleSubscribe(p.key)}
