@@ -41,7 +41,7 @@ export default function PreciosPage() {
   ]), []);
 
   const handleSubscribe = async (planKey) => {
-    if (!user) { router.push('/login'); return; }
+    if (!user) { router.push('/registro'); return; }
 
     const priceId = PRICE_IDS[planKey];
     if (!priceId) { setError(`Plan no disponible: falta configurar la variable para "${planKey}".`); return; }
