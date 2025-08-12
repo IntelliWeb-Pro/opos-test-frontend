@@ -3,8 +3,9 @@
 import { useAuth } from '@/context/AuthContext';
 import { loadStripe } from '@stripe/stripe-js';
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
+import { gaEvent } from '@/lib/ga'; // ⬅️ nuevo
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
@@ -32,6 +33,9 @@ export default function PreciosPage() {
   const [error, setError] = useState(null);
   const [index, setIndex] = useState(0); // índice del slide activo
 
+  // ⬇️ page_view de la página de precios
+  useEffect(() => { gaEvent('view_pricing'); }, []);
+
   const plan = PLANS[index];
   const features = useMemo(() => ([
     'Preguntas ilimitadas y actualizadas',
@@ -45,6 +49,10 @@ export default function PreciosPage() {
 
     const priceId = PRICE_IDS[planKey];
     if (!priceId) { setError(`Plan no disponible: falta configurar la variable para "${planKey}".`); return; }
+
+    // ⬇️ eventos GA
+    gaEvent('select_plan', { plan: planKey });
+    gaEvent('checkout_init', { plan: planKey, price_id: priceId });
 
     setIsSubscribing(true);
     setError(null);
@@ -62,10 +70,15 @@ export default function PreciosPage() {
       if (!response.ok) throw new Error('No se pudo iniciar el proceso de pago. Inténtalo de nuevo.');
 
       const session = await response.json();
+
+      // ⬇️ sesión creada en backend
+      gaEvent('checkout_session_created', { plan: planKey });
+
       const stripe = await stripePromise;
       const { error } = await stripe.redirectToCheckout({ sessionId: session.sessionId });
       if (error) setError(error.message);
     } catch (err) {
+      gaEvent('checkout_error', { plan: planKey, message: err?.message || 'unknown' });
       setError(err.message || 'Error inesperado');
     } finally {
       setIsSubscribing(false);

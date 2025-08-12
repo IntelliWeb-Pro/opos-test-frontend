@@ -30,7 +30,7 @@ function Navbar() {
                 <span className="text-gray-700 text-sm">Hola, {user.username}</span>
                 {!isSubscribed && (
                   <Link href="/precios" className="bg-yellow-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-yellow-500 transition-colors">
-                    Prueba Gratis
+                    Subscríbete
                   </Link>
                 )}
                 <button onClick={logout} className="bg-secondary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-600 transition-colors">Cerrar Sesión</button>
