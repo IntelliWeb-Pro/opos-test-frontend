@@ -54,8 +54,8 @@ export default function PreciosPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
-      <h1 className="text-3xl font-bold text-center mb-6">Planes</h1>
-      <p className="text-center text-secondary mb-8">Empieza ahora con <strong>7 días gratis</strong>. Se te cobrará al finalizar la prueba si no cancelas.</p>
+      <h1 className="text-3xl font-bold text-center  text-white mb-8 ">Subscripción</h1>
+      <p className="text-center text-white mb-8">Empieza ahora con <strong>7 días gratis</strong></p>
 
       <div className="overflow-x-auto rounded-lg border border-gray-200">
         <table className="min-w-full text-left">
@@ -71,10 +71,10 @@ export default function PreciosPage() {
           <tbody>
             {PLANS.map(p => (
               <tr key={p.key} className="border-t">
-                <td className="px-4 py-3 font-semibold">{p.name}</td>
-                <td className="px-4 py-3">{p.pay}</td>
-                <td className="px-4 py-3 font-bold">{eur(p.total)}</td>
-                <td className="px-4 py-3">{eur(p.perMonth)}/m</td>
+                <td className="px-4 py-3 font-semibold text-white mb-8">{p.name}</td>
+                <td className="px-4 py-3 text-white mb-8">{p.pay}</td>
+                <td className="px-4 py-3 font-bold text-white mb-8">{eur(p.total)}</td>
+                <td className="px-4 py-3 text-white mb-8">{eur(p.perMonth)}/m</td>
                 <td className="px-4 py-3">
                   <button
                     onClick={() => handleSubscribe(p.key)}
@@ -92,7 +92,7 @@ export default function PreciosPage() {
 
       {error && <p className="text-red-600 mt-4 text-sm text-center">{error}</p>}
 
-      <p className="text-xs text-secondary mt-6 text-center">
+      <p className="text-xs text-white mt-6 text-center">
         Al continuar aceptas nuestros <Link href="/terminos-condiciones" className="underline">Términos y Condiciones</Link> y la <Link href="/politica-privacidad" className="underline">Política de Privacidad</Link>.
       </p>
     </div>
