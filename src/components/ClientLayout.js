@@ -29,8 +29,8 @@ function Navbar() {
               <div className="flex items-center space-x-4">
                 <span className="text-gray-700 text-sm">Hola, {user.username}</span>
                 {!isSubscribed && (
-                  <Link href="/precios" className="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-hover transition-colors">
-                    Subscríbete
+                  <Link href="/precios" className="bg-yellow-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-hover transition-colors">
+                    Prueba Gratis
                   </Link>
                 )}
                 <button onClick={logout} className="bg-secondary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-600 transition-colors">Cerrar Sesión</button>
