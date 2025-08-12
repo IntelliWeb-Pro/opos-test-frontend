@@ -39,7 +39,7 @@ function Navbar() {
               <div className="flex items-center space-x-2">
                 <Link href="/login" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Iniciar Sesión</Link>
                 <Link href="/registro" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Registrarse</Link>
-                <Link href="/precios" className="bg-yellow-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-hover transition-colors">Subscríbete</Link>
+                <Link href="/precios" className="bg-yellow-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-hover transition-colors">Prueba Gratis</Link>
               </div>
             )}
           </div>
@@ -64,7 +64,7 @@ function Navbar() {
               <>
                 <div className="px-3 py-2 text-gray-700">Hola, {user.username}</div>
                 {!isSubscribed && (
-                  <Link href="/precios" className="bg-yellow-500 text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-primary-hover">Subscríbete</Link>
+                  <Link href="/precios" className="bg-yellow-500 text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-primary-hover">Prueba Gratis</Link>
                 )}
                 <button onClick={logout} className="w-full text-left bg-secondary text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-gray-600">Cerrar Sesión</button>
               </>
@@ -72,7 +72,7 @@ function Navbar() {
               <>
                 <Link href="/login" className="text-gray-700 hover:text-primary block px-3 py-2 rounded-md text-base font-medium">Iniciar Sesión</Link>
                 <Link href="/registro" className="text-gray-700 hover:text-primary block px-3 py-2 rounded-md text-base font-medium">Registrarse</Link>
-                <Link href="/precios" className="bg-yellow-500 text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-primary-hover">Subscríbete</Link>
+                <Link href="/precios" className="bg-yellow-500 text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-primary-hover">Prueba Gratis</Link>
               </>
             )}
           </div>
