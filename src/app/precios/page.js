@@ -6,24 +6,31 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Link from 'next/link';
 
-// Carga la instancia de Stripe con tu clave publicable desde las variables de entorno
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+
+const PLANS = [
+  { key: 'bronce', name: 'Bronce', pay: '1 mes', total: 6.99, perMonth: 6.99 },
+  { key: 'plata', name: 'Plata', pay: '3 meses', total: 15.99, perMonth: 5.33 },
+  { key: 'oro', name: 'Oro', pay: '6 meses', total: 22.99, perMonth: 3.83 },
+  { key: 'platino', name: 'Platino', pay: '12 meses', total: 39.99, perMonth: 3.33 },
+];
+
+function eur(n){ return new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR'}).format(n); }
 
 export default function PreciosPage() {
   const { user, token } = useAuth();
   const router = useRouter();
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [error, setError] = useState(null);
+  const [selected, setSelected] = useState('bronce');
 
-  const handleSubscribe = async () => {
+  const handleSubscribe = async (planKey) => {
     if (!user) {
       router.push('/login');
       return;
     }
-
     setIsSubscribing(true);
     setError(null);
-
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/create-checkout-session/`, {
         method: 'POST',
@@ -31,70 +38,63 @@ export default function PreciosPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-      });
-
-      if (!response.ok) {
-        throw new Error('No se pudo iniciar el proceso de pago. Inténtalo de nuevo.');
-      }
-
+        body: JSON.stringify({ plan: planKey || selected }),
+        });
+      if (!response.ok) throw new Error('No se pudo iniciar el proceso de pago. Inténtalo de nuevo.');
       const session = await response.json();
-      
       const stripe = await stripePromise;
-      const { error } = await stripe.redirectToCheckout({
-        sessionId: session.sessionId,
-      });
-
-      if (error) {
-        console.error('Error de Stripe:', error);
-        setError(error.message);
-      }
-
+      const { error } = await stripe.redirectToCheckout({ sessionId: session.sessionId });
+      if (error) setError(error.message);
     } catch (err) {
-      console.error('Error al suscribirse:', err);
-      setError(err.message);
+      setError(err.message || 'Error inesperado');
     } finally {
-        setIsSubscribing(false);
+      setIsSubscribing(false);
     }
   };
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 flex items-center justify-center">
-      <div className="bg-white p-10 rounded-lg shadow-xl text-center w-full max-w-sm border border-gray-200">
-        <h1 className="text-2xl font-bold text-dark">Plan Premium</h1>
-        <p className="text-secondary mt-2">Acceso ilimitado a todos los tests</p>
-        
-        <div className="my-8">
-          <span className="text-5xl font-extrabold text-dark">5,99€</span>
-          <span className="text-xl font-medium text-secondary">/mes</span>
-        </div>
+    <div className="max-w-4xl mx-auto px-4 py-12">
+      <h1 className="text-3xl font-bold text-center mb-6">Planes</h1>
+      <p className="text-center text-secondary mb-8">Empieza ahora con <strong>7 días gratis</strong>. Se te cobrará al finalizar la prueba si no cancelas.</p>
 
-        <ul className="text-left space-y-3 text-dark">
-          <li className="flex items-center"><span className="text-success mr-2">✔</span> Preguntas ilimitadas y actualizadas</li>
-          <li className="flex items-center"><span className="text-success mr-2">✔</span> Justificaciones detalladas</li>
-          <li className="flex items-center"><span className="text-success mr-2">✔</span> Seguimiento de progreso</li>
-          <li className="flex items-center"><span className="text-success mr-2">✔</span> Comparte con otros usuarios</li>
-        </ul>
-
-        {/* --- CASILLA DE DESISTIMIENTO AÑADIDA --- */}
-        <div className="mt-6 text-left">
-            <label className="flex items-start">
-              <input type="checkbox" className="form-checkbox h-5 w-5 text-primary mt-1" required />
-              <span className="ml-2 text-xs text-secondary">
-                Entiendo y acepto que, al iniciar la suscripción, comenzaré a disfrutar del contenido digital y, por tanto, pierdo mi derecho de desistimiento de 14 días según lo estipulado en los <Link href="/terminos-condiciones" className="text-primary hover:underline" target="_blank">Términos y Condiciones</Link>.
-              </span>
-            </label>
-        </div>
-
-        {error && <p className="text-red-600 mt-4 text-sm">{error}</p>}
-
-        <button 
-          onClick={handleSubscribe} 
-          disabled={isSubscribing}
-          className="mt-10 w-full bg-primary text-white py-3 rounded-lg text-lg font-semibold hover:bg-primary-hover transition-colors disabled:bg-gray-400"
-        >
-          {isSubscribing ? 'Procesando...' : 'Suscribirse ahora'}
-        </button>
+      <div className="overflow-x-auto rounded-lg border border-gray-200">
+        <table className="min-w-full text-left">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-3">Plan</th>
+              <th className="px-4 py-3">Pago</th>
+              <th className="px-4 py-3">PVP total</th>
+              <th className="px-4 py-3">Equiv./mes</th>
+              <th className="px-4 py-3"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {PLANS.map(p => (
+              <tr key={p.key} className="border-t">
+                <td className="px-4 py-3 font-semibold">{p.name}</td>
+                <td className="px-4 py-3">{p.pay}</td>
+                <td className="px-4 py-3 font-bold">{eur(p.total)}</td>
+                <td className="px-4 py-3">{eur(p.perMonth)}/m</td>
+                <td className="px-4 py-3">
+                  <button
+                    onClick={() => handleSubscribe(p.key)}
+                    disabled={isSubscribing}
+                    className="px-4 py-2 rounded bg-primary text-white hover:bg-primary-hover disabled:bg-gray-400"
+                  >
+                    {isSubscribing ? 'Procesando...' : 'Empezar 7 días gratis'}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
+
+      {error && <p className="text-red-600 mt-4 text-sm text-center">{error}</p>}
+
+      <p className="text-xs text-secondary mt-6 text-center">
+        Al continuar aceptas nuestros <Link href="/terminos-condiciones" className="underline">Términos y Condiciones</Link> y la <Link href="/politica-privacidad" className="underline">Política de Privacidad</Link>.
+      </p>
     </div>
   );
 }
