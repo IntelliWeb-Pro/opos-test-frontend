@@ -2,6 +2,7 @@ import "./globals.css";
 import ClientLayout from "@/components/ClientLayout";
 import Script from "next/script";
 import GAListener from "@/components/GAListener";
+import { Suspense } from "react";
 
 // --- METADATA OPTIMIZADA PARA SEO ---
 export const metadata = {
@@ -19,7 +20,9 @@ export default function RootLayout({ children }) {
         <ClientLayout>{children}</ClientLayout>
 
         {/* Listener de pageviews en cada navegación */}
-        <GAListener />
+        <Suspense fallback={null}>
+          <GAListener />
+        </Suspense>
 
         {/* Google tag (gtag.js) */}
         {GA_ID && (
