@@ -16,7 +16,7 @@ const openSans = Open_Sans({
 export const metadata = {
   title: "TestEstado | Tests para Oposiciones de Administrativo C1 y C2",
   description:
-    "Prepara tu oposición con miles de tests online para Administrativo del Estado (C1) y Auxiliar Administrativo (C2). Preguntas de examen, justificaciones y seguimiento. ¡Prueba gratis!",
+    "Prepara tu oposición a la administración general con nuestros tests online.",
 };
 
 export default function RootLayout({ children }) {
