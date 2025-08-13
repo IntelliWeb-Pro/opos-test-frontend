@@ -1,112 +1,166 @@
 // src/app/precios/page.js
-import PreciosClient from '@/components/PreciosClient';
+import Link from "next/link";
+import PreciosClient from "@/components/PreciosClient";
+
+const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://www.testestado.es";
 
 export const metadata = {
-  title: 'Precios y Planes | TestEstado',
+  title: "Precios | TestEstado — 7 días gratis",
   description:
-    'Planes Bronce, Plata, Oro y Platino con 7 días gratis. Acceso ilimitado a todos los tests, justificaciones y seguimiento de progreso.',
-  alternates: {
-    canonical: 'https://www.testestado.es/precios',
-  },
+    "Empieza tu preparación con 7 días gratis. Planes mensuales, trimestrales, semestrales y anuales para Administrativo (C1) y Auxiliar (C2). Cancela cuando quieras.",
+  alternates: { canonical: `${SITE}/precios` },
   openGraph: {
-    type: 'website',
-    url: 'https://www.testestado.es/precios',
-    title: 'Precios y Planes | TestEstado',
+    type: "website",
+    url: `${SITE}/precios`,
+    title: "Precios | TestEstado — 7 días gratis",
     description:
-      'Elige tu plan con 7 días gratis. Acceso ilimitado a tests de Administrativo (C1) y Auxiliar Administrativo (C2).',
-    siteName: 'TestEstado',
+      "Planes flexibles para tu oposición (C1/C2). Empieza hoy con 7 días gratis.",
+    siteName: "TestEstado",
   },
   twitter: {
-    card: 'summary_large_image',
-    title: 'Precios y Planes | TestEstado',
+    card: "summary_large_image",
+    title: "Precios | TestEstado — 7 días gratis",
     description:
-      '7 días gratis. Acceso ilimitado a tests, justificaciones y seguimiento. Planes Bronce, Plata, Oro y Platino.',
+      "Planes flexibles para tu oposición (C1/C2). Empieza hoy con 7 días gratis.",
   },
 };
 
-// ⬇️ Fuerza SSG (no usa datos en SSR)
-export const dynamic = 'force-static';
+// Para el JSON-LD de planes (ItemList)
+const PLANS = [
+  { key: "bronce",  name: "Plan Bronce",  pay: "1 mes",  total: 6.99,  perMonth: 6.99 },
+  { key: "plata",   name: "Plan Plata",   pay: "3 meses", total: 15.99, perMonth: 5.33 },
+  { key: "oro",     name: "Plan Oro",     pay: "6 meses", total: 22.99, perMonth: 3.83 },
+  { key: "platino", name: "Plan Platino", pay: "12 meses", total: 39.99, perMonth: 3.33 },
+];
 
-export default function Page() {
-  const site = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.testestado.es';
-  const url = `${site}/precios`;
+function buildItemListJsonLd() {
+  const itemListElement = PLANS.map((p, idx) => ({
+    "@type": "ListItem",
+    position: idx + 1,
+    name: p.name,
+    url: `${SITE}/precios#${p.key}`,
+  }));
 
-  // Solo para schema; no toca la UI de precios
-  const plans = [
-    { key: 'bronce',  name: 'Plan Bronce',  total: 6.99,  perMonth: 6.99,  isoDuration: 'P1M'  },
-    { key: 'plata',   name: 'Plan Plata',   total: 15.99, perMonth: 5.33,  isoDuration: 'P3M'  },
-    { key: 'oro',     name: 'Plan Oro',     total: 22.99, perMonth: 3.83,  isoDuration: 'P6M'  },
-    { key: 'platino', name: 'Plan Platino', total: 39.99, perMonth: 3.33,  isoDuration: 'P12M' },
-  ];
-
-  const itemListJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'ItemList',
-    url,
-    name: 'Precios y Planes',
-    itemListElement: plans.map((p, i) => ({
-      '@type': 'ListItem',
-      position: i + 1,
-      item: {
-        '@type': 'Product',
-        name: p.name,
-        description:
-          'Acceso ilimitado a tests de Administrativo (C1) y Auxiliar Administrativo (C2), justificaciones y seguimiento de progreso.',
-        brand: { '@type': 'Brand', name: 'TestEstado' },
-        sku: p.key,
-        additionalProperty: [
-          { '@type': 'PropertyValue', name: 'Duración', value: p.isoDuration },
-          { '@type': 'PropertyValue', name: 'Precio mensual', value: `${p.perMonth.toFixed(2)} EUR` },
-          { '@type': 'PropertyValue', name: 'Prueba gratis', value: '7 días' },
-        ],
-        offers: {
-          '@type': 'Offer',
-          url,
-          price: p.total.toFixed(2),
-          priceCurrency: 'EUR',
-          availability: 'https://schema.org/InStock',
-        },
-      },
-    })),
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement,
   };
+}
 
-  const faqJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
+function buildFaqJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
     mainEntity: [
       {
-        '@type': 'Question',
-        name: '¿Cómo funciona la prueba gratis de 7 días?',
+        "@type": "Question",
+        name: "¿Hay prueba gratis?",
         acceptedAnswer: {
-          '@type': 'Answer',
+          "@type": "Answer",
           text:
-            'Al registrarte y elegir un plan, disfrutas de 7 días gratis con acceso completo. Puedes cancelar antes de que termine el periodo de prueba y no se te cobrará nada.',
+            "Sí. Tienes 7 días gratis al registrarte. Puedes cancelar en cualquier momento desde tu perfil antes de que termine la prueba.",
         },
       },
       {
-        '@type': 'Question',
-        name: '¿Puedo cancelar la suscripción cuando quiera?',
+        "@type": "Question",
+        name: "¿Qué incluye la suscripción?",
         acceptedAnswer: {
-          '@type': 'Answer',
+          "@type": "Answer",
           text:
-            'Sí. Puedes cancelar desde tu cuenta en cualquier momento. Seguirás teniendo acceso hasta el final del periodo ya pagado.',
+            "Acceso ilimitado a los test, justificaciones detalladas, simulacros, estadísticas de progreso y comparativas con otros usuarios.",
         },
       },
       {
-        '@type': 'Question',
-        name: '¿Puedo cambiar de plan (subir o bajar) más tarde?',
+        "@type": "Question",
+        name: "¿Cómo cancelo la suscripción?",
         acceptedAnswer: {
-          '@type': 'Answer',
+          "@type": "Answer",
           text:
-            'Sí. Puedes cambiar de plan en cualquier momento. El cambio se aplica al siguiente periodo de facturación según las condiciones de tu suscripción.',
+            "Desde tu cuenta, en el apartado de suscripción. La cancelación es inmediata y no se te volverá a cobrar.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "¿Qué métodos de pago aceptáis?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text:
+            "Pagos con tarjeta a través de Stripe. Aceptamos las principales tarjetas de débito y crédito.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "¿Hay descuentos por periodos más largos?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text:
+            "Sí. Cuanto mayor sea el periodo (trimestral, semestral o anual), menor es el precio equivalente por mes.",
         },
       },
     ],
   };
+}
+
+export default function PreciosPage() {
+  const itemListJsonLd = buildItemListJsonLd();
+  const faqJsonLd = buildFaqJsonLd();
 
   return (
     <>
-      {/* JSON-LD server-rendered para view-source */}
+      {/* UI principal (carrusel y CTA) */}
+      <PreciosClient />
+
+      {/* Interlinking suave bajo el carrusel */}
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+        <h2 className="text-2xl font-bold text-white mb-4">
+          Recursos recomendados
+        </h2>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Link
+            href="/blog"
+            className="block bg-white border border-gray-200 rounded-xl p-5 hover:shadow-sm hover:border-primary transition"
+          >
+            <div className="text-primary font-semibold">Blog de TestEstado</div>
+            <p className="text-sm text-secondary mt-1">
+              Consejos y recursos para Administrativo (C1) y Auxiliar (C2).
+            </p>
+          </Link>
+
+          <Link
+            href="/administrativo"
+            className="block bg-white border border-gray-200 rounded-xl p-5 hover:shadow-sm hover:border-primary transition"
+          >
+            <div className="text-primary font-semibold">Administrativo del Estado (C1)</div>
+            <p className="text-sm text-secondary mt-1">
+              Temario, tests y simulacros específicos de C1.
+            </p>
+          </Link>
+
+          <Link
+            href="/auxiliar-administrativo"
+            className="block bg-white border border-gray-200 rounded-xl p-5 hover:shadow-sm hover:border-primary transition"
+          >
+            <div className="text-primary font-semibold">Auxiliar Administrativo (C2)</div>
+            <p className="text-sm text-secondary mt-1">
+              Práctica guiada y seguimiento para C2.
+            </p>
+          </Link>
+
+          <Link
+            href="/contacto"
+            className="block bg-white border border-gray-200 rounded-xl p-5 hover:shadow-sm hover:border-primary transition"
+          >
+            <div className="text-primary font-semibold">¿Dudas? Habla con nosotros</div>
+            <p className="text-sm text-secondary mt-1">
+              Resolvemos tus preguntas sobre planes y acceso.
+            </p>
+          </Link>
+        </div>
+      </section>
+
+      {/* JSON-LD (ItemList + FAQ) */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
@@ -115,8 +169,6 @@ export default function Page() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
-
-      <PreciosClient />
     </>
   );
 }
