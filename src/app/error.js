@@ -22,8 +22,8 @@ export default function Error({ error, reset }) {
     <main className="min-h-[70vh] flex items-center">
       <div className="container mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
         <header className="text-center mb-8">
-          <h1 className="text-4xl font-extrabold text-dark">Ha ocurrido un error</h1>
-          <p className="text-secondary mt-3">
+          <h1 className="text-4xl font-extrabold text-white">Ha ocurrido un error</h1>
+          <p className="text-white mt-3">
             Hemos tenido un problema cargando esta página. Puedes intentar recargarla o volver al inicio.
           </p>
         </header>
@@ -31,7 +31,7 @@ export default function Error({ error, reset }) {
         <div className="flex flex-wrap gap-3 justify-center">
           <button
             onClick={() => reset()}
-            className="inline-block bg-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-hover transition"
+            className="inline-block bg-white border border-gray-200 px-6 py-3 rounded-xl font-semibold hover:shadow-sm transition"
           >
             Reintentar
           </button>
@@ -43,7 +43,7 @@ export default function Error({ error, reset }) {
           </Link>
           <a
             href="mailto:soporte@testestado.es?subject=Error%20en%20la%20web&body=Describe%20lo%20que%20ocurrió%20y%20pega%20capturas%20si%20puedes."
-            className="inline-block underline underline-offset-4 text-primary font-semibold px-2 py-3"
+            className="inline-block bg-white border border-gray-200 px-6 py-3 rounded-xl font-semibold hover:shadow-sm transition"
           >
             Contactar soporte
           </a>

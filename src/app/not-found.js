@@ -12,8 +12,8 @@ export default function NotFound() {
     <main className="min-h-[70vh] flex items-center">
       <div className="container mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
         <header className="text-center mb-8">
-          <h1 className="text-4xl font-extrabold text-dark">404 — Página no encontrada</h1>
-          <p className="text-secondary mt-3">
+          <h1 className="text-4xl font-extrabold text-white">404 — Página no encontrada</h1>
+          <p className="text-white mt-3">
             La URL puede haberse movido o quizá se escribió incorrectamente.
           </p>
         </header>
@@ -27,7 +27,7 @@ export default function NotFound() {
               className="block rounded-xl border border-gray-200 bg-white p-5 hover:shadow-sm hover:border-primary transition"
             >
               <span className="text-primary font-semibold">Volver al inicio</span>
-              <p className="text-sm text-secondary mt-1">
+              <p className="text-sm text-white mt-1">
                 Descubre todo lo que puedes hacer en TestEstado.
               </p>
             </Link>
@@ -37,7 +37,7 @@ export default function NotFound() {
               className="block rounded-xl border border-gray-200 bg-white p-5 hover:shadow-sm hover:border-primary transition"
             >
               <span className="text-primary font-semibold">Blog de TestEstado</span>
-              <p className="text-sm text-secondary mt-1">
+              <p className="text-sm text-white mt-1">
                 Consejos, noticias y trucos para tu oposición.
               </p>
             </Link>
