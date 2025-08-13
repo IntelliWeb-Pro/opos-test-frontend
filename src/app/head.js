@@ -2,6 +2,11 @@ export default function Head() {
   const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.testestado.es";
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+  // 👉 URL de la imagen de fondo (puedes moverla a una env: NEXT_PUBLIC_HERO_IMAGE)
+  const HERO_IMAGE =
+    process.env.NEXT_PUBLIC_HERO_IMAGE ||
+    "https://i.ibb.co/BVW2TsZR/mujer-de-vista-lateral-que-trabaja-como-economista.jpg";
+
   // Intentamos sacar el origen de la API para preconnect/dns-prefetch
   let apiOrigin = null;
   try {
@@ -16,21 +21,11 @@ export default function Head() {
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <link rel="icon" href="/favicon.ico" />
 
-      {/* 🔗 Auto-discovery del feed RSS */}
-      <link
-        rel="alternate"
-        type="application/rss+xml"
-        title="Blog de TestEstado"
-        href={`${SITE_URL}/rss`}
-      />
-
-      {/* (Opcional) Keywords: si te gustan, mantenlas */}
+      {/* (Opcional) Keywords */}
       <meta
         name="keywords"
         content="oposiciones, test oposiciones, auxiliar administrativo, administrativo del estado, test online, psicotécnicos, simulacros, corrección test"
       />
-
-      {/* ✅ Los metadatos de título/description/OG/Twitter los gestionamos con `metadata` en layouts de cada ruta. */}
 
       {/* Performance: preconnect / dns-prefetch */}
       {/* Google Tag (gtag) */}
@@ -48,6 +43,11 @@ export default function Head() {
           <link rel="dns-prefetch" href={apiOrigin} />
         </>
       )}
+
+      {/* 🚀 Preload de la imagen LCP del fondo (mejora primeras pinturas) */}
+      <link rel="preconnect" href="https://i.ibb.co" crossOrigin="" />
+      <link rel="dns-prefetch" href="https://i.ibb.co" />
+      <link rel="preload" as="image" href={HERO_IMAGE} />
     </>
   );
 }

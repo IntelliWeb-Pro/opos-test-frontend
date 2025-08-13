@@ -25,6 +25,7 @@ function Navbar() {
       router.prefetch('/precios');
       router.prefetch('/registro');
       router.prefetch('/login');
+      router.prefetch('/sobre-nosotros'); // ⬅️ NUEVO
     });
 
     return () => cancel(id);
@@ -33,6 +34,7 @@ function Navbar() {
   // Prefetch al hover/focus de los CTAs
   const prefetchPrecios = () => router.prefetch('/precios');
   const prefetchLogin = () => router.prefetch('/login');
+  const prefetchAbout = () => router.prefetch('/sobre-nosotros'); // ⬅️ NUEVO
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50" role="banner">
@@ -51,7 +53,20 @@ function Navbar() {
             aria-label="Navegación principal"
           >
             <Link href="/blog" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Blog</Link>
+
+            {/* ⬇️ NUEVO: Sobre nosotros */}
+            <Link
+              href="/sobre-nosotros"
+              prefetch
+              onPointerEnter={prefetchAbout}
+              onFocus={prefetchAbout}
+              className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              Sobre nosotros
+            </Link>
+
             <Link href="/contacto" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Contacto</Link>
+
             {user && (
               <Link
                 href="/ranking"
@@ -145,6 +160,18 @@ function Navbar() {
         >
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <Link href="/blog" className="text-gray-700 hover:text-primary block px-3 py-2 rounded-md text-base font-medium">Blog</Link>
+
+            {/* ⬇️ NUEVO en móvil */}
+            <Link
+              href="/sobre-nosotros"
+              prefetch
+              onPointerEnter={prefetchAbout}
+              onFocus={prefetchAbout}
+              className="text-gray-700 hover:text-primary block px-3 py-2 rounded-md text-base font-medium"
+            >
+              Sobre nosotros
+            </Link>
+
             <Link href="/contacto" className="text-gray-700 hover:text-primary block px-3 py-2 rounded-md text-base font-medium">Contacto</Link>
             {user && <Link href="/ranking" className="text-gray-700 hover:text-primary block px-3 py-2 rounded-md text-base font-medium">Ranking</Link>}
             {user && <Link href="/progreso" className="text-gray-700 hover:text-primary block px-3 py-2 rounded-md text-base font-medium">Mi Progreso</Link>}
