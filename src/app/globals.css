@@ -1,6 +1,4 @@
-/* ❌ Quitamos la importación remota de Google Fonts (ya usamos next/font) */
-/* @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap'); */
-
+/* @tailwind + utilidades */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -39,20 +37,30 @@ body::after {
   background-color: rgba(20, 25, 30, 0.5); /* Tono oscuro con 50% de opacidad */
   z-index: -1; /* Se sitúa entre el fondo y el contenido */
 }
-/* ---- Accesibilidad: Skip link ---- */
+
+/* --- Accesibilidad: Skip link --- */
 .skip-link {
   position: absolute;
-  top: 0;
+  top: -40px;
   left: 0;
-  transform: translateY(-200%);
-  background: #111827; /* gris muy oscuro */
-  color: #ffffff;
+  background: #1f2937; /* gris oscuro */
+  color: #fff;
   padding: 8px 12px;
-  z-index: 10000;
-  border-radius: 0 0 8px 0;
-  text-decoration: none;
+  z-index: 9999;
+  border-radius: 0 0 6px 0;
+  transition: top 0.2s ease;
 }
 .skip-link:focus {
-  transform: translateY(0);
-  outline: 2px solid #f59e0b; /* amarillo (match tu paleta) */
+  top: 0;
+  outline: 2px solid #3b82f6; /* azul */
+}
+
+/* (Opcional) Reduce motion para usuarios con preferencias */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

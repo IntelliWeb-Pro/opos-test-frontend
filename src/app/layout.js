@@ -4,7 +4,7 @@ import Script from "next/script";
 import GAListener from "@/components/GAListener";
 import { Suspense } from "react";
 import { Open_Sans } from "next/font/google"; // ⬅️ NUEVO
-
+import WebVitalsGA from "@/components/WebVitalsGA"; // ⬅️ NUEVO
 // Cargamos Open Sans autohospedada (sin FOUT/FOIT)
 const openSans = Open_Sans({
   subsets: ["latin"],
