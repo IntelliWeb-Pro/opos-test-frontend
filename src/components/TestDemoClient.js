@@ -1,4 +1,3 @@
-// src/components/TestDemoClient.js
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -25,7 +24,12 @@ export default function TestDemoClient() {
   const startedAtRef = useRef(null);
   const tickRef = useRef(null);
 
-  // Carga preguntas
+  // Resultados
+  const [scoring, setScoring] = useState(false);
+  const [puntuacion, setPuntuacion] = useState(0);
+  const [datosCorreccion, setDatosCorreccion] = useState([]);
+
+  // Carga preguntas de demo (15 aleatorias)
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -63,14 +67,12 @@ export default function TestDemoClient() {
   }, [finished]);
 
   const current = questions[idx];
-
   const total = questions.length;
+
   const answeredCount = useMemo(
     () => Object.keys(answers).filter(qid => answers[qid] != null).length,
     [answers]
   );
-
-  const progress = total ? Math.round((answeredCount / total) * 100) : 0;
 
   const selectAnswer = (qId, aId) => {
     setAnswers(prev => ({ ...prev, [qId]: aId }));
@@ -79,44 +81,35 @@ export default function TestDemoClient() {
   const next = () => setIdx(i => Math.min(i + 1, total - 1));
   const prev = () => setIdx(i => Math.max(i - 1, 0));
 
-  // --- Puntuación ---
-  function canComputeScore(list) {
-    // A) preguntas[].respuestas[].es_correcta === true
-    // B) preguntas[].respuesta_correcta_id
-    return list.every(q => {
-      const hasB = 'respuesta_correcta_id' in q;
-      const hasA =
-        Array.isArray(q.respuestas) &&
-        q.respuestas.some(r => Object.prototype.hasOwnProperty.call(r, 'es_correcta'));
-      return hasA || hasB;
-    });
-  }
+  const finish = async () => {
+    if (finished) return;
+    setScoring(true);
 
-  function computeScore(list, selected) {
-    let correct = 0;
-    for (const q of list) {
-      const chosen = selected[q.id];
-      if (chosen == null) continue;
+    try {
+      const idsPreguntas = questions.map(p => p.id);
+      const res = await fetch(`${API}/api/preguntas/corregir/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: idsPreguntas }),
+      });
+      if (!res.ok) throw new Error('Fallo al obtener la corrección');
+      const data = await res.json(); // Array de preguntas con respuestas y es_correcta
+      setDatosCorreccion(data);
 
-      if ('respuesta_correcta_id' in q) {
-        if (q.respuesta_correcta_id === chosen) correct += 1;
-      } else if (Array.isArray(q.respuestas)) {
-        const ok = q.respuestas.find(r => r.es_correcta === true);
-        if (ok && ok.id === chosen) correct += 1;
+      // Calcular aciertos reales
+      let correctas = 0;
+      for (const q of data) {
+        const respuestaUsuario = answers[q.id];
+        const respuestaCorrecta = (q.respuestas || []).find(r => r.es_correcta);
+        if (respuestaCorrecta && respuestaUsuario === respuestaCorrecta.id) correctas++;
       }
+      setPuntuacion(correctas);
+      setFinished(true); // también para parar cronómetro
+    } catch (e) {
+      setError(e.message || 'Error al corregir el test.');
+    } finally {
+      setScoring(false);
     }
-    return correct;
-  }
-
-  const [score, setScore] = useState(null);
-  const [canScore, setCanScore] = useState(true);
-
-  const finish = () => {
-    const readyToScore = canComputeScore(questions);
-    setCanScore(readyToScore);
-    const finalScore = readyToScore ? computeScore(questions, answers) : null;
-    setScore(finalScore);
-    setFinished(true);
   };
 
   // ---------------- UI ----------------
@@ -150,75 +143,87 @@ export default function TestDemoClient() {
   }
 
   if (finished) {
-    const pct = score != null && total ? Math.round((score / total) * 100) : null;
+    const pct = total ? Math.round((puntuacion / total) * 100) : 0;
+    const minutos = Math.floor(elapsed / 60);
+    const segundos = Math.floor(elapsed % 60);
+
     return (
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="max-w-3xl mx-auto bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 text-center">Resultados del test de prueba</h1>
+        <div className="bg-white p-8 rounded-lg shadow-md text-center mb-8 border border-gray-200">
+          <h1 className="text-3xl font-bold text-dark">Resultados del Test</h1>
+          <p className="text-xl mt-4 text-secondary">Tu puntuación:</p>
+          <p className="text-6xl font-bold my-2 text-primary">
+            {puntuacion} / {total}
+          </p>
 
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-gray-50 rounded-xl p-4 text-center">
-              <div className="text-sm text-gray-500">Preguntas</div>
-              <div className="text-2xl font-bold text-gray-900">{total}</div>
-            </div>
-            <div className="bg-gray-50 rounded-xl p-4 text-center">
-              <div className="text-sm text-gray-500">Tiempo</div>
-              <div className="text-2xl font-bold text-gray-900">{formatDuration(elapsed)}</div>
-            </div>
-            <div className="bg-gray-50 rounded-xl p-4 text-center">
-              <div className="text-sm text-gray-500">Aciertos</div>
-              <div className="text-2xl font-bold text-gray-900">
-                {score != null ? `${score}` : '—'}
-              </div>
-            </div>
-          </div>
+          <p className="text-lg mt-2 mb-4 text-secondary">
+            Tiempo total:{' '}
+            <span className="font-bold text-dark">
+              {minutos < 10 ? '0' : ''}{minutos}:{segundos < 10 ? '0' : ''}{segundos}
+            </span>
+          </p>
 
-          <div className="mt-8">
+          <div className="mt-6 w-full max-w-lg mx-auto">
             <div className="w-full bg-gray-200 rounded-full h-3">
-              <div
-                className="h-3 rounded-full bg-primary"
-                style={{ width: `${pct ?? Math.round((answeredCount / total) * 100)}%` }}
-              />
+              <div className="h-3 rounded-full bg-primary" style={{ width: `${pct}%` }} />
             </div>
             <div className="mt-2 text-center text-sm text-gray-600">
-              {score != null ? `${pct}% de aciertos` : `${answeredCount}/${total} respondidas`}
+              {pct}% de aciertos
             </div>
           </div>
-
-          {!canScore && (
-            <p className="mt-6 text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-sm">
-              En esta demo no mostramos soluciones detalladas. Tu puntuación exacta puede variar en la versión completa.
-            </p>
-          )}
-
-          {/* ⬇️ Un único botón largo, estilo amarillo como el resto del sitio */}
-          <Link
-            href="/precios"
-            className="mt-10 block w-full text-center px-5 py-4 rounded-xl bg-yellow-500 text-white hover:text-black font-semibold text-lg"
-          >
-            Subscribete ahora
-          </Link>
-
-          <p className="mt-4 text-center text-sm text-gray-500">
-            Accede a todos los tests, justificaciones legales, simulacros y seguimiento de progreso.
-          </p>
         </div>
 
-        {/* Bloques de valor añadido */}
-        <div className="max-w-3xl mx-auto mt-10 grid gap-4 sm:grid-cols-3">
-          <div className="bg-white border border-gray-200 rounded-xl p-4 text-center">
-            <div className="text-lg font-semibold text-gray-900">Justificaciones</div>
-            <div className="text-sm text-gray-600 mt-1">Explicaciones legales y referencias.</div>
-          </div>
-          <div className="bg-white border border-gray-200 rounded-xl p-4 text-center">
-            <div className="text-lg font-semibold text-gray-900">Simulacros</div>
-            <div className="text-sm text-gray-600 mt-1">Exámenes reales cronometrados.</div>
-          </div>
-          <div className="bg-white border border-gray-200 rounded-xl p-4 text-center">
-            <div className="text-lg font-semibold text-gray-900">Progreso</div>
-            <div className="text-sm text-gray-600 mt-1">Estadísticas por tema y bloque.</div>
-          </div>
-        </div>
+        {/* Listado de preguntas con acierto/fallo y justificación (mismo formato que tu TestPage) */}
+        {datosCorreccion.map((pregunta, index) => {
+          const respuestaUsuarioId = answers[pregunta.id];
+          const respuestaCorrecta = (pregunta.respuestas || []).find(r => r.es_correcta);
+          return (
+            <div key={pregunta.id} className="bg-white p-6 rounded-lg shadow-md mb-6 border border-gray-200">
+              <p className="font-bold text-lg text-dark">
+                {index + 1}. {pregunta.texto_pregunta || pregunta.enunciado}
+              </p>
+              <div className="mt-4 space-y-2">
+                {(pregunta.respuestas || []).map(respuesta => {
+                  let classNames = 'block w-full text-left p-3 rounded-md border text-dark';
+                  if (respuesta.es_correcta) {
+                    classNames += ' bg-green-100 border-green-400 font-semibold';
+                  } else if (respuesta.id === respuestaUsuarioId) {
+                    classNames += ' bg-red-100 border-red-400';
+                  } else {
+                    classNames += ' bg-gray-50 border-gray-200 text-gray-600';
+                  }
+                  return (
+                    <div key={respuesta.id} className={classNames}>
+                      {respuesta.texto_respuesta || respuesta.texto}
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mt-4 p-4 border-l-4 border-yellow-400 bg-yellow-50">
+                <h3 className="font-bold text-yellow-800">Justificación:</h3>
+                <p className="mt-1 text-dark">
+                  {respuestaCorrecta?.texto_justificacion || 'Consulta la versión completa para ver la justificación detallada.'}
+                </p>
+                {respuestaCorrecta?.fuente_justificacion && (
+                  <p className="mt-2 text-sm text-secondary">
+                    <strong>Fuente:</strong> {respuestaCorrecta.fuente_justificacion}
+                  </p>
+                )}
+              </div>
+            </div>
+          );
+        })}
+
+        {/* ÚNICO botón largo de suscripción */}
+        <Link
+          href="/precios"
+          className="mt-10 block w-full max-w-3xl mx-auto text-center px-5 py-4 rounded-xl bg-yellow-500 text-white hover:text-black font-semibold text-lg"
+        >
+          Subscribete ahora
+        </Link>
+        <p className="mt-3 text-center text-sm text-gray-500">
+          Accede a todos los tests, justificaciones legales, simulacros y seguimiento de progreso.
+        </p>
       </div>
     );
   }
@@ -309,9 +314,10 @@ export default function TestDemoClient() {
               ) : (
                 <button
                   onClick={finish}
-                  className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary-hover"
+                  disabled={scoring}
+                  className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary-hover disabled:opacity-50"
                 >
-                  Finalizar intento
+                  {scoring ? 'Calculando…' : 'Finalizar Test'}
                 </button>
               )}
             </div>
@@ -335,7 +341,9 @@ export default function TestDemoClient() {
         {/* CTA sutil bajo el test */}
         <div className="mt-6 bg-white border border-gray-200 rounded-2xl p-5 text-center">
           <p className="text-gray-800 font-medium">¿Te gusta la experiencia?</p>
-          <p className="text-gray-600 text-sm mt-1">Suscríbete para acceder a todos los tests, justificaciones y estadísticas.</p>
+          <p className="text-gray-600 text-sm mt-1">
+            Suscríbete para acceder a todos los tests, justificaciones y estadísticas.
+          </p>
           <Link
             href="/precios"
             className="inline-block mt-3 px-5 py-3 rounded-xl bg-yellow-500 text-white hover:text-black font-semibold"
