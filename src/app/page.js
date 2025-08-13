@@ -1,6 +1,7 @@
 // src/app/page.js
 // Server component wrapper para permitir metadata a nivel de página
 import HomeClient from '@/components/HomeClient';
+import { cookies } from 'next/headers';
 
 export const metadata = {
   title: 'TestEstado | Tests para Oposiciones de Administrativo C1 y C2',
@@ -33,7 +34,44 @@ const faqData = [
   { q: '¿Qué precio tiene la suscripción a TestEstado?', a: 'Ofrecemos un plan de suscripción mensual muy asequible que te da acceso ilimitado a todas las preguntas de todas las oposiciones. Puedes consultar el precio actualizado y todas las ventajas en nuestra sección de "Precios".' },
 ];
 
-export default function Page() {
+// --- NUEVO: detección SSR defensiva del estado de suscripción (opcional)
+async function detectIsSubscribed() {
+  const API = process.env.NEXT_PUBLIC_API_URL;
+  if (!API) return null;
+
+  const cookieHeader = cookies()?.toString() || '';
+  const endpoints = ['/api/me/', '/api/users/me/', '/api/profile/', '/api/auth/user/'];
+
+  for (const path of endpoints) {
+    try {
+      const res = await fetch(`${API}${path}`, {
+        headers: {
+          Accept: 'application/json',
+          ...(cookieHeader ? { Cookie: cookieHeader } : {}),
+        },
+        // queremos el estado actual del usuario
+        cache: 'no-store',
+      });
+      if (!res.ok) continue;
+
+      const me = await res.json();
+      const subscribed =
+        me?.isSubscribed === true ||                // por si tu backend ya lo expone así
+        me?.suscripcion?.activa === true ||        // patrón común: { suscripcion: { activa: true } }
+        me?.is_premium === true ||                 // alias típico
+        me?.subscription === 'premium' ||
+        me?.plan === 'premium' ||
+        me?.role === 'premium';
+
+      return !!subscribed;
+    } catch {
+      // probamos el siguiente endpoint
+    }
+  }
+  return null; // desconocido: que lo resuelva el cliente (AuthContext)
+}
+
+export default async function Page() {
   const faqJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
@@ -47,6 +85,9 @@ export default function Page() {
     })),
   };
 
+  // NUEVO: pasamos al cliente un valor inicial (true/false) o null si no se pudo determinar
+  const initialIsSubscribed = await detectIsSubscribed();
+
   return (
     <>
       {/* JSON-LD FAQ para resultados enriquecidos */}
@@ -54,7 +95,7 @@ export default function Page() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
-      <HomeClient />
+      <HomeClient initialIsSubscribed={initialIsSubscribed} />
     </>
   );
 }
