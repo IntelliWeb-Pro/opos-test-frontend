@@ -116,8 +116,8 @@ export default function HomePage() {
           </blockquote>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link href="/precios" className="inline-block bg-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-hover transition">
-              Empezar gratis
+            <Link href="/test-de-prueba" className="inline-block bg-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-hover transition">
+              Test de prueba
             </Link>
             <Link href="/sobre-nosotros" className="inline-block bg-white/90 text-gray-900 px-6 py-3 rounded-xl font-semibold hover:bg-white transition">
               Sobre nosotros
