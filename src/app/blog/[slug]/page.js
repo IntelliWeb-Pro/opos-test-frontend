@@ -71,14 +71,14 @@ export default async function PostDetailPage({ params }) {
                   <p className="text-sm text-secondary mt-1">Empieza con 7 días gratis y acceso completo.</p>
                 </Link>
               </li>
-              <li>
-                {oposiciones.map(opo => (
-                <Link key={opo.id} href={`/oposicion/${opo.slug}`} className="block rounded-md border border-gray-200 p-4 hover:border-primary hover:shadow-sm transition">
+              {oposiciones.map(opo => (
+              <li key={opo.id}>
+                <Link href={`/oposicion/${opo.slug}`} className="block rounded-md border border-gray-200 p-4 hover:border-primary hover:shadow-sm transition">
                   <span className="text-primary font-semibold">{opo.nombre}</span>
-                  <p className="text-sm text-secondary mt-1">Información, tests y simulacros específicos sobre {opo.nombre}.</p>
+                  <p className="text-sm text-secondary mt-1">Información, tests y simulacros específicos.</p>
                 </Link>
-                ))}
               </li>
+              ))}
             </ul>
           </nav>
         </article>
