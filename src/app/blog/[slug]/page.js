@@ -72,8 +72,8 @@ export default async function PostDetailPage({ params }) {
                 </Link>
               </li>
               <li>
-                <Link href="/auxiliar-adm-estado-c2-temas" className="block rounded-md border border-gray-200 p-4 hover:border-primary hover:shadow-sm transition">
-                  <span className="text-primary font-semibold">Administrativo del Estado (C1)</span>
+                <Link href="/oposicion/auxiliar-adm-estado-c2-temas" className="block rounded-md border border-gray-200 p-4 hover:border-primary hover:shadow-sm transition">
+                  <span className="text-primary font-semibold">Administrativo del Estado (C2)</span>
                   <p className="text-sm text-secondary mt-1">Información, tests y simulacros específicos.</p>
                 </Link>
               </li>
