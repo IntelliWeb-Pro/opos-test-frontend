@@ -30,8 +30,6 @@ export default function Page() {
   return (
     <>
       <HomeClient />
-      {/* ⬇️ Bloque de interlinking suave bajo el hero */}
-      <HomeInterlinks />
     </>
   );
 }
