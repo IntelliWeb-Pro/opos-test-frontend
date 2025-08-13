@@ -220,7 +220,9 @@ export default function HomePage() {
                 <h3 className="text-primary font-semibold">Mídete</h3>
                 <p className="text-sm text-secondary mt-1">Comparate con otros usuarios para saber en que puesto estás semanalmente.</p>
               </Link>
-
+            <div/>
+          <div/>
+        <section/>
         {/* =================== RECURSOS RECOMENDADOS (interlinking + externos) =================== */}
         <section ref={recursosRef} className="py-16 bg-light opacity-0 px-4" style={{ animationDelay: '150ms' }}>
           <div className="container mx-auto max-w-6xl">
