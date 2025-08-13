@@ -221,7 +221,7 @@ export default function TestDemoClient() {
         >
           Subscribete ahora
         </Link>
-        <p className="mt-3 text-center text-sm text-gray-500">
+        <p className="mt-3 text-center text-sm text-white">
           Accede a todos los tests, justificaciones legales, simulacros y seguimiento de progreso.
         </p>
       </div>
