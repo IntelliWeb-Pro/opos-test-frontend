@@ -8,15 +8,25 @@ export const metadata = {
     type: 'website',
     url: 'https://www.testestado.es/progreso',
     title: 'Tu Progreso | TestEstado',
-    description:
-      'Panel con estadísticas personales y métricas de estudio.',
+    description: 'Panel con estadísticas personales y métricas de estudio.',
     siteName: 'TestEstado',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Tu Progreso | TestEstado',
-    description:
-      'Estadísticas y métricas de tus tests.',
+    description: 'Estadísticas y métricas de tus tests.',
+  },
+  robots: {
+    index: false,
+    follow: false, // si prefieres que los bots sigan enlaces internos, cambia a true
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+      'max-image-preview': 'none',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
   },
 };
 

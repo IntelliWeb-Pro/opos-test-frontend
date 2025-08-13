@@ -15,8 +15,19 @@ export const metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Ranking de Opositores | TestEstado',
-    description:
-      'Clasificación por puntos y progreso en los tests.',
+    description: 'Clasificación por puntos y progreso en los tests.',
+  },
+  robots: {
+    index: false,
+    follow: false, // cambia a true si quieres que los bots sigan enlaces
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+      'max-image-preview': 'none',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
   },
 };
 

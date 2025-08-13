@@ -15,12 +15,20 @@ export default async function sitemap() {
     }
   }
 
-  // 1) Estáticas
+  // 1) Estáticas (¡/progreso y /ranking eliminadas!)
   const staticPaths = [
-    '/', '/precios', '/registro', '/login',
-    '/contacto', '/administrativo', '/auxiliar-administrativo',
-    '/blog', '/politica-privacidad', '/politica-cookies',
-    '/terminos-condiciones', '/ranking', '/progreso',
+    '/',
+    '/precios',
+    // '/registro',           // RECOMENDADO: si es noindex, quítalo también
+    // '/login',              // RECOMENDADO: si es noindex, quítalo también
+    '/contacto',
+    '/administrativo',
+    '/auxiliar-administrativo',
+    '/blog',
+    '/politica-privacidad',
+    '/politica-cookies',
+    '/terminos-condiciones',
+    '/aviso-legal',
   ];
 
   const staticEntries = staticPaths.map((path) => ({
@@ -34,15 +42,16 @@ export default async function sitemap() {
   const [posts, opos, temarios, temas, examenes] = await Promise.all([
     safeJson(`${API}/api/blog/`),
     safeJson(`${API}/api/oposiciones/`),
-    safeJson(`${API}/api/temarios/`),          // si no existe, safeJson -> []
-    safeJson(`${API}/api/temas/`),             // si no existe, safeJson -> []
-    safeJson(`${API}/api/examenes-oficiales/`) // si no existe, safeJson -> []
+    safeJson(`${API}/api/temarios/`),
+    safeJson(`${API}/api/temas/`),
+    safeJson(`${API}/api/examenes-oficiales/`),
   ]);
 
   const blogEntries = (posts || [])
     .filter((p) => p && (p.slug || p.id))
     .map((p) => ({
-      url: `${SITE}/blog/${p.slug}`,
+      // Hardened: si faltara slug, usa id
+      url: `${SITE}/blog/${p.slug ?? p.id}`,
       lastModified:
         p.actualizado_en ||
         p.updated_at ||
