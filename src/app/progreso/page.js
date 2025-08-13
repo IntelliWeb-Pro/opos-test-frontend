@@ -59,7 +59,7 @@ export default function ProgresoPage() {
     return (
       <main className="text-center p-8 container mx-auto">
         <div className="bg-white p-8 rounded-lg shadow-md mt-10 border border-gray-200">
-          <h1 className="text-2xl font-bold text-dark">Inicia sesión para ver tu progreso</h1>
+          <h2 className="text-2xl font-bold text-dark">Inicia sesión para ver tu progreso</h2>
           <Link href="/login" className="mt-4 inline-block bg-primary text-white px-6 py-2 rounded-md hover:bg-primary-hover">Iniciar Sesión</Link>
         </div>
       </main>
@@ -70,7 +70,7 @@ export default function ProgresoPage() {
     return (
         <main className="text-center p-8 container mx-auto">
             <div className="bg-white p-8 rounded-lg shadow-md mt-10 border border-gray-200">
-                <h1 className="text-2xl font-bold text-dark">Aún no hay estadísticas</h1>
+                <h2 className="text-2xl font-bold text-dark">Aún no hay estadísticas</h2>
                 <p className="mt-2 text-secondary">{error || "Completa tu primer test para empezar a ver tu progreso."}</p>
                 <Link href="/" className="mt-4 inline-block bg-primary text-white px-6 py-2 rounded-md hover:bg-primary-hover">Empezar un test</Link>
             </div>

@@ -105,7 +105,7 @@ export default function RegistroPage() {
           
           {success ? (
             <div className="text-center">
-              <h1 className="text-2xl font-bold mb-4 text-dark">¡Revisa tu correo!</h1>
+              <h2 className="text-2xl font-bold mb-4 text-dark">¡Revisa tu correo!</h2>
               <p className="text-secondary mb-6">
                 Hemos enviado un código de verificación a <strong>{email}</strong>. Por favor, introduce el código en la siguiente página para activar tu cuenta.
               </p>

@@ -78,7 +78,7 @@ export default function VerificarCuentaPage() {
           
           {success ? (
             <div className="text-center">
-              <h1 className="text-2xl font-bold mb-4 text-success">¡Cuenta Activada!</h1>
+              <h2 className="text-2xl font-bold mb-4 text-success">¡Cuenta Activada!</h2>
               <p className="text-secondary mb-6">
                 Tu cuenta ha sido verificada con éxito. Ya puedes iniciar sesión. Serás redirigido en unos segundos...
               </p>

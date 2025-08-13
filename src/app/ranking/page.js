@@ -94,7 +94,7 @@ export default function RankingPage() {
       {/* --- Este div ahora envuelve todo el contenido y aplica el efecto --- */}
       <div className={!isSubscribed ? 'opacity-50 blur-sm pointer-events-none' : ''}>
         <header className="mb-12 text-center">
-          <h1 className="text-4xl font-bold text-white">Podio de la Semana</h1>
+          <h2 className="text-4xl font-bold text-white">Podio de la Semana</h2>
           <p className="text-lg text-white mt-2">Los 3 opositores con el mejor porcentaje de aciertos (Lunes a Domingo).</p>
         </header>
         
