@@ -24,14 +24,15 @@ export default function RootLayout({ children }) {
 
   // --------- JSON-LD global ----------
   const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.testestado.es";
-  const LOGO_URL = process.env.NEXT_PUBLIC_LOGO_URL || null; // opcional
+  // ⬇️ Fallback seguro de logo si no hay env específico
+  const LOGO_URL = process.env.NEXT_PUBLIC_LOGO_URL || `${SITE_URL}/apple-touch-icon.png`;
 
   const orgJsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: "TestEstado",
     url: SITE_URL,
-    ...(LOGO_URL ? { logo: LOGO_URL } : {}),
+    logo: LOGO_URL,
   };
 
   const webSiteJsonLd = {

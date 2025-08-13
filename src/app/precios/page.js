@@ -27,7 +27,7 @@ export const metadata = {
 
 // Para el JSON-LD de planes (ItemList)
 const PLANS = [
-  { key: "bronce",  name: "Plan Bronce",  pay: "1 mes",  total: 6.99,  perMonth: 6.99 },
+  { key: "bronce",  name: "Plan Bronce",  pay: "1 mes",   total: 6.99,  perMonth: 6.99 },
   { key: "plata",   name: "Plan Plata",   pay: "3 meses", total: 15.99, perMonth: 5.33 },
   { key: "oro",     name: "Plan Oro",     pay: "6 meses", total: 22.99, perMonth: 3.83 },
   { key: "platino", name: "Plan Platino", pay: "12 meses", total: 39.99, perMonth: 3.33 },
@@ -102,9 +102,51 @@ function buildFaqJsonLd() {
   };
 }
 
+/**
+ * JSON-LD de Servicio + Ofertas (uno por plan)
+ * Nota: schema.org no tiene un marcado estandarizado para "free trial" en Ofertas
+ * con soporte de Google, así que lo indicamos claramente en la descripción.
+ */
+function buildServiceJsonLd() {
+  const offers = PLANS.map((p) => ({
+    "@type": "Offer",
+    name: p.name,
+    url: `${SITE}/precios#${p.key}`,
+    price: p.total,
+    priceCurrency: "EUR",
+    availability: "https://schema.org/InStock",
+    category: "https://schema.org/Subscription",
+    eligibleRegion: "ES",
+    description: `${p.pay}. Incluye prueba gratis de 7 días. Cancela cuando quieras.`,
+  }));
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name: "TestEstado — preparación online para oposiciones (C1/C2)",
+    serviceType: "Plataforma de tests y simulacros para Administrativo (C1) y Auxiliar (C2)",
+    url: `${SITE}/precios`,
+    brand: {
+      "@type": "Brand",
+      name: "TestEstado",
+      url: SITE,
+    },
+    provider: {
+      "@type": "Organization",
+      name: "TestEstado",
+      url: SITE,
+    },
+    areaServed: "ES",
+    isAccessibleForFree: false,
+    termsOfService: `${SITE}/terminos-condiciones`,
+    offers,
+  };
+}
+
 export default function PreciosPage() {
   const itemListJsonLd = buildItemListJsonLd();
   const faqJsonLd = buildFaqJsonLd();
+  const serviceJsonLd = buildServiceJsonLd();
 
   return (
     <>
@@ -160,7 +202,7 @@ export default function PreciosPage() {
         </div>
       </section>
 
-      {/* JSON-LD (ItemList + FAQ) */}
+      {/* JSON-LD (ItemList + FAQ + Service/Offers) */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
@@ -168,6 +210,10 @@ export default function PreciosPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceJsonLd) }}
       />
     </>
   );
