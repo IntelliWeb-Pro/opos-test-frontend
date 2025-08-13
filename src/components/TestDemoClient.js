@@ -3,8 +3,6 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-// Si tienes lib/ga con helper, puedes descomentar y usarlos.
-// import { gaEvent } from '@/lib/ga';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -41,14 +39,12 @@ export default function TestDemoClient() {
         const list = json.results || [];
         setQuestions(list);
         setLoading(false);
-        // Start timer
+        // Iniciar cronómetro
         startedAtRef.current = Date.now();
         tickRef.current = setInterval(() => {
           const diff = (Date.now() - startedAtRef.current) / 1000;
           setElapsed(diff);
         }, 1000);
-
-        // gaEvent?.('demo_start', { count: list.length });
       })
       .catch(e => {
         if (cancelled) return;
@@ -61,11 +57,9 @@ export default function TestDemoClient() {
     };
   }, []);
 
-  // Cleanup intervalo cuando se finaliza
+  // Parar cronómetro al finalizar
   useEffect(() => {
-    if (finished && tickRef.current) {
-      clearInterval(tickRef.current);
-    }
+    if (finished && tickRef.current) clearInterval(tickRef.current);
   }, [finished]);
 
   const current = questions[idx];
@@ -85,13 +79,15 @@ export default function TestDemoClient() {
   const next = () => setIdx(i => Math.min(i + 1, total - 1));
   const prev = () => setIdx(i => Math.max(i - 1, 0));
 
+  // --- Puntuación ---
   function canComputeScore(list) {
-    // Soporta dos variantes:
     // A) preguntas[].respuestas[].es_correcta === true
-    // B) preguntas[].respuesta_correcta_id presente
+    // B) preguntas[].respuesta_correcta_id
     return list.every(q => {
-      const hasA = Array.isArray(q.respuestas) && q.respuestas.some(r => 'es_correcta' in r);
       const hasB = 'respuesta_correcta_id' in q;
+      const hasA =
+        Array.isArray(q.respuestas) &&
+        q.respuestas.some(r => Object.prototype.hasOwnProperty.call(r, 'es_correcta'));
       return hasA || hasB;
     });
   }
@@ -100,7 +96,7 @@ export default function TestDemoClient() {
     let correct = 0;
     for (const q of list) {
       const chosen = selected[q.id];
-      if (!chosen) continue;
+      if (chosen == null) continue;
 
       if ('respuesta_correcta_id' in q) {
         if (q.respuesta_correcta_id === chosen) correct += 1;
@@ -121,18 +117,6 @@ export default function TestDemoClient() {
     const finalScore = readyToScore ? computeScore(questions, answers) : null;
     setScore(finalScore);
     setFinished(true);
-
-    // gaEvent?.('demo_complete', {
-    //   answered: answeredCount,
-    //   total,
-    //   score: finalScore ?? -1,
-    //   duration_sec: Math.floor(elapsed),
-    // });
-  };
-
-  const reset = () => {
-    // Reinicio "soft": volvemos a pedir preguntas nuevas
-    window.location.reload();
   };
 
   // ---------------- UI ----------------
@@ -207,27 +191,20 @@ export default function TestDemoClient() {
             </p>
           )}
 
-          <div className="mt-10 grid gap-3 sm:grid-cols-2">
-            <button
-              onClick={reset}
-              className="w-full px-5 py-3 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-50"
-            >
-              Probar otro test
-            </button>
-            <Link
-              href="/precios"
-              className="w-full text-center px-5 py-3 rounded-xl bg-primary text-white hover:bg-primary-hover font-semibold"
-            >
-              Suscríbete ahora
-            </Link>
-          </div>
+          {/* ⬇️ Un único botón largo, estilo amarillo como el resto del sitio */}
+          <Link
+            href="/precios"
+            className="mt-10 block w-full text-center px-5 py-4 rounded-xl bg-yellow-500 text-white hover:text-black font-semibold text-lg"
+          >
+            Subscribete ahora
+          </Link>
 
-          <p className="mt-6 text-center text-sm text-gray-500">
-            Suscríbete para acceder a todos los tests, justificaciones legales, simulacros y seguimiento de progreso.
+          <p className="mt-4 text-center text-sm text-gray-500">
+            Accede a todos los tests, justificaciones legales, simulacros y seguimiento de progreso.
           </p>
         </div>
 
-        {/* Bloque atractivo de valor añadido */}
+        {/* Bloques de valor añadido */}
         <div className="max-w-3xl mx-auto mt-10 grid gap-4 sm:grid-cols-3">
           <div className="bg-white border border-gray-200 rounded-xl p-4 text-center">
             <div className="text-lg font-semibold text-gray-900">Justificaciones</div>
@@ -361,7 +338,7 @@ export default function TestDemoClient() {
           <p className="text-gray-600 text-sm mt-1">Suscríbete para acceder a todos los tests, justificaciones y estadísticas.</p>
           <Link
             href="/precios"
-            className="inline-block mt-3 px-5 py-3 rounded-xl bg-primary text-white hover:bg-primary-hover font-semibold"
+            className="inline-block mt-3 px-5 py-3 rounded-xl bg-yellow-500 text-white hover:text-black font-semibold"
           >
             Empieza 7 días gratis
           </Link>
