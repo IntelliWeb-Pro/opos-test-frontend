@@ -23,7 +23,8 @@ function Navbar() {
 
     const id = idle(() => {
       router.prefetch('/precios');
-      router.prefetch('/registro'); // aunque no haya link directo, acelera la navegación desde /precios
+      router.prefetch('/registro');
+      router.prefetch('/login');       // ⬅️ NUEVO
     });
 
     return () => cancel(id);
@@ -31,6 +32,7 @@ function Navbar() {
 
   // Prefetch al hover/focus de los CTAs
   const prefetchPrecios = () => router.prefetch('/precios');
+  const prefetchLogin = () => router.prefetch('/login');  // ⬅️ NUEVO
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
@@ -83,7 +85,15 @@ function Navbar() {
               </div>
             ) : (
               <div className="flex items-center space-x-2">
-                <Link href="/login" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Iniciar Sesión</Link>
+                <Link
+                  href="/login"
+                  prefetch
+                  onPointerEnter={prefetchLogin}   // ⬅️ NUEVO
+                  onFocus={prefetchLogin}          // ⬅️ NUEVO
+                  className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Iniciar Sesión
+                </Link>
                 <Link
                   href="/precios"
                   prefetch
@@ -141,7 +151,15 @@ function Navbar() {
               </>
             ) : (
               <>
-                <Link href="/login" className="text-gray-700 hover:text-primary block px-3 py-2 rounded-md text-base font-medium">Iniciar Sesión</Link>
+                <Link
+                  href="/login"
+                  prefetch
+                  onPointerEnter={prefetchLogin}     // ⬅️ NUEVO
+                  onFocus={prefetchLogin}            // ⬅️ NUEVO
+                  className="text-gray-700 hover:text-primary block px-3 py-2 rounded-md text-base font-medium"
+                >
+                  Iniciar Sesión
+                </Link>
                 <Link
                   href="/precios"
                   prefetch
