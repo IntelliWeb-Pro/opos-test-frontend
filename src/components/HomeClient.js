@@ -5,7 +5,6 @@ import Link from 'next/link';
 import Head from 'next/head';
 import CallToAction from '@/components/CallToAction'; // Importamos el nuevo componente
 
-
 const useScrollAnimation = () => {
   const ref = useRef(null);
   useEffect(() => {
@@ -77,7 +76,6 @@ export default function HomePage() {
         return response.json();
       })
       .then(data => {
-        // Guardamos todas las oposiciones, ya que ahora las renderizamos dinámicamente
         setOposiciones(data);
         setLoading(false);
       })
@@ -85,25 +83,29 @@ export default function HomePage() {
   }, []);
 
   const oposicionesRef = useScrollAnimation();
+  const beneficiosRef = useScrollAnimation();   // ⬅️ NUEVO
+  const comoRef = useScrollAnimation();         // ⬅️ NUEVO
+  const recursosRef = useScrollAnimation();     // ⬅️ NUEVO
   const faqRef = useScrollAnimation();
 
   return (
     <div>
       <Head>
         <title>TestEstado - Plataforma Nº1 para Opositores en España</title>
-        <meta name="description" content="Practica con miles de preguntas tipo test para tus oposiciones. Auxiliar Administrativo, Administrativo del Estado." />
+        <meta name="description" content="Practica con miles de preguntas tipo test." />
         <meta name="keywords" content="oposiciones, test oposiciones, auxiliar administrativo, administrativo del estado, correos, policía, guardia civil, test online, preguntas justificadas, preparación de oposiciones" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      {/* Hero Section */}
+      {/* =================== HERO (H1 ÚNICO) =================== */}
       <section
         className="h-screen w-full fixed top-0 left-0 flex items-center justify-center text-center bg-gradient-to-b from-transparent to-transparent"
         style={{ opacity: heroOpacity, pointerEvents: heroOpacity === 0 ? 'none' : 'auto', zIndex: 1 }}
       >
         <div className="px-4">
+          {/* H1 semántico y único */}
           <h1 className="text-5xl md:text-6xl font-extrabold text-white drop-shadow-lg">
-                  Aprueba tus Oposiciones de Administrativo y Auxiliar del Estado con los mejores test
+            Aprueba tus Oposiciones de Administrativo y Auxiliar del Estado con los mejores test
           </h1>
           <p className="text-xl md:text-2xl mt-6 max-w-3xl mx-auto text-white drop-shadow-md">
             Miles de preguntas actualizadas y justificadas para que practiques sin límites y consigas tu objetivo.
@@ -112,15 +114,25 @@ export default function HomePage() {
             <p>&quot;Somos lo que hacemos repetidamente. La excelencia, entonces, no es un acto, sino un hábito.&quot;</p>
             <cite className="mt-2 block not-italic font-semibold">- Aristóteles</cite>
           </blockquote>
+
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <Link href="/precios" className="inline-block bg-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-hover transition">
+              Empezar gratis
+            </Link>
+            <Link href="/sobre-nosotros" className="inline-block bg-white/90 text-gray-900 px-6 py-3 rounded-xl font-semibold hover:bg-white transition">
+              Sobre nosotros
+            </Link>
+          </div>
         </div>
       </section>
 
       <div className="h-screen"></div>
 
       <div className="relative z-20 bg-light">
+        {/* =================== OPOSICIONES =================== */}
         <section ref={oposicionesRef} className="py-16 bg-light opacity-0 px-4" style={{ animationDelay: '200ms' }}>
           <div className="container mx-auto">
-            {/* --- SECCIÓN MODIFICADA PARA USAR SLUGS --- */}
+            <h2 className="text-3xl font-bold text-dark text-center mb-8">Selecciona tu oposición</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-4xl mx-auto">
               {loading && <p>Cargando oposiciones...</p>}
               {error && <p className="text-red-500">{error}</p>}
@@ -136,8 +148,123 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* =================== BENEFICIOS (H2 + H3) =================== */}
+        <section ref={beneficiosRef} className="py-16 bg-white opacity-0 px-4" style={{ animationDelay: '150ms' }}>
+          <div className="container mx-auto max-w-6xl">
+            <h2 className="text-3xl font-bold text-dark text-center mb-10">¿Por qué TestEstado?</h2>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <article className="bg-white rounded-2xl shadow p-6 border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">Preguntas actualizadas</h3>
+                <p className="mt-2 text-sm text-gray-600">Banco en crecimiento para C1 y C2, con revisiones constantes.</p>
+              </article>
+              <article className="bg-white rounded-2xl shadow p-6 border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">Justificaciones detalladas</h3>
+                <p className="mt-2 text-sm text-gray-600">Aprende de cada fallo con explicaciones claras y legales.</p>
+              </article>
+              <article className="bg-white rounded-2xl shadow p-6 border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">Seguimiento real</h3>
+                <p className="mt-2 text-sm text-gray-600">Estadísticas, comparativas y evolución para priorizar mejor.</p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA existente */}
         <CallToAction />
 
+        {/* =================== CÓMO FUNCIONA =================== */}
+        <section ref={comoRef} className="py-16 bg-white opacity-0 px-4" style={{ animationDelay: '150ms' }}>
+          <div className="container mx-auto max-w-6xl">
+            <h2 className="text-3xl font-bold text-dark text-center mb-10">¿Cómo funciona?</h2>
+            <ol className="grid gap-6 sm:grid-cols-3 list-decimal list-inside">
+              <li className="bg-white rounded-2xl shadow p-6 border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">Crea tu cuenta</h3>
+                <p className="mt-2 text-sm text-gray-600">
+                  <Link href="/registro" className="text-primary underline hover:no-underline">Regístrate</Link> y disfruta de 7 días gratis.
+                </p>
+              </li>
+              <li className="bg-white rounded-2xl shadow p-6 border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">Elige tu oposición</h3>
+                <p className="mt-2 text-sm text-gray-600">
+                  Practica para <Link href="/administrativo" className="text-primary underline hover:no-underline">Administrativo (C1)</Link> o{' '}
+                  <Link href="/auxiliar-administrativo" className="text-primary underline hover:no-underline">Auxiliar (C2)</Link>.
+                </p>
+              </li>
+              <li className="bg-white rounded-2xl shadow p-6 border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">Mejora cada día</h3>
+                <p className="mt-2 text-sm text-gray-600">
+                  Repite, revisa justificaciones y monitoriza tu avance en{' '}
+                  <Link href="/progreso" className="text-primary underline hover:no-underline">Mi Progreso</Link>.
+                </p>
+              </li>
+            </ol>
+          </div>
+        </section>
+
+        {/* =================== RECURSOS RECOMENDADOS (interlinking + externos) =================== */}
+        <section ref={recursosRef} className="py-16 bg-light opacity-0 px-4" style={{ animationDelay: '150ms' }}>
+          <div className="container mx-auto max-w-6xl">
+            <h2 className="text-3xl font-bold text-white text-center mb-10">Recursos recomendados</h2>
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {/* Internos */}
+              <Link
+                href="/precios"
+                className="block bg-white rounded-xl border border-gray-200 p-5 hover:shadow-sm hover:border-primary transition"
+              >
+                <h3 className="text-primary font-semibold">Planes y precios</h3>
+                <p className="text-sm text-secondary mt-1">Empieza con 7 días gratis. Cancela cuando quieras.</p>
+              </Link>
+
+              <Link
+                href="/blog"
+                className="block bg-white rounded-xl border border-gray-200 p-5 hover:shadow-sm hover:border-primary transition"
+              >
+                <h3 className="text-primary font-semibold">Blog de TestEstado</h3>
+                <p className="text-sm text-secondary mt-1">Consejos, estrategias y cambios de convocatoria.</p>
+              </Link>
+
+              <Link
+                href="/contacto"
+                className="block bg-white rounded-xl border border-gray-200 p-5 hover:shadow-sm hover:border-primary transition"
+              >
+                <h3 className="text-primary font-semibold">¿Dudas? Contáctanos</h3>
+                <p className="text-sm text-secondary mt-1">Resolvemos tus preguntas sobre planes y acceso.</p>
+              </Link>
+
+              <Link
+                href="/sobre-nosotros"
+                className="block bg-white rounded-xl border border-gray-200 p-5 hover:shadow-sm hover:border-primary transition"
+              >
+                <h3 className="text-primary font-semibold">Sobre nosotros</h3>
+                <p className="text-sm text-secondary mt-1">Conoce el proyecto y nuestra misión.</p>
+              </Link>
+
+              {/* Externos de autoridad */}
+              <a
+                href="https://www.boe.es/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block bg-white rounded-xl border border-gray-200 p-5 hover:shadow-sm transition"
+              >
+                <h3 className="text-primary font-semibold">BOE</h3>
+                <p className="text-sm text-secondary mt-1">Consulta legislación y convocatorias oficiales.</p>
+              </a>
+
+              <a
+                href="https://www.inap.es/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block bg-white rounded-xl border border-gray-200 p-5 hover:shadow-sm transition"
+              >
+                <h3 className="text-primary font-semibold">INAP</h3>
+                <p className="text-sm text-secondary mt-1">Recursos de formación y novedades para opositores.</p>
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* =================== FAQ =================== */}
         <section ref={faqRef} className="py-16 bg-white opacity-0 px-4" style={{ animationDelay: '150ms' }}>
           <div className="container mx-auto max-w-4xl">
             <h2 className="text-3xl font-bold text-center mb-12 text-dark">Preguntas Frecuentes</h2>
