@@ -1,6 +1,7 @@
 // src/app/page.js
 // Server component wrapper para permitir metadata a nivel de página
 import HomeClient from '@/components/HomeClient';
+import HomeInterlinks from '@/components/HomeInterlinks'; // ⬅️ NUEVO: bloque de interlinking
 
 export const metadata = {
   title: 'TestEstado | Tests para Oposiciones de Administrativo C1 y C2',
@@ -29,6 +30,8 @@ export default function Page() {
   return (
     <>
       <HomeClient />
+      {/* ⬇️ Bloque de interlinking suave bajo el hero */}
+      <HomeInterlinks />
     </>
   );
 }
