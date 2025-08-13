@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-static';
+
 import Link from 'next/link';
 import { useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -11,13 +13,12 @@ export default function PagoExitosoPage() {
   useEffect(() => {
     const sessionId = searchParams.get('session_id') || null;
 
-    // Evento de conversión propio
+    // Evento de conversión propio (seguro aunque GA aún no esté listo)
     gaEvent('checkout_success', {
       session_id: sessionId || '(unknown)',
     });
 
-    // (Opcional) Evento estándar "purchase" de GA4.
-    // Si en el futuro quieres pasar valor/moneda, podemos ampliarlo aquí.
+    // (Opcional) Evento estándar "purchase" de GA4
     // window.gtag?.('event', 'purchase', {
     //   transaction_id: sessionId || '(unknown)',
     // });

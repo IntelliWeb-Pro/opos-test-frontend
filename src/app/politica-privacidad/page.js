@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 // src/app/politica-privacidad/page.js
 
 const LegalSection = ({ title, children }) => (

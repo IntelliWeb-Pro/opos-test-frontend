@@ -24,6 +24,9 @@ export const metadata = {
   },
 };
 
+// ⬇️ Fuerza SSG (no usa datos en SSR)
+export const dynamic = 'force-static';
+
 export default function Page() {
   const site = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.testestado.es';
   const url = `${site}/precios`;
@@ -103,7 +106,7 @@ export default function Page() {
 
   return (
     <>
-      {/* JSON-LD server-rendered para que aparezca en view-source */}
+      {/* JSON-LD server-rendered para view-source */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}

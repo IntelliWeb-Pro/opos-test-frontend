@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 // src/app/terminos-condiciones/page.js
 
 const LegalSection = ({ title, children }) => (
