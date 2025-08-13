@@ -3,6 +3,14 @@ import ClientLayout from "@/components/ClientLayout";
 import Script from "next/script";
 import GAListener from "@/components/GAListener";
 import { Suspense } from "react";
+import { Open_Sans } from "next/font/google"; // ⬅️ NUEVO
+
+// Cargamos Open Sans autohospedada (sin FOUT/FOIT)
+const openSans = Open_Sans({
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
+  display: "swap",
+});
 
 // --- METADATA OPTIMIZADA PARA SEO ---
 export const metadata = {
@@ -41,8 +49,9 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="es">
-      <body className="font-sans bg-light">
-        {/* ⬇️ Suspense global para cualquier página/client component que use useSearchParams, etc. */}
+      {/* Aplicamos la clase de la fuente en el BODY (quitamos font-sans para evitar conflicto) */}
+      <body className={`${openSans.className} bg-light`}>
+        {/* ⬇️ Suspense global para componentes cliente (useSearchParams, etc.) */}
         <Suspense fallback={null}>
           <ClientLayout>{children}</ClientLayout>
         </Suspense>
