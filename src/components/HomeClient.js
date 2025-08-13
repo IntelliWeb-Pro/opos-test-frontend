@@ -186,8 +186,7 @@ export default function HomePage() {
               <li className="bg-white rounded-2xl shadow p-6 border border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900">Elige tu oposición</h3>
                 <p className="mt-2 text-sm text-gray-600">
-                  Practica para <Link href="/administrativo" className="text-primary underline hover:no-underline">Administrativo (C1)</Link> o{' '}
-                  <Link href="/auxiliar-administrativo" className="text-primary underline hover:no-underline">Auxiliar (C2)</Link>.
+                  Practica para <Link key={opo.id} href={`/oposicion/${opo.slug}`} className="block bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300"></Link>
                 </p>
               </li>
               <li className="bg-white rounded-2xl shadow p-6 border border-gray-200">
@@ -204,7 +203,7 @@ export default function HomePage() {
         {/* =================== RECURSOS RECOMENDADOS (interlinking + externos) =================== */}
         <section ref={recursosRef} className="py-16 bg-light opacity-0 px-4" style={{ animationDelay: '150ms' }}>
           <div className="container mx-auto max-w-6xl">
-            <h2 className="text-3xl font-bold text-white text-center mb-10">Recursos recomendados</h2>
+            <h2 className="text-3xl font-bold text-black text-center mb-10">Recursos recomendados</h2>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {/* Internos */}
