@@ -36,10 +36,9 @@ export default function SobreNosotrosPage() {
           <h2 className="text-xl font-semibold text-primary">Nuestra misión</h2>
           <p className="text-secondary mt-2">
             Ayudarte a lograr el objetivo de aprobar tu oposición con los test de mayor calidad elaborados a través de inteligenia artificial y respaldo jurista.
-            <strong> qué fallas, por qué</strong> y <strong>cómo mejorar</strong> de forma práctica.
+            <strong> Indicando en qué fallas, por qué</strong> y <strong>cómo mejorar</strong> de forma práctica.
           </p>
         </div>
-
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="text-xl font-semibold text-primary">Metodología</h2>
           <ul className="text-secondary mt-2 list-disc pl-5 space-y-1">
