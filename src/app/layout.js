@@ -31,7 +31,6 @@ export default function RootLayout({ children }) {
     "@type": "WebSite",
     name: "TestEstado",
     url: SITE_URL,
-    // ⬇️ SearchAction: si tu buscador es otra ruta, cambia target a esa URL
     potentialAction: {
       "@type": "SearchAction",
       target: `${SITE_URL}/buscar?q={query}`,
@@ -43,7 +42,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="es">
       <body className="font-sans bg-light">
-        <ClientLayout>{children}</ClientLayout>
+        {/* ⬇️ Suspense global para cualquier página/client component que use useSearchParams, etc. */}
+        <Suspense fallback={null}>
+          <ClientLayout>{children}</ClientLayout>
+        </Suspense>
 
         {/* Listener de pageviews en cada navegación */}
         <Suspense fallback={null}>

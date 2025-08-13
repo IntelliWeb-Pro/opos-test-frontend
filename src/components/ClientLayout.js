@@ -3,7 +3,6 @@
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import Link from 'next/link';
 import { useState } from "react";
-import Head from 'next/head'; // <-- 1. IMPORTAMOS EL COMPONENTE HEAD
 
 // --- Componente de Navegación RESPONSIVO ---
 function Navbar() {
@@ -21,10 +20,23 @@ function Navbar() {
           <div className="hidden md:flex items-center space-x-4">
             <Link href="/blog" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Blog</Link>
             <Link href="/contacto" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Contacto</Link>
-            {user && <Link href="/ranking" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors"git>Ranking</Link>}
-            {user && <Link href="/progreso" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Mi Progreso</Link>}
+            {user && (
+              <Link
+                href="/ranking"
+                className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Ranking
+              </Link>
+            )}
+            {user && (
+              <Link
+                href="/progreso"
+                className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Mi Progreso
+              </Link>
+            )}
 
-            
             {user ? (
               <div className="flex items-center space-x-4">
                 <span className="text-gray-700 text-sm">Hola, {user.username}</span>
@@ -44,8 +56,18 @@ function Navbar() {
           </div>
           {/* Botón de Hamburguesa */}
           <div className="md:hidden flex items-center">
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-primary focus:outline-none">
-              <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">{isMenuOpen ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /> : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />}</svg>
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-primary focus:outline-none"
+              aria-label="Abrir menú"
+            >
+              <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                {isMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
             </button>
           </div>
         </div>
@@ -81,45 +103,34 @@ function Navbar() {
 }
 
 function Footer() {
-    return (
-        <footer className="bg-white mt-16">
-            <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 border-t">
-                <div className="flex justify-center space-x-4 mb-4 text-sm text-secondary">
-                    <Link href="/aviso-legal" className="hover:text-primary">Aviso Legal</Link>
-                    <Link href="/politica-privacidad" className="hover:text-primary">Política de Privacidad</Link>
-                    <Link href="/politica-cookies" className="hover:text-primary">Política de Cookies</Link>
-                    <Link href="/terminos-condiciones" className="hover:text-primary">Términos y Condiciones</Link>
-                    <Link href="/contacto" className="hover:text-primary">Contacto</Link>
-                </div>
-                <p className="text-center text-sm text-gray-500">
-                    © {new Date().getFullYear()} TestEstado. Todos los derechos reservados.
-                </p>
-            </div>
-        </footer>
-    )
+  return (
+    <footer className="bg-white mt-16">
+      <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 border-t">
+        <div className="flex justify-center space-x-4 mb-4 text-sm text-secondary">
+          <Link href="/aviso-legal" className="hover:text-primary">Aviso Legal</Link>
+          <Link href="/politica-privacidad" className="hover:text-primary">Política de Privacidad</Link>
+          <Link href="/politica-cookies" className="hover:text-primary">Política de Cookies</Link>
+          <Link href="/terminos-condiciones" className="hover:text-primary">Términos y Condiciones</Link>
+          <Link href="/contacto" className="hover:text-primary">Contacto</Link>
+        </div>
+        <p className="text-center text-sm text-gray-500">
+          © {new Date().getFullYear()} TestEstado. Todos los derechos reservados.
+        </p>
+      </div>
+    </footer>
+  );
 }
 
 export default function ClientLayout({ children }) {
-    return (
-        <AuthProvider>
-            {/* --- 2. AÑADIMOS EL COMPONENTE HEAD --- */}
-            <Head>
-                <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-                <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-                <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-                <link rel="manifest" href="/site.webmanifest" />
-                <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#007bff" />
-                <meta name="msapplication-TileColor" content="#ffffff" />
-                <meta name="theme-color" content="#ffffff" />
-                <meta name="apple-mobile-web-app-title" content="TestEstado" />
-            </Head>
-            <div className="flex flex-col min-h-screen">
-                <Navbar />
-                <main className="flex-grow">
-                    {children}
-                </main>
-                <Footer />
-            </div>
-        </AuthProvider>
-    );
+  return (
+    <AuthProvider>
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-grow">
+          {children}
+        </main>
+        <Footer />
+      </div>
+    </AuthProvider>
+  );
 }

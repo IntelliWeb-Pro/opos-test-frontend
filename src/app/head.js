@@ -1,30 +1,48 @@
 export default function Head() {
-  return (
-    <>
-      <title>TestEstado: Test Online para Oposiciones del Estado | Simulacros Reales</title>
-      <meta name="description" content="Practica test para oposiciones del Estado con preguntas oficiales, correcciones legales, estadísticas, y simulacros. ¡Accede gratis y prepárate online!" />
-      <meta name="keywords" content="oposiciones, test oposiciones, auxiliar administrativo, administrativo del estado, test online, psicotécnicos, simulacros, corrección test" />
-      <meta name="robots" content="index, follow" />
-      <meta name="viewport" content="width=device-width, initial-scale=1" />
+  const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.testestado.es";
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-      {/* OpenGraph */}
-      <meta property="og:title" content="TestEstado: Tu plataforma de test para oposiciones" />
-      <meta property="og:description" content="Miles de preguntas tipo test actualizadas para tu oposición. Simulacros, estadísticas, y preparación personalizada." />
-      <meta property="og:image" content="https://testestado.com/og-image.jpg" />
-      <meta property="og:url" content="https://testestado.com" />
-      <meta property="og:type" content="website" />
+  let apiOrigin = null;
+  try {
+    apiOrigin = API_URL ? new URL(API_URL).origin : null;
+  } catch {}
 
-      {/* Twitter Card */}
-      <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content="TestEstado: Test Online para Oposiciones del Estado" />
-      <meta name="twitter:description" content="Prepara tus oposiciones con test reales, estadísticas, y corrección automatizada. ¡Accede gratis!" />
-      <meta name="twitter:image" content="https://testestado.com/og-image.jpg" />
+  return (
+    <>
+      {/* Canonical y básicos */}
+      <link rel="canonical" href={`${SITE_URL}/`} />
+      <meta name="robots" content="index, follow" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-      {/* Canonical */}
-      <link rel="canonical" href="https://testestado.com/" />
+      {/* Favicons / PWA */}
+      <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+      <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+      <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+      <link rel="manifest" href="/site.webmanifest" />
+      <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#007bff" />
+      <meta name="msapplication-TileColor" content="#ffffff" />
+      <meta name="theme-color" content="#ffffff" />
+      <meta name="apple-mobile-web-app-title" content="TestEstado" />
 
-      {/* Favicon */}
-      <link rel="icon" href="/favicon.ico" />
-    </>
-  );
+      {/* (Opcional) Keywords */}
+      <meta
+        name="keywords"
+        content="oposiciones, test oposiciones, auxiliar administrativo, administrativo del estado, test online, psicotécnicos, simulacros, corrección test"
+      />
+
+      {/* Performance: preconnect / dns-prefetch */}
+      <link rel="preconnect" href="https://www.googletagmanager.com" crossOrigin="" />
+      <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+
+      <link rel="preconnect" href="https://js.stripe.com" crossOrigin="" />
+      <link rel="dns-prefetch" href="https://js.stripe.com" />
+
+      {apiOrigin && (
+        <>
+          <link rel="preconnect" href={apiOrigin} crossOrigin="" />
+          <link rel="dns-prefetch" href={apiOrigin} />
+        </>
+      )}
+    </>
+  );
 }
