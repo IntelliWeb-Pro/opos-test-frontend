@@ -2,12 +2,35 @@
 
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import Link from 'next/link';
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 // --- Componente de Navegación RESPONSIVO ---
 function Navbar() {
   const { user, logout, isSubscribed } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const router = useRouter();
+
+  // Prefetch en idle de rutas clave (una sola vez)
+  useEffect(() => {
+    const idle = typeof window !== 'undefined' && 'requestIdleCallback' in window
+      ? window.requestIdleCallback
+      : (cb) => setTimeout(cb, 200);
+
+    const cancel = typeof window !== 'undefined' && 'cancelIdleCallback' in window
+      ? window.cancelIdleCallback
+      : (id) => clearTimeout(id);
+
+    const id = idle(() => {
+      router.prefetch('/precios');
+      router.prefetch('/registro'); // aunque no haya link directo, acelera la navegación desde /precios
+    });
+
+    return () => cancel(id);
+  }, [router]);
+
+  // Prefetch al hover/focus de los CTAs
+  const prefetchPrecios = () => router.prefetch('/precios');
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
@@ -41,16 +64,35 @@ function Navbar() {
               <div className="flex items-center space-x-4">
                 <span className="text-gray-700 text-sm">Hola, {user.username}</span>
                 {!isSubscribed && (
-                  <Link href="/precios" className="bg-yellow-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-yellow-500 transition-colors">
+                  <Link
+                    href="/precios"
+                    prefetch
+                    onPointerEnter={prefetchPrecios}
+                    onFocus={prefetchPrecios}
+                    className="bg-yellow-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-yellow-500 transition-colors"
+                  >
                     Subscríbete
                   </Link>
                 )}
-                <button onClick={logout} className="bg-secondary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-600 transition-colors">Cerrar Sesión</button>
+                <button
+                  onClick={logout}
+                  className="bg-secondary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-600 transition-colors"
+                >
+                  Cerrar Sesión
+                </button>
               </div>
             ) : (
               <div className="flex items-center space-x-2">
                 <Link href="/login" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Iniciar Sesión</Link>
-                <Link href="/precios" className="bg-yellow-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:text-black transition-colors">Prueba Gratis</Link>
+                <Link
+                  href="/precios"
+                  prefetch
+                  onPointerEnter={prefetchPrecios}
+                  onFocus={prefetchPrecios}
+                  className="bg-yellow-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:text-black transition-colors"
+                >
+                  Prueba Gratis
+                </Link>
               </div>
             )}
           </div>
@@ -85,14 +127,30 @@ function Navbar() {
               <>
                 <div className="px-3 py-2 text-gray-700">Hola, {user.username}</div>
                 {!isSubscribed && (
-                  <Link href="/precios" className="bg-yellow-500 text-white block px-3 py-2 rounded-md text-base font-medium hover:text-black">Prueba Gratis</Link>
+                  <Link
+                    href="/precios"
+                    prefetch
+                    onPointerEnter={prefetchPrecios}
+                    onFocus={prefetchPrecios}
+                    className="bg-yellow-500 text-white block px-3 py-2 rounded-md text-base font-medium hover:text-black"
+                  >
+                    Prueba Gratis
+                  </Link>
                 )}
                 <button onClick={logout} className="w-full text-left bg-secondary text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-gray-600">Cerrar Sesión</button>
               </>
             ) : (
               <>
                 <Link href="/login" className="text-gray-700 hover:text-primary block px-3 py-2 rounded-md text-base font-medium">Iniciar Sesión</Link>
-                <Link href="/precios" className="bg-yellow-500 text-white block px-3 py-2 rounded-md text-base font-medium hover:text-black">Prueba Gratis</Link>
+                <Link
+                  href="/precios"
+                  prefetch
+                  onPointerEnter={prefetchPrecios}
+                  onFocus={prefetchPrecios}
+                  className="bg-yellow-500 text-white block px-3 py-2 rounded-md text-base font-medium hover:text-black"
+                >
+                  Prueba Gratis
+                </Link>
               </>
             )}
           </div>
