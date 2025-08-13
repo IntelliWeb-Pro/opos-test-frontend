@@ -35,7 +35,7 @@ export default function SobreNosotrosPage() {
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="text-xl font-semibold text-primary">Nuestra misión</h2>
           <p className="text-secondary mt-2">
-            Reducir la incertidumbre del estudio con una plataforma que te diga
+            Ayudarte a lograr el objetivo de aprobar tu oposición con los test de mayor calidad elaborados a través de inteligenia artificial y respaldo jurista.
             <strong> qué fallas, por qué</strong> y <strong>cómo mejorar</strong> de forma práctica.
           </p>
         </div>
