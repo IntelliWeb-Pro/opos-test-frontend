@@ -24,7 +24,7 @@ function Navbar() {
     const id = idle(() => {
       router.prefetch('/precios');
       router.prefetch('/registro');
-      router.prefetch('/login');       // ⬅️ NUEVO
+      router.prefetch('/login');
     });
 
     return () => cancel(id);
@@ -32,17 +32,24 @@ function Navbar() {
 
   // Prefetch al hover/focus de los CTAs
   const prefetchPrecios = () => router.prefetch('/precios');
-  const prefetchLogin = () => router.prefetch('/login');  // ⬅️ NUEVO
+  const prefetchLogin = () => router.prefetch('/login');
 
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-50">
+    <header className="bg-white shadow-sm sticky top-0 z-50" role="banner">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex-shrink-0">
-            <Link href="/" className="text-2xl font-bold text-primary">TestEstado</Link>
+            <Link href="/" className="text-2xl font-bold text-primary" aria-label="Ir al inicio">
+              TestEstado
+            </Link>
           </div>
+
           {/* Menú de Escritorio */}
-          <div className="hidden md:flex items-center space-x-4">
+          <nav
+            className="hidden md:flex items-center space-x-4"
+            role="navigation"
+            aria-label="Navegación principal"
+          >
             <Link href="/blog" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Blog</Link>
             <Link href="/contacto" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Contacto</Link>
             {user && (
@@ -88,8 +95,8 @@ function Navbar() {
                 <Link
                   href="/login"
                   prefetch
-                  onPointerEnter={prefetchLogin}   // ⬅️ NUEVO
-                  onFocus={prefetchLogin}          // ⬅️ NUEVO
+                  onPointerEnter={prefetchLogin}
+                  onFocus={prefetchLogin}
                   className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors"
                 >
                   Iniciar Sesión
@@ -105,15 +112,18 @@ function Navbar() {
                 </Link>
               </div>
             )}
-          </div>
+          </nav>
+
           {/* Botón de Hamburguesa */}
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-primary focus:outline-none"
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               aria-label="Abrir menú"
+              aria-controls="mobile-menu"
+              aria-expanded={isMenuOpen ? 'true' : 'false'}
             >
-              <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+              <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 {isMenuOpen ? (
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 ) : (
@@ -124,9 +134,15 @@ function Navbar() {
           </div>
         </div>
       </div>
+
       {/* Menú Desplegable Móvil */}
       {isMenuOpen && (
-        <div className="md:hidden bg-white shadow-lg">
+        <nav
+          id="mobile-menu"
+          className="md:hidden bg-white shadow-lg"
+          role="navigation"
+          aria-label="Navegación móvil"
+        >
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <Link href="/blog" className="text-gray-700 hover:text-primary block px-3 py-2 rounded-md text-base font-medium">Blog</Link>
             <Link href="/contacto" className="text-gray-700 hover:text-primary block px-3 py-2 rounded-md text-base font-medium">Contacto</Link>
@@ -147,15 +163,20 @@ function Navbar() {
                     Prueba Gratis
                   </Link>
                 )}
-                <button onClick={logout} className="w-full text-left bg-secondary text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-gray-600">Cerrar Sesión</button>
+                <button
+                  onClick={logout}
+                  className="w-full text-left bg-secondary text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-gray-600"
+                >
+                  Cerrar Sesión
+                </button>
               </>
             ) : (
               <>
                 <Link
                   href="/login"
                   prefetch
-                  onPointerEnter={prefetchLogin}     // ⬅️ NUEVO
-                  onFocus={prefetchLogin}            // ⬅️ NUEVO
+                  onPointerEnter={prefetchLogin}
+                  onFocus={prefetchLogin}
                   className="text-gray-700 hover:text-primary block px-3 py-2 rounded-md text-base font-medium"
                 >
                   Iniciar Sesión
@@ -172,7 +193,7 @@ function Navbar() {
               </>
             )}
           </div>
-        </div>
+        </nav>
       )}
     </header>
   );
@@ -180,7 +201,7 @@ function Navbar() {
 
 function Footer() {
   return (
-    <footer className="bg-white mt-16">
+    <footer className="bg-white mt-16" role="contentinfo">
       <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 border-t">
         <div className="flex justify-center space-x-4 mb-4 text-sm text-secondary">
           <Link href="/aviso-legal" className="hover:text-primary">Aviso Legal</Link>
@@ -200,9 +221,12 @@ function Footer() {
 export default function ClientLayout({ children }) {
   return (
     <AuthProvider>
+      {/* Skip link accesible */}
+      <a href="#main-content" className="skip-link">Saltar al contenido</a>
+
       <div className="flex flex-col min-h-screen">
         <Navbar />
-        <main className="flex-grow">
+        <main id="main-content" role="main" className="flex-grow">
           {children}
         </main>
         <Footer />
