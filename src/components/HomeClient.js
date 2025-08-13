@@ -183,34 +183,43 @@ export default function HomePage() {
         <CallToAction />
 
         {/* =================== CÓMO FUNCIONA =================== */}
-        <section ref={comoRef} className="py-16 bg-white opacity-0 px-4" style={{ animationDelay: '150ms' }}>
+        <section ref={comoRef} className="py-16 bg-light opacity-0 px-4" style={{ animationDelay: '150ms' }}>
           <div className="container mx-auto max-w-6xl">
-            <h2 className="text-3xl font-bold text-dark text-center mb-10">¿Cómo funciona?</h2>
-            <ol className="grid gap-6 sm:grid-cols-3 list-decimal list-inside">
-              <li className="bg-white rounded-2xl shadow p-6 border border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">Crea tu cuenta</h3>
-                <p className="mt-2 text-sm text-gray-600">
-                  <Link href="/registro" className="text-primary underline hover:no-underline">Regístrate</Link> y disfruta de 7 días gratis.
-                </p>
-              </li>
-              <li className="bg-white rounded-2xl shadow p-6 border border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">Elige tu oposición</h3>
-                {oposiciones.map(opo => (
-                  <p key={opo.id} className="mt-2 text-sm text-gray-600">
-                    Practica para <Link href={`/oposicion/${opo.slug}`} className="text-primary underline hover:no-underline">{opo.nombre}</Link>
-                  </p>
-                ))}
-              </li>
-              <li className="bg-white rounded-2xl shadow p-6 border border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">Mejora cada día</h3>
-                <p className="mt-2 text-sm text-gray-600">
-                  Repite, revisa justificaciones y monitoriza tu avance en{' '}
-                  <Link href="/progreso" className="text-primary underline hover:no-underline">Mi Progreso</Link>.
-                </p>
-              </li>
-            </ol>
-          </div>
-        </section>
+            <h2 className="text-3xl font-bold text-black text-center mb-10">¿Cómo funciona?</h2>
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {/* Internos */}
+              <Link
+                href="/registro"
+                className="block bg-white rounded-xl border border-gray-200 p-5 hover:shadow-sm hover:border-primary transition"
+              >
+                <h3 className="text-primary font-semibold">Crea tu cuenta</h3>
+                <p className="text-sm text-secondary mt-1">Registrate y disfruta de 7 días gratis.</p>
+              </Link>
+
+              <Link
+                href="/oposicion/auxiliar-adm-estado-c2-temas"
+                className="block bg-white rounded-xl border border-gray-200 p-5 hover:shadow-sm hover:border-primary transition"
+              >
+                <h3 className="text-primary font-semibold">Elige tu oposición</h3>
+                <p className="text-sm text-secondary mt-1">Auxiliar Administrativo del Estado C2</p>
+              </Link>
+
+              <Link
+                href="/progreso"
+                className="block bg-white rounded-xl border border-gray-200 p-5 hover:shadow-sm hover:border-primary transition"
+              >
+                <h3 className="text-primary font-semibold">Mejora cada día</h3>
+                <p className="text-sm text-secondary mt-1">Repite, revisa justificaciones y monitoriza tu avance en "Mi Progreso".</p>
+              </Link>
+
+              <Link
+                href="/ranking"
+                className="block bg-white rounded-xl border border-gray-200 p-5 hover:shadow-sm hover:border-primary transition"
+              >
+                <h3 className="text-primary font-semibold">Mídete</h3>
+                <p className="text-sm text-secondary mt-1">Comparate con otros usuarios para saber en que puesto estás semanalmente.</p>
+              </Link>
 
         {/* =================== RECURSOS RECOMENDADOS (interlinking + externos) =================== */}
         <section ref={recursosRef} className="py-16 bg-light opacity-0 px-4" style={{ animationDelay: '150ms' }}>
