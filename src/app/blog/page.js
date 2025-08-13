@@ -3,6 +3,8 @@ import Link from 'next/link';
 
 export const revalidate = 900; // 15 minutos de ISR (HTML servido ya con contenido)
 
+const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.testestado.es';
+
 async function getPosts() {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blog/`, {
@@ -41,8 +43,41 @@ export const metadata = {
 export default async function BlogListPage() {
   const posts = await getPosts();
 
+  // --- JSON-LD: migas y listado de items ---
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Inicio', item: SITE },
+      { '@type': 'ListItem', position: 2, name: 'Blog', item: `${SITE}/blog` },
+    ],
+  };
+
+  const itemListJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: posts.map((p, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: `${SITE}/blog/${p.slug}`,
+      name: p.titulo ?? p.title ?? 'Sin título',
+    })),
+  };
+
   return (
     <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* JSON-LD inline */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      {posts.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+        />
+      )}
+
       <header className="mb-12 text-center">
         <h1 className="text-4xl font-bold text-white">Blog de TestEstado</h1>
         <p className="text-lg text-white mt-2">

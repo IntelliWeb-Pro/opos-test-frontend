@@ -1,59 +1,73 @@
 'use client';
 
-// Enviamos CLS, LCP, FID, INP, TTFB, FCP a GA4 como eventos
-// Requisitos: GA4 ya cargado (window.gtag disponible)
-import { useEffect } from 'react';
+// Envía CLS, LCP, FID, INP, TTFB, FCP a GA4 como eventos
+import { useEffect, useRef } from 'react';
 
 export default function WebVitalsGA() {
+  const initialized = useRef(false);
+
   useEffect(() => {
-    let unsub = null;
+    if (initialized.current) return;
+    initialized.current = true;
+
+    const waitForGtag = () =>
+      new Promise((resolve) => {
+        if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+          resolve();
+          return;
+        }
+        const start = Date.now();
+        const id = setInterval(() => {
+          if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+            clearInterval(id);
+            resolve();
+          } else if (Date.now() - start > 5000) {
+            clearInterval(id);
+            resolve(); // seguimos, si no está gtag simplemente no enviamos
+          }
+        }, 150);
+      });
+
+    let unsub = () => {};
 
     (async () => {
-      // Importa onCLS, onINP, etc. de forma lazy
-      const {
-        onCLS,
-        onFID,
-        onLCP,
-        onINP,
-        onTTFB,
-        onFCP,
-      } = await import('web-vitals');
+      await waitForGtag();
+
+      // Import lazy para no afectar al TTI
+      const { onCLS, onFID, onLCP, onINP, onTTFB, onFCP } = await import('web-vitals');
 
       const sendToGA = (metric) => {
-        // GA4: event name + value (en milisegundos para casi todas)
-        // INP/FID/LCP/FCP/TTFB vienen en ms; CLS es fracción (0–1), la multiplicamos por 1000 para tener un número entero comparable.
-        const value =
-          metric.name === 'CLS' ? Math.round(metric.value * 1000) : Math.round(metric.value);
+        const value = metric.name === 'CLS'
+          ? Math.round(metric.value * 1000) // CLS como entero (milli-CLS)
+          : Math.round(metric.value);
 
-        // Enviamos a GA4 si está disponible
         if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
           window.gtag('event', metric.name, {
-            // GA4 recomienda usar 'value' numérico + algunos params útiles
             value,
             metric_id: metric.id,
-            // page info
+            metric_value: value,
+            metric_delta: Math.round(metric.delta || 0),
+            // Pistas útiles:
             page_path: window.location.pathname,
             page_title: document?.title,
+            transport_type: 'beacon',
+            // En dev se ve en DebugView
+            debug_mode: process.env.NODE_ENV !== 'production',
           });
         }
       };
 
-      // Suscribimos cada métrica
-      const subs = [
-        onCLS(sendToGA),
-        onFID(sendToGA),
-        onLCP(sendToGA),
-        onINP(sendToGA),
-        onTTFB(sendToGA),
-        onFCP(sendToGA),
-      ];
-
-      // Guardamos para "desuscribir" si fuera necesario (no estrictamente requerido)
-      unsub = () => subs.forEach(() => {});
+      // Suscripciones
+      onCLS(sendToGA);
+      onFID(sendToGA);
+      onLCP(sendToGA);
+      onINP(sendToGA);
+      onTTFB(sendToGA);
+      onFCP(sendToGA);
     })();
 
     return () => {
-      if (unsub) unsub();
+      unsub();
     };
   }, []);
 

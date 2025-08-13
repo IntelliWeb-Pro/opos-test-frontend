@@ -3,10 +3,8 @@ export default function Head() {
   const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.testestado.es';
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-  // 👉 URL de la imagen de fondo (si la usas como LCP; si no, puedes eliminar el preload de abajo)
-  const HERO_IMAGE =
-    process.env.NEXT_PUBLIC_HERO_IMAGE ||
-    'https://i.ibb.co/BVW2TsZR/mujer-de-vista-lateral-que-trabaja-como-economista.jpg';
+  // Hero local (puedes sobreescribir con NEXT_PUBLIC_HERO_IMAGE si quieres)
+  const HERO_IMAGE = process.env.NEXT_PUBLIC_HERO_IMAGE || '/hero.webp';
 
   // Intentamos sacar el origen de la API para preconnect/dns-prefetch
   let apiOrigin = null;
@@ -28,12 +26,7 @@ export default function Head() {
       />
 
       {/* RSS feed */}
-      <link
-        rel="alternate"
-        type="application/rss+xml"
-        title="Blog de TestEstado"
-        href="/rss"
-      />
+      <link rel="alternate" type="application/rss+xml" title="Blog de TestEstado" href="/rss" />
 
       {/* Performance: preconnect / dns-prefetch */}
       {/* Google Tag (gtag) */}
@@ -44,7 +37,7 @@ export default function Head() {
       <link rel="preconnect" href="https://js.stripe.com" crossOrigin="" />
       <link rel="dns-prefetch" href="https://js.stripe.com" />
 
-      {/* Tu API (Render) */}
+      {/* Tu API */}
       {apiOrigin && (
         <>
           <link rel="preconnect" href={apiOrigin} crossOrigin="" />
@@ -52,9 +45,7 @@ export default function Head() {
         </>
       )}
 
-      {/* 🚀 Preload de la imagen LCP (si la usas). Si no hay hero con esta imagen, puedes quitar estas 3 líneas */}
-      <link rel="preconnect" href="https://i.ibb.co" crossOrigin="" />
-      <link rel="dns-prefetch" href="https://i.ibb.co" />
+      {/* 🚀 Preload de la imagen LCP local */}
       <link rel="preload" as="image" href={HERO_IMAGE} />
     </>
   );

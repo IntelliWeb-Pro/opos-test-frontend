@@ -1,132 +1,128 @@
-// src/app/blog/[slug]/page.js
-import { notFound } from 'next/navigation';
+// src/app/blog/page.js
 import Link from 'next/link';
 
-async function getPost(slug) {
+export const revalidate = 900; // 15 minutos de ISR (HTML servido ya con contenido)
+
+const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.testestado.es';
+
+async function getPosts() {
   try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/blog/${slug}/`,
-      { next: { revalidate: 900 } } // 15 min ISR
-    );
-    if (!res.ok) return null;
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blog/`, {
+      next: { revalidate },
+    });
+    if (!res.ok) return [];
     return await res.json();
   } catch {
-    return null;
+    return [];
   }
 }
 
-export default async function PostDetailPage({ params }) {
-  const { slug } = params || {};
-  const post = await getPost(slug);
-  if (!post) return notFound();
+export const metadata = {
+  title: 'Blog de TestEstado',
+  description:
+    'Consejos, noticias y trucos para tu oposición de Administrativo y Auxiliar del Estado.',
+  alternates: {
+    canonical: 'https://www.testestado.es/blog',
+  },
+  openGraph: {
+    type: 'website',
+    url: 'https://www.testestado.es/blog',
+    title: 'Blog de TestEstado',
+    description:
+      'Consejos, noticias y trucos para tu oposición de Administrativo y Auxiliar del Estado.',
+    siteName: 'TestEstado',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Blog de TestEstado',
+    description:
+      'Consejos, noticias y trucos para tu oposición de Administrativo y Auxiliar del Estado.',
+  },
+};
 
-  const titulo =
-    post.titulo ?? post.title ?? 'Artículo';
-  const autor =
-    post.autor_username ?? post.autor ?? null;
-  const fecha =
-    post.creado_en ?? post.published_at ?? post.fecha_publicacion ?? null;
+export default async function BlogListPage() {
+  const posts = await getPosts();
 
-  // Preferimos HTML ya saneado desde backend si existe
-  const html =
-    post.contenido_html ??
-    post.contenido ??
-    post.content_html ??
-    post.content ??
-    '';
+  // --- JSON-LD: migas y listado de items ---
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Inicio', item: SITE },
+      { '@type': 'ListItem', position: 2, name: 'Blog', item: `${SITE}/blog` },
+    ],
+  };
+
+  const itemListJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: posts.map((p, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: `${SITE}/blog/${p.slug}`,
+      name: p.titulo ?? p.title ?? 'Sin título',
+    })),
+  };
 
   return (
-    <main className="bg-white py-12">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
-        <article>
-          <header className="mb-8">
-            <Link href="/blog" className="text-primary hover:underline text-sm">
-              ← Volver al blog
-            </Link>
-            <h1 className="text-4xl font-bold text-dark mt-4 leading-tight">
-              {titulo}
-            </h1>
-            {(autor || fecha) && (
-              <p className="text-md text-secondary mt-3">
-                {autor ? <>Por {autor}</> : null}
-                {autor && fecha ? ' | ' : ''}
-                {fecha ? (
-                  <>
-                    Publicado el{' '}
-                    {new Date(fecha).toLocaleDateString('es-ES', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-                  </>
-                ) : null}
-              </p>
-            )}
-          </header>
+    <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* JSON-LD inline */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      {posts.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+        />
+      )}
 
-          {/* Contenido del post (SSR) */}
-          <div
-            className="prose prose-lg max-w-none"
-            dangerouslySetInnerHTML={{ __html: html }}
-          />
+      <header className="mb-12 text-center">
+        <h1 className="text-4xl font-bold text-white">Blog de TestEstado</h1>
+        <p className="text-lg text-white mt-2">
+          Consejos, noticias y trucos para tu oposición.
+        </p>
+      </header>
 
-          {/* --- BLOQUE DE INTERLINKING --- */}
-          <nav
-            aria-label="Enlaces relacionados"
-            className="mt-12 border-t border-gray-200 pt-8"
-          >
-            <h2 className="text-xl font-semibold text-dark mb-4">
-              También te puede interesar
-            </h2>
-            <ul className="grid gap-3 sm:grid-cols-2">
-              <li>
-                <Link
-                  href="/blog"
-                  className="block rounded-md border border-gray-200 p-4 hover:border-primary hover:shadow-sm transition"
-                >
-                  <span className="text-primary font-semibold">← Volver al Blog</span>
-                  <p className="text-sm text-secondary mt-1">
-                    Más artículos y recursos para tu oposición.
-                  </p>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/precios"
-                  className="block rounded-md border border-gray-200 p-4 hover:border-primary hover:shadow-sm transition"
-                >
-                  <span className="text-primary font-semibold">Planes y Precios</span>
-                  <p className="text-sm text-secondary mt-1">
-                    Empieza con 7 días gratis y acceso completo.
-                  </p>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/administrativo"
-                  className="block rounded-md border border-gray-200 p-4 hover:border-primary hover:shadow-sm transition"
-                >
-                  <span className="text-primary font-semibold">Administrativo del Estado (C1)</span>
-                  <p className="text-sm text-secondary mt-1">
-                    Temario, tests y simulacros específicos de C1.
-                  </p>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/auxiliar-administrativo"
-                  className="block rounded-md border border-gray-200 p-4 hover:border-primary hover:shadow-sm transition"
-                >
-                  <span className="text-primary font-semibold">Auxiliar Administrativo (C2)</span>
-                  <p className="text-sm text-secondary mt-1">
-                    Práctica guiada y seguimiento para C2.
-                  </p>
-                </Link>
-              </li>
-            </ul>
-          </nav>
-          {/* --- FIN BLOQUE INTERLINKING --- */}
-        </article>
+      <div className="max-w-4xl mx-auto space-y-8">
+        {posts.length > 0 ? (
+          posts.map((post) => {
+            const titulo = post.titulo ?? post.title ?? 'Sin título';
+            const fecha =
+              post.creado_en ??
+              post.published_at ??
+              post.fecha_publicacion ??
+              null;
+
+            return (
+              <Link
+                key={post.slug || post.id}
+                href={`/blog/${post.slug}`}
+                className="block bg-white p-6 rounded-lg shadow-md border border-gray-200 hover:shadow-lg hover:border-primary transition-all duration-300"
+              >
+                <h2 className="text-2xl font-bold text-dark hover:text-primary">
+                  {titulo}
+                </h2>
+                <p className="text-sm text-secondary mt-2">
+                  Publicado
+                  {post.autor_username ? ` por ${post.autor_username}` : ''}{' '}
+                  {fecha
+                    ? `el ${new Date(fecha).toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}`
+                    : ''}
+                </p>
+              </Link>
+            );
+          })
+        ) : (
+          <p className="text-center text-white">
+            No hay artículos publicados en este momento.
+          </p>
+        )}
       </div>
     </main>
   );

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import CallToAction from '@/components/CallToAction'; // Importamos el nuevo componente
 
 const useScrollAnimation = () => {
@@ -82,18 +83,35 @@ export default function HomePage() {
   }, []);
 
   const oposicionesRef = useScrollAnimation();
-  const beneficiosRef = useScrollAnimation();   // ⬅️ NUEVO
-  const comoRef = useScrollAnimation();         // ⬅️ NUEVO
-  const recursosRef = useScrollAnimation();     // ⬅️ NUEVO
+  const beneficiosRef = useScrollAnimation();
+  const comoRef = useScrollAnimation();
+  const recursosRef = useScrollAnimation();
   const faqRef = useScrollAnimation();
 
   return (
     <main id="main-content" role="main" aria-labelledby="home-hero-title">
       {/* =================== HERO (H1 ÚNICO) =================== */}
       <section
-        className="h-screen w-full fixed top-0 left-0 flex items-center justify-center text-center bg-gradient-to-b from-transparent to-transparent"
+        className="h-screen w-full fixed top-0 left-0 flex items-center justify-center text-center"
         style={{ opacity: heroOpacity, pointerEvents: heroOpacity === 0 ? 'none' : 'auto', zIndex: 1 }}
       >
+        {/* Fondo con imagen local optimizada */}
+        <div className="absolute inset-0 -z-10">
+          <Image
+            src={process.env.NEXT_PUBLIC_HERO_IMAGE || '/hero.webp'}
+            alt="" // decorativa
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+          />
+          {/* Overlay para contraste de texto */}
+          <div
+            className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/20"
+            aria-hidden="true"
+          />
+        </div>
+
         <div className="px-4">
           {/* H1 semántico y único */}
           <h1 id="home-hero-title" className="text-5xl md:text-6xl font-extrabold text-white drop-shadow-lg">

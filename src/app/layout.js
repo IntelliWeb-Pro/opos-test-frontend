@@ -3,8 +3,13 @@ import ClientLayout from "@/components/ClientLayout";
 import Script from "next/script";
 import GAListener from "@/components/GAListener";
 import { Suspense } from "react";
-import { Open_Sans } from "next/font/google"; // ⬅️ NUEVO
-import WebVitalsGA from "@/components/WebVitalsGA"; // ⬅️ NUEVO
+import { Open_Sans } from "next/font/google";
+import WebVitalsGA from "@/components/WebVitalsGA"; // activado más abajo
+
+// ====== Constantes compartidas (usadas en metadata y layout) ======
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.testestado.es";
+const LOGO_URL = process.env.NEXT_PUBLIC_LOGO_URL || `${SITE_URL}/apple-touch-icon.png`;
+
 // Cargamos Open Sans autohospedada (sin FOUT/FOIT)
 const openSans = Open_Sans({
   subsets: ["latin"],
@@ -12,21 +17,36 @@ const openSans = Open_Sans({
   display: "swap",
 });
 
-// --- METADATA OPTIMIZADA PARA SEO ---
+// --- METADATA GLOBAL OPTIMIZADA PARA SEO ---
 export const metadata = {
-  title: "TestEstado | Tests para Oposiciones de Administrativo C1 y C2",
+  // Base para construir URLs absolutas (OG, canonicals definidos por página, etc.)
+  metadataBase: new URL(SITE_URL),
+
+  // Título y plantilla global
+  title: {
+    default: "TestEstado | Tests para Oposiciones de Administrativo C1 y C2",
+    template: "%s | TestEstado",
+  },
+
   description:
     "Prepara tu oposición a la administración general con nuestros tests online.",
+
+  // Open Graph global
+  openGraph: {
+    siteName: "TestEstado",
+    locale: "es_ES",
+  },
+
+  // Twitter global (puedes añadir `site: '@tu_cuenta'` si la tienes)
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export default function RootLayout({ children }) {
   const GA_ID = process.env.NEXT_PUBLIC_GA_ID; // <- tu ID GA4 (G-XXXX)
 
   // --------- JSON-LD global ----------
-  const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.testestado.es";
-  // ⬇️ Fallback seguro de logo si no hay env específico
-  const LOGO_URL = process.env.NEXT_PUBLIC_LOGO_URL || `${SITE_URL}/apple-touch-icon.png`;
-
   const orgJsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -80,6 +100,9 @@ export default function RootLayout({ children }) {
             </Script>
           </>
         )}
+
+        {/* Web Vitals -> GA4 (solo en producción y si hay GA_ID) */}
+        {process.env.NODE_ENV === 'production' && GA_ID && <WebVitalsGA />}
 
         {/* JSON-LD global (Organization) */}
         <Script id="ld-organization" type="application/ld+json" strategy="afterInteractive">
