@@ -14,7 +14,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   const GA_ID = process.env.NEXT_PUBLIC_GA_ID; // <- tu ID GA4 (G-XXXX)
 
-  // --------- JSON-LD (solo añadimos esto) ----------
+  // --------- JSON-LD global ----------
   const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.testestado.es";
   const LOGO_URL = process.env.NEXT_PUBLIC_LOGO_URL || null; // opcional
 
@@ -31,8 +31,14 @@ export default function RootLayout({ children }) {
     "@type": "WebSite",
     name: "TestEstado",
     url: SITE_URL,
+    // ⬇️ SearchAction: si tu buscador es otra ruta, cambia target a esa URL
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${SITE_URL}/buscar?q={query}`,
+      "query-input": "required name=query",
+    },
   };
-  // --------------------------------------------------
+  // -----------------------------------
 
   return (
     <html lang="es">
@@ -68,7 +74,7 @@ export default function RootLayout({ children }) {
           {JSON.stringify(orgJsonLd)}
         </Script>
 
-        {/* JSON-LD global (WebSite) */}
+        {/* JSON-LD global (WebSite + SearchAction) */}
         <Script id="ld-website" type="application/ld+json" strategy="afterInteractive">
           {JSON.stringify(webSiteJsonLd)}
         </Script>

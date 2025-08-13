@@ -83,6 +83,44 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default function Layout({ children }) {
-  return children;
+export default async function Layout({ children, params }) {
+  const site = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.testestado.es';
+  const id = params?.id;
+  const url = `${site}/tema/${id}`;
+
+  // Fetch ligero para obtener un título para la miga
+  let item = null;
+  try {
+    const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/temas/${id}/`, {
+      next: { revalidate: 86400 },
+    });
+    if (r.ok) item = await r.json();
+  } catch {}
+
+  const numero =
+    item?.numero || item?.numero_tema || item?.n || (Number.isFinite(+id) ? +id : null);
+
+  const crumbTitle =
+    item?.titulo || item?.title || item?.nombre || item?.name || (numero ? `Tema ${numero}` : `Tema ${id}`);
+
+  // Breadcrumbs de 2 niveles (Inicio → Tema X) para no depender de una ruta listadora
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Inicio', item: site },
+      { '@type': 'ListItem', position: 2, name: crumbTitle, item: url },
+    ],
+  };
+
+  return (
+    <>
+      {/* Breadcrumbs SSR para que aparezcan en view-source */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      {children}
+    </>
+  );
 }

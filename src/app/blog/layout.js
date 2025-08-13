@@ -1,4 +1,4 @@
-// Metadata específica para /blog (listado) sin tocar la página
+// Metadata específica para /blog (listado)
 export const metadata = {
   title: 'Blog | TestEstado',
   description:
@@ -23,5 +23,24 @@ export const metadata = {
 };
 
 export default function Layout({ children }) {
-  return children;
+  const site = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.testestado.es';
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Inicio', item: site },
+      { '@type': 'ListItem', position: 2, name: 'Blog',   item: `${site}/blog` },
+    ],
+  };
+
+  return (
+    <>
+      {/* Migas de pan (SSR para que aparezcan en view-source) */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      {children}
+    </>
+  );
 }

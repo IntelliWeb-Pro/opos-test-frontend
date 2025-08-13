@@ -65,6 +65,44 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default function Layout({ children }) {
-  return children;
+export default async function Layout({ children, params }) {
+  const site = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.testestado.es';
+  const slug = params?.slug;
+  const url = `${site}/oposicion/${slug}`;
+
+  // Fetch ligero para el título de la miga
+  let item = null;
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/oposiciones/`, {
+      next: { revalidate: 86400 },
+    });
+    if (res.ok) {
+      const list = await res.json();
+      item = Array.isArray(list) ? list.find((x) => x?.slug === slug) : null;
+    }
+  } catch (_) {}
+
+  const crumbTitle =
+    item?.title || item?.seo_title || item?.name || item?.nombre || 'Oposición';
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Inicio', item: site },
+      { '@type': 'ListItem', position: 2, name: 'Oposiciones', item: `${site}/oposicion` },
+      { '@type': 'ListItem', position: 3, name: crumbTitle, item: url },
+    ],
+  };
+
+  return (
+    <>
+      {/* Breadcrumbs SSR para que aparezcan en view-source */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      {children}
+    </>
+  );
 }

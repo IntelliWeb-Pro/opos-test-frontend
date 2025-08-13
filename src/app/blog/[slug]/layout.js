@@ -4,8 +4,7 @@ export async function generateMetadata({ params }) {
   const slug = params?.slug;
   const url = `${site}/blog/${slug}`;
 
-  // Intentamos obtener los datos del post desde tu API (listado) y filtramos por slug.
-  // Si falla, devolvemos metadatos genéricos. No rompemos el build.
+  // Intento obtener el post desde la API (listado) y filtrar por slug
   let post = null;
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blog/`, {
@@ -15,11 +14,10 @@ export async function generateMetadata({ params }) {
       const posts = await res.json();
       post = Array.isArray(posts) ? posts.find((p) => p?.slug === slug) : null;
     }
-  } catch (e) {
-    // Silencio: sin afectar al render ni al build
+  } catch (_) {
+    // Silencio: sin romper build
   }
 
-  // Campos posibles en tu API (nos adaptamos de forma defensiva)
   const titleFromPost =
     post?.seo_title ||
     post?.title ||
@@ -65,6 +63,44 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default function Layout({ children }) {
-  return children;
+export default async function Layout({ children, params }) {
+  const site = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.testestado.es';
+  const slug = params?.slug;
+  const url = `${site}/blog/${slug}`;
+
+  // Repetimos fetch ligero para sacar el título del breadcrumb (SSR)
+  let post = null;
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blog/`, {
+      next: { revalidate: 86400 },
+    });
+    if (res.ok) {
+      const posts = await res.json();
+      post = Array.isArray(posts) ? posts.find((p) => p?.slug === slug) : null;
+    }
+  } catch (_) {}
+
+  const crumbTitle =
+    post?.title || post?.seo_title || post?.name || 'Artículo';
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Inicio', item: site },
+      { '@type': 'ListItem', position: 2, name: 'Blog',   item: `${site}/blog` },
+      { '@type': 'ListItem', position: 3, name: crumbTitle, item: url },
+    ],
+  };
+
+  return (
+    <>
+      {/* Migas de pan SSR para que aparezcan en view-source */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      {children}
+    </>
+  );
 }
