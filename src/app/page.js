@@ -5,6 +5,30 @@ import Link from 'next/link';
 import Head from 'next/head';
 import CallToAction from '@/components/CallToAction'; // Importamos el nuevo componente
 
+/** SEO: metadata + canonical (Home) */
+export const metadata = {
+  title: 'TestEstado | Tests para Oposiciones de Administrativo C1 y C2',
+  description:
+    'Prepara tu oposición con miles de tests online para Administrativo del Estado (C1) y Auxiliar Administrativo (C2). Preguntas de examen, justificaciones y seguimiento. ¡Prueba gratis!',
+  alternates: {
+    canonical: 'https://www.testestado.es/',
+  },
+  openGraph: {
+    type: 'website',
+    url: 'https://www.testestado.es/',
+    title: 'TestEstado | Tests para Oposiciones de Administrativo C1 y C2',
+    description:
+      'Prepara tu oposición con miles de tests online para Administrativo del Estado (C1) y Auxiliar Administrativo (C2). Preguntas de examen, justificaciones y seguimiento. ¡Prueba gratis!',
+    siteName: 'TestEstado',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'TestEstado | Tests para Oposiciones de Administrativo C1 y C2',
+    description:
+      'Prepara tu oposición con miles de tests online para Administrativo del Estado (C1) y Auxiliar Administrativo (C2). Preguntas de examen, justificaciones y seguimiento. ¡Prueba gratis!',
+  },
+};
+
 const useScrollAnimation = () => {
   const ref = useRef(null);
   useEffect(() => {
