@@ -1,5 +1,6 @@
 // src/app/precios/page.js
 import PreciosClient from '@/components/PreciosClient';
+import Script from 'next/script';
 
 export const metadata = {
   title: 'Precios y Planes | TestEstado',
@@ -20,10 +21,101 @@ export const metadata = {
     card: 'summary_large_image',
     title: 'Precios y Planes | TestEstado',
     description:
-      '7 días gratis. Acceso ilimitado a tests, justificacione y seguimiento. Planes Bronce, Plata, Oro y Platino.',
+      '7 días gratis. Acceso ilimitado a tests, justificaciones y seguimiento. Planes Bronce, Plata, Oro y Platino.',
   },
 };
 
 export default function Page() {
-  return <PreciosClient />;
+  const site = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.testestado.es';
+  const url = `${site}/precios`;
+
+  // Definición de planes (solo para schema; no toca tu UI)
+  const plans = [
+    { key: 'bronce',  name: 'Plan Bronce',  total: 6.99,  perMonth: 6.99,  isoDuration: 'P1M'  },
+    { key: 'plata',   name: 'Plan Plata',   total: 15.99, perMonth: 5.33,  isoDuration: 'P3M'  },
+    { key: 'oro',     name: 'Plan Oro',     total: 22.99, perMonth: 3.83,  isoDuration: 'P6M'  },
+    { key: 'platino', name: 'Plan Platino', total: 39.99, perMonth: 3.33,  isoDuration: 'P12M' },
+  ];
+
+  const itemListJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    url,
+    name: 'Precios y Planes',
+    itemListElement: plans.map((p, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: {
+        '@type': 'Product',
+        name: p.name,
+        description:
+          'Acceso ilimitado a tests de Administrativo (C1) y Auxiliar Administrativo (C2), justificaciones y seguimiento de progreso.',
+        brand: { '@type': 'Brand', name: 'TestEstado' },
+        sku: p.key,
+        additionalProperty: [
+          { '@type': 'PropertyValue', name: 'Duración', value: p.isoDuration },
+          { '@type': 'PropertyValue', name: 'Precio mensual', value: `${p.perMonth.toFixed(2)} EUR` },
+          { '@type': 'PropertyValue', name: 'Prueba gratis', value: '7 días' },
+        ],
+        offers: {
+          '@type': 'Offer',
+          url,
+          price: p.total.toFixed(2),
+          priceCurrency: 'EUR',
+          availability: 'https://schema.org/InStock',
+          // puedes añadir priceValidUntil si quieres, o category: 'Subscription'
+        },
+      },
+    })),
+  };
+
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: '¿Cómo funciona la prueba gratis de 7 días?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text:
+            'Al registrarte y elegir un plan, disfrutas de 7 días gratis con acceso completo. Puedes cancelar antes de que termine el periodo de prueba y no se te cobrará nada.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: '¿Puedo cancelar la suscripción cuando quiera?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text:
+            'Sí. Puedes cancelar desde tu cuenta en cualquier momento. Seguirás teniendo acceso hasta el final del periodo ya pagado.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: '¿Puedo cambiar de plan (subir o bajar) más tarde?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text:
+            'Sí. Puedes cambiar de plan en cualquier momento. El cambio se aplica al siguiente periodo de facturación según las condiciones de tu suscripción.',
+        },
+      },
+    ],
+  };
+
+  return (
+    <>
+      {/* JSON-LD de Productos/Ofertas en forma de ItemList */}
+      <Script id="ld-precios-itemlist" type="application/ld+json" strategy="afterInteractive">
+        {JSON.stringify(itemListJsonLd)}
+      </Script>
+
+      {/* JSON-LD de Preguntas Frecuentes */}
+      <Script id="ld-precios-faq" type="application/ld+json" strategy="afterInteractive">
+        {JSON.stringify(faqJsonLd)}
+      </Script>
+
+      <PreciosClient />
+    </>
+  );
 }
