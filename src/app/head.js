@@ -2,6 +2,7 @@ export default function Head() {
   const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.testestado.es";
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+  // Intentamos sacar el origen de la API para preconnect/dns-prefetch
   let apiOrigin = null;
   try {
     apiOrigin = API_URL ? new URL(API_URL).origin : null;
@@ -13,30 +14,34 @@ export default function Head() {
       <link rel="canonical" href={`${SITE_URL}/`} />
       <meta name="robots" content="index, follow" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <link rel="icon" href="/favicon.ico" />
 
-      {/* Favicons / PWA */}
-      <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-      <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-      <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-      <link rel="manifest" href="/site.webmanifest" />
-      <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#007bff" />
-      <meta name="msapplication-TileColor" content="#ffffff" />
-      <meta name="theme-color" content="#ffffff" />
-      <meta name="apple-mobile-web-app-title" content="TestEstado" />
+      {/* 🔗 Auto-discovery del feed RSS */}
+      <link
+        rel="alternate"
+        type="application/rss+xml"
+        title="Blog de TestEstado"
+        href={`${SITE_URL}/rss`}
+      />
 
-      {/* (Opcional) Keywords */}
+      {/* (Opcional) Keywords: si te gustan, mantenlas */}
       <meta
         name="keywords"
         content="oposiciones, test oposiciones, auxiliar administrativo, administrativo del estado, test online, psicotécnicos, simulacros, corrección test"
       />
 
+      {/* ✅ Los metadatos de título/description/OG/Twitter los gestionamos con `metadata` en layouts de cada ruta. */}
+
       {/* Performance: preconnect / dns-prefetch */}
+      {/* Google Tag (gtag) */}
       <link rel="preconnect" href="https://www.googletagmanager.com" crossOrigin="" />
       <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
 
+      {/* Stripe */}
       <link rel="preconnect" href="https://js.stripe.com" crossOrigin="" />
       <link rel="dns-prefetch" href="https://js.stripe.com" />
 
+      {/* Tu API (Render) */}
       {apiOrigin && (
         <>
           <link rel="preconnect" href={apiOrigin} crossOrigin="" />
