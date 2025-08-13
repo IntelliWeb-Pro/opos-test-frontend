@@ -14,6 +14,26 @@ export const metadata = {
 export default function RootLayout({ children }) {
   const GA_ID = process.env.NEXT_PUBLIC_GA_ID; // <- tu ID GA4 (G-XXXX)
 
+  // --------- JSON-LD (solo añadimos esto) ----------
+  const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.testestado.es";
+  const LOGO_URL = process.env.NEXT_PUBLIC_LOGO_URL || null; // opcional
+
+  const orgJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "TestEstado",
+    url: SITE_URL,
+    ...(LOGO_URL ? { logo: LOGO_URL } : {}),
+  };
+
+  const webSiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "TestEstado",
+    url: SITE_URL,
+  };
+  // --------------------------------------------------
+
   return (
     <html lang="es">
       <body className="font-sans bg-light">
@@ -42,6 +62,16 @@ export default function RootLayout({ children }) {
             </Script>
           </>
         )}
+
+        {/* JSON-LD global (Organization) */}
+        <Script id="ld-organization" type="application/ld+json" strategy="afterInteractive">
+          {JSON.stringify(orgJsonLd)}
+        </Script>
+
+        {/* JSON-LD global (WebSite) */}
+        <Script id="ld-website" type="application/ld+json" strategy="afterInteractive">
+          {JSON.stringify(webSiteJsonLd)}
+        </Script>
       </body>
     </html>
   );
