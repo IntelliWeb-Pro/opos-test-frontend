@@ -185,9 +185,11 @@ export default function HomePage() {
               </li>
               <li className="bg-white rounded-2xl shadow p-6 border border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900">Elige tu oposición</h3>
+                {oposiciones.map(opo => (
                 <p className="mt-2 text-sm text-gray-600">
-                  Practica para <Link href={`/oposicion/${opo.slug}`} className="text-primary underline hover:no-underline">{opo.nombre}</Link>
+                  Practica para <Link key={opo.id} href={`/oposicion/${opo.slug}`} className="text-primary underline hover:no-underline">{opo.nombre}</Link>
                 </p>
+                ))}
               </li>
               <li className="bg-white rounded-2xl shadow p-6 border border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900">Mejora cada día</h3>
