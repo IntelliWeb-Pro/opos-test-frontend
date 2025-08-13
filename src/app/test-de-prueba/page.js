@@ -1,26 +1,26 @@
 // src/app/test-de-prueba/page.js
-import TestDemoClient from "@/components/TestDemoClient";
+import TestDemoClient from '@/components/TestDemoClient';
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://www.testestado.es";
+const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.testestado.es';
 
 export const metadata = {
-  title: "Test de prueba (15 preguntas) | TestEstado",
+  title: 'Test de prueba gratuito (15 preguntas) | TestEstado',
   description:
-    "Haz un test de 15 preguntas aleatorias sin registro. Al terminar verás tu puntuación y tiempo. Prueba gratis y suscríbete para acceso ilimitado.",
+    'Haz un test gratuito de 15 preguntas sin registrarte. Mide tu tiempo y aciertos. Si te gusta, suscríbete y accede a todos los tests con justificaciones y progreso.',
   alternates: { canonical: `${SITE}/test-de-prueba` },
   openGraph: {
-    type: "website",
+    type: 'website',
     url: `${SITE}/test-de-prueba`,
-    title: "Test de prueba (15 preguntas) | TestEstado",
+    title: 'Test de prueba gratuito (15 preguntas) | TestEstado',
     description:
-      "Resuelve 15 preguntas aleatorias y conoce tu nivel. Acceso sin registro.",
-    siteName: "TestEstado",
+      'Pon a prueba tu preparación con 15 preguntas aleatorias. Resultados y tiempo al finalizar.',
+    siteName: 'TestEstado',
   },
   twitter: {
-    card: "summary_large_image",
-    title: "Test de prueba (15 preguntas) | TestEstado",
+    card: 'summary_large_image',
+    title: 'Test de prueba gratuito (15 preguntas) | TestEstado',
     description:
-      "Un test rápido para medir tu nivel. Pruébalo sin registrarte.",
+      'Haz un test rápido sin registro. Aciertos, tiempo y CTA a la suscripción.',
   },
 };
 
