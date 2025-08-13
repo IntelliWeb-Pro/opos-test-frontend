@@ -1,6 +1,5 @@
 // src/app/precios/page.js
 import PreciosClient from '@/components/PreciosClient';
-import Script from 'next/script';
 
 export const metadata = {
   title: 'Precios y Planes | TestEstado',
@@ -29,7 +28,7 @@ export default function Page() {
   const site = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.testestado.es';
   const url = `${site}/precios`;
 
-  // Definición de planes (solo para schema; no toca tu UI)
+  // Solo para schema; no toca la UI de precios
   const plans = [
     { key: 'bronce',  name: 'Plan Bronce',  total: 6.99,  perMonth: 6.99,  isoDuration: 'P1M'  },
     { key: 'plata',   name: 'Plan Plata',   total: 15.99, perMonth: 5.33,  isoDuration: 'P3M'  },
@@ -63,7 +62,6 @@ export default function Page() {
           price: p.total.toFixed(2),
           priceCurrency: 'EUR',
           availability: 'https://schema.org/InStock',
-          // puedes añadir priceValidUntil si quieres, o category: 'Subscription'
         },
       },
     })),
@@ -105,15 +103,15 @@ export default function Page() {
 
   return (
     <>
-      {/* JSON-LD de Productos/Ofertas en forma de ItemList */}
-      <Script id="ld-precios-itemlist" type="application/ld+json" strategy="afterInteractive">
-        {JSON.stringify(itemListJsonLd)}
-      </Script>
-
-      {/* JSON-LD de Preguntas Frecuentes */}
-      <Script id="ld-precios-faq" type="application/ld+json" strategy="afterInteractive">
-        {JSON.stringify(faqJsonLd)}
-      </Script>
+      {/* JSON-LD server-rendered para que aparezca en view-source */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
 
       <PreciosClient />
     </>
