@@ -20,8 +20,10 @@ export const metadata = {
     description:
       'Crea tu cuenta y disfruta de 7 días gratis con acceso ilimitado a tests y seguimiento.',
   },
+  // ⬇️ Noindex / nofollow para páginas utilitarias
+  robots: { index: false, follow: false },
 };
 
 export default function Layout({ children }) {
-  return children;
+  return <>{children}</>;
 }

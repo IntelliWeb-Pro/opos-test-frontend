@@ -20,8 +20,10 @@ export const metadata = {
     description:
       'Accede a tu cuenta para continuar con tus tests y ver tu progreso.',
   },
+  // ⬇️ Noindex / nofollow para páginas utilitarias
+  robots: { index: false, follow: false },
 };
 
 export default function Layout({ children }) {
-  return children;
+  return <>{children}</>;
 }
