@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import Head from 'next/head';
 import CallToAction from '@/components/CallToAction'; // Importamos el nuevo componente
 
 const useScrollAnimation = () => {
@@ -89,14 +88,7 @@ export default function HomePage() {
   const faqRef = useScrollAnimation();
 
   return (
-    <div>
-      <Head>
-        <title>TestEstado - Plataforma Nº1 para Opositores en España</title>
-        <meta name="description" content="Practica con miles de preguntas tipo test." />
-        <meta name="keywords" content="oposiciones, test oposiciones, auxiliar administrativo, administrativo del estado, correos, policía, guardia civil, test online, preguntas justificadas, preparación de oposiciones" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-      </Head>
-
+    <main id="main-content" role="main" aria-labelledby="home-hero-title">
       {/* =================== HERO (H1 ÚNICO) =================== */}
       <section
         className="h-screen w-full fixed top-0 left-0 flex items-center justify-center text-center bg-gradient-to-b from-transparent to-transparent"
@@ -104,7 +96,7 @@ export default function HomePage() {
       >
         <div className="px-4">
           {/* H1 semántico y único */}
-          <h1 className="text-5xl md:text-6xl font-extrabold text-white drop-shadow-lg">
+          <h1 id="home-hero-title" className="text-5xl md:text-6xl font-extrabold text-white drop-shadow-lg">
             Aprueba tus Oposiciones de Administrativo y Auxiliar del Estado con los mejores test
           </h1>
           <p className="text-xl md:text-2xl mt-6 max-w-3xl mx-auto text-white drop-shadow-md">
@@ -186,9 +178,9 @@ export default function HomePage() {
               <li className="bg-white rounded-2xl shadow p-6 border border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900">Elige tu oposición</h3>
                 {oposiciones.map(opo => (
-                <p className="mt-2 text-sm text-gray-600">
-                  Practica para <Link key={opo.id} href={`/oposicion/${opo.slug}`} className="text-primary underline hover:no-underline">{opo.nombre}</Link>
-                </p>
+                  <p key={opo.id} className="mt-2 text-sm text-gray-600">
+                    Practica para <Link href={`/oposicion/${opo.slug}`} className="text-primary underline hover:no-underline">{opo.nombre}</Link>
+                  </p>
                 ))}
               </li>
               <li className="bg-white rounded-2xl shadow p-6 border border-gray-200">
@@ -277,6 +269,6 @@ export default function HomePage() {
           </div>
         </section>
       </div>
-    </div>
+    </main>
   );
 }

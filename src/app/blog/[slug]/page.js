@@ -1,63 +1,76 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+// src/app/blog/[slug]/page.js
+import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
-export default function PostDetailPage() {
-  const params = useParams();
-  const [post, setPost] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+async function getPost(slug) {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/blog/${slug}/`,
+      { next: { revalidate: 900 } } // 15 min ISR
+    );
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
 
-  useEffect(() => {
-    if (params.slug) {
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/blog/${params.slug}/`)
-        .then(res => {
-          if (!res.ok) {
-            throw new Error('Artículo no encontrado.');
-          }
-          return res.json();
-        })
-        .then(data => {
-          setPost(data);
-          setLoading(false);
-        })
-        .catch(err => {
-          setError(err.message);
-          setLoading(false);
-        });
-    }
-  }, [params.slug]);
+export default async function PostDetailPage({ params }) {
+  const { slug } = params || {};
+  const post = await getPost(slug);
+  if (!post) return notFound();
 
-  if (loading) return <p className="text-center mt-20">Cargando artículo...</p>;
-  if (error) return <p className="text-center mt-20 text-red-600">{error}</p>;
-  if (!post) return null;
+  const titulo =
+    post.titulo ?? post.title ?? 'Artículo';
+  const autor =
+    post.autor_username ?? post.autor ?? null;
+  const fecha =
+    post.creado_en ?? post.published_at ?? post.fecha_publicacion ?? null;
+
+  // Preferimos HTML ya saneado desde backend si existe
+  const html =
+    post.contenido_html ??
+    post.contenido ??
+    post.content_html ??
+    post.content ??
+    '';
 
   return (
-    <div className="bg-white py-12">
+    <main className="bg-white py-12">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
         <article>
           <header className="mb-8">
-            <Link href="/blog" className="text-primary hover:underline text-sm">← Volver al blog</Link>
-            <h1 className="text-4xl font-bold text-dark mt-4 leading-tight">{post.titulo}</h1>
-            <p className="text-md text-secondary mt-3">
-              Por {post.autor_username} | Publicado el{' '}
-              {new Date(post.creado_en).toLocaleDateString('es-ES', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </p>
+            <Link href="/blog" className="text-primary hover:underline text-sm">
+              ← Volver al blog
+            </Link>
+            <h1 className="text-4xl font-bold text-dark mt-4 leading-tight">
+              {titulo}
+            </h1>
+            {(autor || fecha) && (
+              <p className="text-md text-secondary mt-3">
+                {autor ? <>Por {autor}</> : null}
+                {autor && fecha ? ' | ' : ''}
+                {fecha ? (
+                  <>
+                    Publicado el{' '}
+                    {new Date(fecha).toLocaleDateString('es-ES', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
+                  </>
+                ) : null}
+              </p>
+            )}
           </header>
 
-          {/* Contenido del post */}
+          {/* Contenido del post (SSR) */}
           <div
             className="prose prose-lg max-w-none"
-            dangerouslySetInnerHTML={{ __html: post.contenido }}
+            dangerouslySetInnerHTML={{ __html: html }}
           />
 
-          {/* --- BLOQUE DE INTERLINKING (añadido) --- */}
+          {/* --- BLOQUE DE INTERLINKING --- */}
           <nav
             aria-label="Enlaces relacionados"
             className="mt-12 border-t border-gray-200 pt-8"
@@ -115,6 +128,6 @@ export default function PostDetailPage() {
           {/* --- FIN BLOQUE INTERLINKING --- */}
         </article>
       </div>
-    </div>
+    </main>
   );
 }
