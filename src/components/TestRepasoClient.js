@@ -29,7 +29,7 @@ export default function TestRepasoClient() {
     return (
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="max-w-xl mx-auto bg-white border border-gray-200 rounded-2xl p-6 text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Test de personalizado</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Test personalizado</h1>
           <p className="mt-2 text-gray-600">
             Debes iniciar sesión para usar el test personalizado.
           </p>
@@ -67,16 +67,16 @@ export default function TestRepasoClient() {
   }
 
   // Estado de configuración
-  const [oposiciones, setOposiciones] = useState([]);
-  const [opSelected, setOpSelected] = useState(null); // objeto {id, nombre, slug}
-  const [temas, setTemas] = useState([]);
-  const [temasSeleccionados, setTemasSeleccionados] = useState([]); // array de IDs
+  const [oposiciones, setOposiciones] = useState([]); // [{id, nombre, slug, ...}]
+  const [opSelected, setOpSelected] = useState(null); // objeto de oposición
+  const [temas, setTemas] = useState([]); // [{id, slug, nombre}]
+  const [temasSeleccionados, setTemasSeleccionados] = useState([]); // array de SLUGS
   const [nPregPorTema, setNPregPorTema] = useState(5);
   const [tiempoMinutos, setTiempoMinutos] = useState(20);
   const [cargandoTemas, setCargandoTemas] = useState(false);
 
   // Estado del test en curso
-  const [preguntas, setPreguntas] = useState([]);
+  const [preguntas, setPreguntas] = useState([]); // cada pregunta la marcaremos con _tema_slug
   const [respuestasUsuario, setRespuestasUsuario] = useState({});
   const [idxActual, setIdxActual] = useState(0);
   const [enCurso, setEnCurso] = useState(false);
@@ -100,15 +100,11 @@ export default function TestRepasoClient() {
         if (!r.ok) throw new Error('No se pudieron cargar las oposiciones');
         return r.json();
       })
-      .then((data) => {
-        setOposiciones(data || []);
-      })
-      .catch(() => {
-        setOposiciones([]);
-      });
+      .then((data) => setOposiciones(data || []))
+      .catch(() => setOposiciones([]));
   }, []);
 
-  // --- Carga temas al elegir oposición ---
+  // --- Carga temas al elegir oposición (por SLUG) ---
   useEffect(() => {
     if (!opSelected) {
       setTemas([]);
@@ -117,52 +113,53 @@ export default function TestRepasoClient() {
     }
     const api = process.env.NEXT_PUBLIC_API_URL;
     setCargandoTemas(true);
-    // Intento principal: /api/temas/?oposicion=<ID>
-    fetch(`${api}/api/temas/?oposicion=${opSelected.id}`, {
+
+    // Recuperamos la oposición con sus bloques+temas: /api/oposiciones/<slug>/
+    fetch(`${api}/api/oposiciones/${opSelected.slug}/`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
-      .then(async (r) => {
-        if (r.ok) return r.json();
-        // Fallback (por si tu backend usa otro patrón)
-        const alt = await fetch(`${api}/api/oposiciones/${opSelected.id}/temas/`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-        if (!alt.ok) throw new Error('No se pudieron cargar los temas');
-        return alt.json();
+      .then((r) => {
+        if (!r.ok) throw new Error('No se pudieron cargar los temas de la oposición');
+        return r.json();
       })
       .then((data) => {
-        setTemas(data || []);
+        // Normalizamos temas desde bloques o data.temas
+        const nestedTemas =
+          (data?.bloques || []).flatMap((b) => b?.temas || []) ||
+          data?.temas ||
+          [];
+        const norm = nestedTemas.map((t) => ({
+          id: t.id ?? null,
+          slug: t.slug,
+          nombre: t.nombre || t.nombre_oficial || t.titulo || `Tema ${t.id ?? ''}`,
+        }));
+        setTemas(norm);
         setTemasSeleccionados([]);
       })
-      .catch(() => {
-        setTemas([]);
-      })
+      .catch(() => setTemas([]))
       .finally(() => setCargandoTemas(false));
   }, [opSelected, token]);
 
   // --- Manejadores de selección ---
   const handleSelectOposicion = (e) => {
-    const id = Number(e.target.value || 0);
-    const opo = oposiciones.find((o) => o.id === id) || null;
+    const slug = e.target.value || '';
+    const opo = oposiciones.find((o) => o.slug === slug) || null;
     setOpSelected(opo);
   };
 
-  const toggleTema = (id) => {
+  const toggleTema = (slug) => {
     setTemasSeleccionados((prev) =>
-      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
+      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
     );
   };
 
-  const seleccionarTodos = () => {
-    setTemasSeleccionados(temas.map((t) => t.id));
-  };
+  const seleccionarTodos = () => setTemasSeleccionados(temas.map((t) => t.slug));
   const limpiarTemas = () => setTemasSeleccionados([]);
 
   // --- Generar test ---
   const generarTest = async () => {
     if (!opSelected) return alert('Elige una oposición');
-    if (temasSeleccionados.length === 0)
-      return alert('Selecciona al menos un tema');
+    if (temasSeleccionados.length === 0) return alert('Selecciona al menos un tema');
     if (nPregPorTema <= 0) return alert('Indica nº de preguntas por tema (>0)');
     if (tiempoMinutos <= 0) return alert('Indica el tiempo en minutos (>0)');
 
@@ -170,25 +167,35 @@ export default function TestRepasoClient() {
 
     try {
       const porTema = await Promise.all(
-        temasSeleccionados.map(async (temaId) => {
-          // intento 1: endpoint de repaso con límite
+        temasSeleccionados.map(async (temaSlug) => {
+          // 1) Intento de endpoint de repaso por slug
           const tryRepaso = await fetch(
-            `${api}/api/preguntas/repaso/?tema=${temaId}&limit=${nPregPorTema}`,
+            `${api}/api/preguntas/repaso/?tema_slug=${encodeURIComponent(
+              temaSlug
+            )}&limit=${nPregPorTema}`,
             { headers: token ? { Authorization: `Bearer ${token}` } : {} }
           );
 
           if (tryRepaso.ok) {
             const data = await tryRepaso.json();
-            return sampleN(data || [], nPregPorTema);
+            // marcamos cada pregunta con su slug de origen
+            return sampleN(data || [], nPregPorTema).map((p) => ({
+              ...p,
+              _tema_slug: temaSlug,
+            }));
           }
 
-          // intento 2: preguntas del tema y muestrear aquí
-          const r = await fetch(`${api}/api/preguntas/?tema=${temaId}`, {
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-          });
+          // 2) Fallback: preguntas por slug normal
+          const r = await fetch(
+            `${api}/api/preguntas/?tema_slug=${encodeURIComponent(temaSlug)}`,
+            { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+          );
           if (!r.ok) throw new Error('No se pudieron cargar preguntas');
           const data = await r.json();
-          return sampleN(data || [], nPregPorTema);
+          return sampleN(data || [], nPregPorTema).map((p) => ({
+            ...p,
+            _tema_slug: temaSlug,
+          }));
         })
       );
 
@@ -206,6 +213,7 @@ export default function TestRepasoClient() {
       setEnCurso(true);
       setTimeLeft(tiempoMinutos * 60);
     } catch (err) {
+      console.error(err);
       alert('Error generando el test de repaso.');
     }
   };
@@ -226,14 +234,10 @@ export default function TestRepasoClient() {
     setRespuestasUsuario((prev) => ({ ...prev, [preguntaId]: respuestaId }));
   };
 
-  const siguiente = () => {
-    setIdxActual((i) => Math.min(i + 1, preguntas.length - 1));
-  };
-  const anterior = () => {
-    setIdxActual((i) => Math.max(i - 1, 0));
-  };
+  const siguiente = () => setIdxActual((i) => Math.min(i + 1, preguntas.length - 1));
+  const anterior = () => setIdxActual((i) => Math.max(i - 1, 0));
 
-  // === ACTUALIZADO: guardar resultados en backend (por tema) ===
+  // === Guardar resultados por tema (usando tema_slug) ===
   const terminarTest = useCallback(async () => {
     if (terminado || preguntas.length === 0) return;
     setTerminado(true);
@@ -243,7 +247,7 @@ export default function TestRepasoClient() {
       const api = process.env.NEXT_PUBLIC_API_URL;
       const ids = preguntas.map((p) => p.id);
 
-      // 1) Obtenemos corrección
+      // 1) Corrección
       const r = await fetch(`${api}/api/preguntas/corregir/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -253,36 +257,39 @@ export default function TestRepasoClient() {
       const data = await r.json();
       setDatosCorreccion(data || []);
 
-      // 2) Cálculo de aciertos globales
+      // 2) Puntuación global
       let ok = 0;
       data.forEach((preg) => {
         const userAns = respuestasUsuario[preg.id];
-        const correcta = preg.respuestas.find((r) => r.es_correcta);
+        const correcta = preg.respuestas.find((x) => x.es_correcta);
         if (userAns && correcta && userAns === correcta.id) ok++;
       });
       setPuntuacion(ok);
 
-      // 3) MAPEO preguntaId -> temaId (usamos los datos originales de "preguntas")
-      const qIdToTemaId = new Map();
+      // 3) Mapeo preguntaId -> tema_slug (preferimos _tema_slug que añadimos al generar)
+      const qIdToTemaSlug = new Map();
       preguntas.forEach((p) => {
-        // Soportar varias estructuras: p.tema (id u objeto) o p.tema_id
-        let temaId = null;
-        if (p.tema && typeof p.tema === 'object') temaId = p.tema.slug ?? null;
-        else if (p.tema != null) temaId = p.tema;
-        else if (p.tema_id != null) temaId = p.tema_id;
-        if (temaId != null) qIdToTemaId.set(p.id, temaId);
+        if (p._tema_slug) {
+          qIdToTemaSlug.set(p.id, p._tema_slug);
+        } else if (p.tema && typeof p.tema === 'object' && p.tema.slug) {
+          qIdToTemaSlug.set(p.id, p.tema.slug);
+        } else if (p.tema_id != null) {
+          // Último recurso: si vino un tema_id, buscamos su slug en la lista "temas"
+          const found = temas.find((t) => Number(t.id) === Number(p.tema_id));
+          if (found?.slug) qIdToTemaSlug.set(p.id, found.slug);
+        }
       });
 
-      // 4) Agrupar resultados por tema para almacenarlos en tu endpoint existente
-      const perTema = new Map(); // temaId -> { total, correctas, aciertos[], fallos[] }
+      // 4) Agrupar por tema_slug
+      const perTema = new Map(); // slug -> { total, correctas, aciertos[], fallos[] }
       data.forEach((preg) => {
-        const temaId = qIdToTemaId.get(preg.id) ?? null;
+        const temaSlug = qIdToTemaSlug.get(preg.id) ?? null;
         const userAns = respuestasUsuario[preg.id];
-        const correcta = preg.respuestas.find((r) => r.es_correcta)?.id;
+        const correcta = preg.respuestas.find((x) => x.es_correcta)?.id;
         const esOK = userAns && correcta && userAns === correcta;
 
         const bucket =
-          perTema.get(temaId) || { total: 0, correctas: 0, aciertos: [], fallos: [] };
+          perTema.get(temaSlug) || { total: 0, correctas: 0, aciertos: [], fallos: [] };
         bucket.total += 1;
         if (esOK) {
           bucket.correctas += 1;
@@ -290,13 +297,13 @@ export default function TestRepasoClient() {
         } else {
           bucket.fallos.push(preg.id);
         }
-        perTema.set(temaId, bucket);
+        perTema.set(temaSlug, bucket);
       });
 
-      // 5) Guardar en backend: un POST por tema
+      // 5) Guardar en backend: un POST por tema usando tema_slug
       if (token && perTema.size > 0) {
         await Promise.all(
-          Array.from(perTema.entries()).map(([temaId, bucket]) =>
+          Array.from(perTema.entries()).map(([temaSlug, bucket]) =>
             fetch(`${api}/api/resultados/`, {
               method: 'POST',
               headers: {
@@ -304,7 +311,8 @@ export default function TestRepasoClient() {
                 Authorization: `Bearer ${token}`,
               },
               body: JSON.stringify({
-                tema: temaId,
+                // En el nuevo sistema por slug:
+                tema_slug: temaSlug,
                 puntuacion: bucket.correctas,
                 total_preguntas: bucket.total,
                 aciertos: bucket.aciertos,
@@ -315,12 +323,11 @@ export default function TestRepasoClient() {
         );
       }
     } catch (e) {
-      // silencioso; ya mostramos los datos en UI
       console.error('Error corrigiendo/guardando resultados de repaso:', e);
     } finally {
       setCorrigiendo(false);
     }
-  }, [terminado, preguntas, respuestasUsuario, token]);
+  }, [terminado, preguntas, respuestasUsuario, token, temas]);
 
   // Presentación de tiempo (mm:ss)
   const fmt = (s) => {
@@ -346,7 +353,7 @@ export default function TestRepasoClient() {
           {/* Selector oposición */}
           <div className="bg-white border border-gray-200 rounded-xl p-6">
             <h2 className="text-lg font-semibold text-gray-900">1) Oposición</h2>
-            <p className="text-sm text-gray-600 mt-1">Selecciona la oposición (mostramos el nombre y su slug).</p>
+            <p className="text-sm text-gray-600 mt-1">Selecciona la oposición (por slug).</p>
 
             <div className="mt-4">
               <label className="block text-sm font-medium text-gray-700">
@@ -354,12 +361,12 @@ export default function TestRepasoClient() {
               </label>
               <select
                 className="mt-1 block w-full rounded-md border-gray-300"
-                value={opSelected?.id || ''}
+                value={opSelected?.slug || ''}
                 onChange={handleSelectOposicion}
               >
                 <option value="">— Elegir —</option>
                 {oposiciones.map((o) => (
-                  <option key={o.id} value={o.id}>
+                  <option key={o.slug} value={o.slug}>
                     {o.nombre} {o.slug ? `(${o.slug})` : ''}
                   </option>
                 ))}
@@ -371,7 +378,7 @@ export default function TestRepasoClient() {
           <div className="bg-white border border-gray-200 rounded-xl p-6">
             <h2 className="text-lg font-semibold text-gray-900">2) Temas</h2>
             <p className="text-sm text-gray-600 mt-1">
-              Elige uno o varios temas para incluir en el test.
+              Elige uno o varios temas (por slug) para incluir en el test.
             </p>
 
             {cargandoTemas ? (
@@ -383,19 +390,21 @@ export default function TestRepasoClient() {
             ) : (
               <div className="mt-4 max-h-64 overflow-auto border rounded-md divide-y">
                 {temas.map((t) => {
-                  const checked = temasSeleccionados.includes(t.id);
+                  const checked = temasSeleccionados.includes(t.slug);
                   return (
                     <label
-                      key={t.id}
+                      key={t.slug}
                       className="flex items-center gap-3 px-3 py-2 text-sm cursor-pointer hover:bg-gray-50"
                     >
                       <input
                         type="checkbox"
                         className="h-4 w-4"
                         checked={checked}
-                        onChange={() => toggleTema(t.id)}
+                        onChange={() => toggleTema(t.slug)}
                       />
-                      <span className="text-gray-800">{t.nombre || t.titulo || `Tema ${t.id}`}</span>
+                      <span className="text-gray-800">
+                        {t.nombre} {t.slug ? <em className="text-gray-500">({t.slug})</em> : null}
+                      </span>
                     </label>
                   );
                 })}
@@ -425,13 +434,13 @@ export default function TestRepasoClient() {
             {temasSeleccionados.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2">
                 {temas
-                  .filter((t) => temasSeleccionados.includes(t.id))
+                  .filter((t) => temasSeleccionados.includes(t.slug))
                   .map((t) => (
                     <span
-                      key={t.id}
+                      key={t.slug}
                       className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary"
                     >
-                      {t.nombre || t.titulo || `Tema ${t.id}`}
+                      {t.nombre}
                     </span>
                   ))}
               </div>
