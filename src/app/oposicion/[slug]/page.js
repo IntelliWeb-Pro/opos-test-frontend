@@ -81,7 +81,7 @@ export default function OposicionGuiaPage() {
                     Test Oficial de Examen
                 </button>
                 <Link href="/test-de-repaso" className="w-full sm:w-auto text-center bg-primary text-white px-8 py-3 rounded-md text-lg font-semibold hover:bg-primary-hover transition-colors">
-                    Test personalizado
+                    Test Personalizado
                 </Link>
             </div>
         </div>
