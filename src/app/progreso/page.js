@@ -6,7 +6,69 @@ import Link from 'next/link';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 
 const PIE_COLORS = ['#007bff', '#dc3545'];
+function Incompletos() {
+  const { token, isSubscribed } = useAuth();
+  const [items, setItems] = useState([]);
 
+  useEffect(() => {
+    if (!token || !isSubscribed) return;
+    const api = process.env.NEXT_PUBLIC_API_URL;
+    fetch(`${api}/api/sesiones/?estado=in_progress`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(setItems)
+      .catch(() => setItems([]));
+  }, [token, isSubscribed]);
+
+  if (!isSubscribed || items.length === 0) return null;
+
+  return (
+    <section className="mb-8">
+      <div className="bg-white border border-gray-200 rounded-2xl p-6">
+        <h2 className="text-xl font-bold text-dark mb-4">Tests sin finalizar</h2>
+        <ul className="divide-y">
+          {items.map(it => {
+            const isRepaso = it.tipo === 'repaso';
+            const resumeHref = isRepaso
+              ? `/test-de-repaso?resume=${it.id}`
+              : `/tema/${it.tema_slug}?resume=${it.id}`;
+
+            return (
+              <li key={it.id} className="py-3 flex items-center justify-between">
+                <div className="text-sm text-secondary">
+                  <span className="font-semibold text-dark">{isRepaso ? 'Repaso' : 'Tema'}</span>
+                  {isRepaso ? (
+                    <span className="ml-2">{it.tema_slugs?.length || 0} tema(s)</span>
+                  ) : (
+                    <span className="ml-2">{it.tema_slug}</span>
+                  )}
+                  <span className="ml-2">• pregunta {it.idx_actual + 1}</span>
+                  <span className="ml-2">• {Math.max(0, Math.round((it.tiempo_restante || 0) / 60))} min restantes</span>
+                </div>
+                <Link
+                  href={resumeHref}
+                  className="px-3 py-1.5 rounded-md bg-primary text-white text-sm font-semibold hover:bg-primary-hover"
+                >
+                  Continuar
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
+export default function ProgresoPage() {
+  return (
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <Incompletos />
+      {/* …tu progreso existente debajo… */}
+    </div>
+  );
+}
 // --- NUEVO COMPONENTE: El overlay para usuarios no suscritos ---
 const PremiumOverlay = () => (
     <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm p-8 text-center rounded-lg">

@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
+import { useTestSessionGuard } from '@/hooks/useTestSessionGuard';
 
 const PremiumNotice = () => (
   <div
@@ -25,6 +26,7 @@ const PremiumNotice = () => (
 export default function TestTemaClient() {
   const { slug } = useParams();               // ← tema por slug
   const searchParams = useSearchParams();
+  const resumeId = searchParams.get('resume'); // ← reanudar si viene ?resume=<id>
   const { user, token, isSubscribed } = useAuth();
 
   const [tema, setTema] = useState(null);
@@ -38,21 +40,24 @@ export default function TestTemaClient() {
   const [cargandoResultados, setCargandoResultados] = useState(false);
   const [datosCorreccion, setDatosCorreccion] = useState([]);
   const [puntuacion, setPuntuacion] = useState(0);
+
+  // Para test normal contamos hacia arriba (cronómetro)
   const [tiempoTranscurrido, setTiempoTranscurrido] = useState(0);
 
   const API = process.env.NEXT_PUBLIC_API_URL;
 
-  // Carga tema + preguntas por slug
+  // Carga tema + preguntas por slug (si NO estamos reanudando)
   useEffect(() => {
     if (!slug) return;
-    setLoading(true);
+    if (resumeId) { // si vamos a reanudar, dejamos que el hook nos pinte los datos
+      setLoading(false);
+      return;
+    }
 
+    setLoading(true);
     const temaUrl = `${API}/api/temas/${slug}/`;
     const preguntasUrl = `${API}/api/preguntas/?tema_slug=${encodeURIComponent(slug)}`;
-
-    const authHeaders = token
-      ? { Authorization: `Bearer ${token}` }
-      : {};
+    const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
 
     Promise.all([
       fetch(temaUrl, { headers: authHeaders }),
@@ -74,9 +79,9 @@ export default function TestTemaClient() {
         setError(e.message || 'Error cargando el test.');
         setLoading(false);
       });
-  }, [slug, token, API]);
+  }, [slug, token, API, resumeId]);
 
-  // Cronómetro
+  // Cronómetro (solo si no está terminado y hay preguntas)
   useEffect(() => {
     if (!loading && !testTerminado && preguntas.length > 0) {
       const t = setInterval(() => setTiempoTranscurrido((s) => s + 1), 1000);
@@ -94,6 +99,53 @@ export default function TestTemaClient() {
   const siguiente = () => {
     if (preguntaActualIndex < preguntas.length - 1) setPreguntaActualIndex((i) => i + 1);
   };
+
+  // ====== Guardado/reanudación de sesión (premium) ======
+  const {
+    sessionId,
+    requestExit,
+    ExitModal,
+    finalizeSession,
+  } = useTestSessionGuard({
+    token,
+    // Solo habilitamos guardado si el usuario es premium, el test está en curso y hay preguntas
+    isEnabled: !!isSubscribed && !testTerminado && preguntas.length > 0,
+    // Qué guardar periódicamente (y al darle a "Salir")
+    buildPayload: () => ({
+      tipo: 'normal',
+      tema_slug: slug,
+      // Para test normal no hay cuenta atrás: guardamos el tiempo transcurrido en "tiempo_restante"
+      tiempo_total: 0,
+      tiempo_restante: tiempoTranscurrido,
+      idx_actual: preguntaActualIndex,
+      respuestas: respuestasUsuario,
+      pregunta_ids: preguntas.map((p) => p.id),
+      // Guardamos las preguntas sin revelar correctas
+      preguntas: preguntas.map((p) => ({
+        id: p.id,
+        texto_pregunta: p.texto_pregunta,
+        // Mantenemos las respuestas sin el flag es_correcta
+        respuestas: (p.respuestas || []).map((r) => ({
+          id: r.id,
+          texto_respuesta: r.texto_respuesta,
+        })),
+      })),
+    }),
+    // Cómo restaurar si venimos con ?resume=<id>
+    onRestore: (s) => {
+      try {
+        setPreguntaActualIndex(s.idx_actual || 0);
+        setRespuestasUsuario(s.respuestas || {});
+        setPreguntas(Array.isArray(s.preguntas) ? s.preguntas : []);
+        // Recuperamos el cronómetro desde lo que guardamos como "tiempo_restante"
+        setTiempoTranscurrido(Number(s.tiempo_restante || 0));
+        setLoading(false);
+        setTestTerminado(false);
+      } catch {
+        // si algo falla, no bloqueamos
+      }
+    },
+  });
 
   const terminarTest = useCallback(async () => {
     if (testTerminado) return;
@@ -145,13 +197,16 @@ export default function TestTemaClient() {
           }),
         });
       }
+
+      // Marcar sesión como completada (si existía)
+      await finalizeSession();
     } catch (e) {
       console.error(e);
       setError('Error al obtener la corrección o guardar el resultado.');
     } finally {
       setCargandoResultados(false);
     }
-  }, [API, preguntas, respuestasUsuario, slug, testTerminado, token, user]);
+  }, [API, preguntas, respuestasUsuario, slug, testTerminado, token, user, finalizeSession]);
 
   if (loading) return <p className="text-center mt-20">Cargando test...</p>;
   if (error) return <p className="text-center mt-20 text-red-600">{error}</p>;
@@ -177,9 +232,7 @@ export default function TestTemaClient() {
           <p className="text-lg mt-2 mb-4 text-secondary">
             Tiempo total:{' '}
             <span className="font-bold text-dark">
-              {min < 10 ? '0' : ''}
-              {min}:{seg < 10 ? '0' : ''}
-              {seg}
+              {min < 10 ? '0' : ''}{min}:{seg < 10 ? '0' : ''}{seg}
             </span>
           </p>
 
@@ -265,11 +318,19 @@ export default function TestTemaClient() {
           <span className="text-lg font-semibold text-dark">
             Pregunta {preguntaActualIndex + 1} de {preguntas.length}
           </span>
-          <span className="text-2xl font-bold text-dark">
-            {min < 10 ? '0' : ''}
-            {min}:{seg < 10 ? '0' : ''}
-            {seg}
-          </span>
+          <div className="flex items-center gap-3">
+            {isSubscribed && (
+              <button
+                onClick={() => requestExit()}
+                className="px-3 py-2 rounded-md border hover:bg-gray-50 text-sm"
+              >
+                Salir
+              </button>
+            )}
+            <span className="text-2xl font-bold text-dark">
+              {min < 10 ? '0' : ''}{min}:{seg < 10 ? '0' : ''}{seg}
+            </span>
+          </div>
         </div>
 
         <h2 className="text-2xl font-semibold text-dark mb-6">{preguntaActual.texto_pregunta}</h2>
@@ -316,6 +377,9 @@ export default function TestTemaClient() {
           )}
         </div>
       </div>
+
+      {/* Modal de confirmación de salida */}
+      <ExitModal />
     </div>
   );
 }
