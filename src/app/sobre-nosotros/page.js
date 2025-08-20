@@ -1,4 +1,6 @@
 // Página "Sobre nosotros" – Server Component
+import CTAIfNotSubscribed from './CTAIfNotSubscribed';
+
 export const metadata = {
   title: 'Sobre nosotros | TestEstado',
   description:
@@ -75,14 +77,9 @@ export default function SobreNosotrosPage() {
         </p>
       </section>
 
+      {/* CTA visible solo si NO está suscrito */}
       <section className="mt-10 text-center">
-        <a
-          href="/precios"
-          className="inline-block bg-yellow-500 text-white px-8 py-3 rounded-md text-lg font-semibold hover:bg-black transition-colors"
-          aria-label="Ver planes y empezar 7 días gratis"
-        >
-          Empieza 7 días gratis
-        </a>
+        <CTAIfNotSubscribed />
       </section>
 
       {/* JSON-LD AboutPage simple para E-E-A-T */}
