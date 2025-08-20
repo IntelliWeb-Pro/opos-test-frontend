@@ -267,7 +267,7 @@ export default function TestRepasoClient() {
       preguntas.forEach((p) => {
         // Soportar varias estructuras: p.tema (id u objeto) o p.tema_id
         let temaId = null;
-        if (p.tema && typeof p.tema === 'object') temaId = p.tema.id ?? null;
+        if (p.tema && typeof p.tema === 'object') temaId = p.tema.slug ?? null;
         else if (p.tema != null) temaId = p.tema;
         else if (p.tema_id != null) temaId = p.tema_id;
         if (temaId != null) qIdToTemaId.set(p.id, temaId);
