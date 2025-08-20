@@ -157,10 +157,10 @@ export default function HomePage() {
               {loading && <p>Cargando oposiciones...</p>}
               {error && <p className="text-red-500">{error}</p>}
               {oposiciones.map(opo => (
-                <Link key={opo.id} href={`/oposicion/${opo.slug}`} className="block bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                <Link key={opo.id} href={`/oposicion/${opo.slug}`} className="block bg-primary border border-gray-200 rounded-lg shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
                   <div className="p-6">
-                    <h3 className="text-xl font-bold text-dark">{opo.nombre}</h3>
-                    <p className="text-sm text-secondary mt-2">Accede a la guía y empieza a practicar.</p>
+                    <h3 className="text-xl font-bold text-white">{opo.nombre}</h3>
+                    <p className="text-sm text-white mt-2">Accede a la guía y empieza a practicar.</p>
                   </div>
                 </Link>
               ))}
