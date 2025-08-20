@@ -51,7 +51,7 @@ export default function OposicionPage() {
               <h2 className="text-2xl font-bold text-dark mb-4 border-b pb-2">Bloque {bloque.numero}: {bloque.nombre}</h2>
               <ul className="space-y-4">
                 {bloque.temas.map(tema => (
-                  <li key={tema.id} className="bg-light p-4 rounded-lg border border-gray-200">
+                  <li key={tema.slug} className="bg-light p-4 rounded-lg border border-gray-200">
                     <div className="flex flex-col sm:flex-row justify-between items-center">
                       <span className="text-lg text-dark font-semibold text-center sm:text-left">
                         Tema {tema.numero}. {tema.nombre_oficial}
@@ -62,7 +62,7 @@ export default function OposicionPage() {
                         {/* --- 4. Lógica condicional para el botón --- */}
                         {(!tema.es_premium || isSubscribed) ? (
                           // Si el tema es GRATIS o el usuario ESTÁ suscrito
-                          <Link href={`/tema/${tema.id}`} className="text-center bg-primary text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-primary-hover transition-colors">
+                          <Link href={`/tema/${tema.slug}`} className="text-center bg-primary text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-primary-hover transition-colors">
                             Realizar Test
                           </Link>
                         ) : (
