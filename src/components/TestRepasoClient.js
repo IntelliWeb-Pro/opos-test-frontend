@@ -271,7 +271,7 @@ export default function TestRepasoClient() {
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900">1) Oposición</h2>
-                  <p className="text-sm text-gray-600">Selecciona la convocatoria (por slug).</p>
+                  <p className="text-sm text-gray-600">Selecciona tus oposiciones.</p>
                 </div>
               </div>
 
