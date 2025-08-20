@@ -130,7 +130,7 @@ export default function HomePage() {
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             {/* ⬇️ Condicional: si está suscrito -> botón a /progreso, si no -> /test-de-prueba */}
             {isSubscribed ? (
-              <Link href="/progreso" className="inline-block bg-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-hover transition">
+              <Link href="/progreso" className="inline-block bg-red-800 text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-hover transition">
                 Ver mi progreso
               </Link>
             ) : (
