@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useAuth } from '@/context/AuthContext'; // ⬅️ NUEVO
 import CallToAction from '@/components/CallToAction'; // Importamos el nuevo componente
 
 const useScrollAnimation = () => {
@@ -53,6 +54,7 @@ const FAQItem = ({ question, answer }) => {
 };
 
 export default function HomePage() {
+  const { isSubscribed } = useAuth(); // ⬅️ NUEVO
   const [oposiciones, setOposiciones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -126,9 +128,17 @@ export default function HomePage() {
           </blockquote>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link href="/test-de-prueba" className="inline-block bg-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-hover transition">
-              Test de prueba
-            </Link>
+            {/* ⬇️ Condicional: si está suscrito -> botón a /progreso, si no -> /test-de-prueba */}
+            {isSubscribed ? (
+              <Link href="/progreso" className="inline-block bg-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-hover transition">
+                Ver mi progreso
+              </Link>
+            ) : (
+              <Link href="/test-de-prueba" className="inline-block bg-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-hover transition">
+                Test de prueba
+              </Link>
+            )}
+
             <Link href="/sobre-nosotros" className="inline-block bg-white/90 text-gray-900 px-6 py-3 rounded-xl font-semibold hover:bg-white transition">
               Sobre nosotros
             </Link>
