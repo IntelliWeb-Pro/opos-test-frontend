@@ -59,7 +59,13 @@ export default function ProgresoPage() {
   }, [API, token]);
 
   // Cargar sesiones incompletas (arriba del todo)
-  useEffect(() => {
+ 
+        {/* ======= Resto del dashboard ======= */}
+        <header className="mb-12 text-center">
+          <h1 className="text-4xl font-bold text-white">Dashboard de Progreso</h1>
+          <p className="text-lg text-white mt-2">Analiza tu rendimiento y descubre tus puntos fuertes y débiles.</p>
+        </header>
+ useEffect(() => {
     if (!token) { setLoadingPending(false); return; }
 
     const tryEndpoints = async () => {
@@ -256,12 +262,6 @@ export default function ProgresoPage() {
             )}
           </div>
         </section>
-
-        {/* ======= Resto del dashboard ======= */}
-        <header className="mb-12 text-center">
-          <h1 className="text-4xl font-bold text-white">Dashboard de Progreso</h1>
-          <p className="text-lg text-white mt-2">Analiza tu rendimiento y descubre tus puntos fuertes y débiles.</p>
-        </header>
 
         <div>
           {stats.puntos_debiles && stats.puntos_debiles.length > 0 && (
