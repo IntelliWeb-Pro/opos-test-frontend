@@ -1,92 +1,41 @@
+// src/app/progreso/page.js
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line
+} from 'recharts';
 
 const PIE_COLORS = ['#007bff', '#dc3545'];
-function Incompletos() {
-  const { token, isSubscribed } = useAuth();
-  const [items, setItems] = useState([]);
 
-  useEffect(() => {
-    if (!token || !isSubscribed) return;
-    const api = process.env.NEXT_PUBLIC_API_URL;
-    fetch(`${api}/api/sesiones/?estado=in_progress`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then(setItems)
-      .catch(() => setItems([]));
-  }, [token, isSubscribed]);
-
-  if (!isSubscribed || items.length === 0) return null;
-
-  return (
-    <section className="mb-8">
-      <div className="bg-white border border-gray-200 rounded-2xl p-6">
-        <h2 className="text-xl font-bold text-dark mb-4">Tests sin finalizar</h2>
-        <ul className="divide-y">
-          {items.map(it => {
-            const isRepaso = it.tipo === 'repaso';
-            const resumeHref = isRepaso
-              ? `/test-de-repaso?resume=${it.id}`
-              : `/tema/${it.tema_slug}?resume=${it.id}`;
-
-            return (
-              <li key={it.id} className="py-3 flex items-center justify-between">
-                <div className="text-sm text-secondary">
-                  <span className="font-semibold text-dark">{isRepaso ? 'Repaso' : 'Tema'}</span>
-                  {isRepaso ? (
-                    <span className="ml-2">{it.tema_slugs?.length || 0} tema(s)</span>
-                  ) : (
-                    <span className="ml-2">{it.tema_slug}</span>
-                  )}
-                  <span className="ml-2">• pregunta {it.idx_actual + 1}</span>
-                  <span className="ml-2">• {Math.max(0, Math.round((it.tiempo_restante || 0) / 60))} min restantes</span>
-                </div>
-                <Link
-                  href={resumeHref}
-                  className="px-3 py-1.5 rounded-md bg-primary text-white text-sm font-semibold hover:bg-primary-hover"
-                >
-                  Continuar
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    </section>
-  );
-}
-
-export default function ProgresoPage() {
-  return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <Incompletos />
-      {/* …tu progreso existente debajo… */}
-    </div>
-  );
-}
-// --- NUEVO COMPONENTE: El overlay para usuarios no suscritos ---
+// Overlay para no suscritos (premium)
 const PremiumOverlay = () => (
-    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm p-8 text-center rounded-lg">
-        <div className="bg-white p-8 rounded-lg shadow-xl border border-gray-200">
-            <h2 className="text-2xl font-bold text-dark">Desbloquea tu Progreso Completo</h2>
-            <p className="mt-2 text-secondary max-w-sm">
-                Conviértete en premium para acceder a todas tus estadísticas, analizar tus puntos débiles y ver tu evolución.
-            </p>
-            <Link 
-                href="/precios" 
-                className="mt-6 inline-block bg-yellow-500 text-white px-8 py-3 rounded-md text-lg font-semibold hover:bg-yellow-600 transition-colors shadow-lg"
-            >
-                Subscríbete Ahora
-            </Link>
-        </div>
+  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm p-8 text-center rounded-lg">
+    <div className="bg-white p-8 rounded-lg shadow-xl border border-gray-200">
+      <h2 className="text-2xl font-bold text-dark">Desbloquea tu Progreso Completo</h2>
+      <p className="mt-2 text-secondary max-w-sm">
+        Conviértete en premium para acceder a todas tus estadísticas, analizar tus puntos débiles y ver tu evolución.
+      </p>
+      <Link
+        href="/precios"
+        className="mt-6 inline-block bg-yellow-500 text-white px-8 py-3 rounded-md text-lg font-semibold hover:bg-yellow-600 transition-colors shadow-lg"
+      >
+        Subscríbete Ahora
+      </Link>
     </div>
+  </div>
 );
 
+// helper
+const fmt = (s) => {
+  if (typeof s !== 'number' || Number.isNaN(s)) return '—';
+  const m = Math.floor(s / 60);
+  const ss = s % 60;
+  return `${m.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
+};
 
 export default function ProgresoPage() {
   const { user, token, isSubscribed } = useAuth();
@@ -94,141 +43,298 @@ export default function ProgresoPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    if (!token) {
-      setLoading(false);
-      return;
-    }
+  // NUEVO: sesiones incompletas (repaso/tema)
+  const [pending, setPending] = useState([]);
+  const [loadingPending, setLoadingPending] = useState(true);
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/estadisticas/`, {
-      headers: { 'Authorization': `Bearer ${token}` },
-    })
-      .then(res => {
-        if (!res.ok) { throw new Error('No se pudo cargar tu progreso. Es posible que aún no hayas completado ningún test.'); }
-        return res.json();
-      })
-      .then(data => {
-        if (data.message) { setStats(null); } 
-        else { setStats(data); }
-        setLoading(false);
-      })
+  const API = process.env.NEXT_PUBLIC_API_URL;
+
+  // Cargar estadísticas
+  useEffect(() => {
+    if (!token) { setLoading(false); return; }
+    fetch(`${API}/api/estadisticas/`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => { if (!res.ok) throw new Error('No se pudo cargar tu progreso. Es posible que aún no hayas completado ningún test.'); return res.json(); })
+      .then(data => { setStats(data?.message ? null : data); setLoading(false); })
       .catch(err => { setError(err.message); setLoading(false); });
-  }, [token]);
+  }, [API, token]);
+
+  // Cargar sesiones incompletas (arriba del todo)
+  useEffect(() => {
+    if (!token) { setLoadingPending(false); return; }
+
+    const tryEndpoints = async () => {
+      const base = `${API}/api/sesiones`;
+      const urls = [
+        `${base}/?estado=incompleta&limit=5`,
+        `${base}/?pendientes=1&limit=5`,
+        `${base}/?estado=abandonado,en_curso&limit=5`,
+        `${base}/incompletas/?limit=5`,
+      ];
+      for (const url of urls) {
+        try {
+          const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+          if (!r.ok) continue;
+          const data = await r.json();
+          // admitir {results:[...]} o array plano
+          const items = Array.isArray(data) ? data : (Array.isArray(data?.results) ? data.results : []);
+          if (!items.length) continue;
+
+          // normalizar
+          const norm = items.map(s => ({
+            id: s.id,
+            tipo: s.tipo || s.type || 'repaso', // 'repaso' | 'tema'
+            idx: Number(s.idx_actual ?? 0),
+            total: Number(
+              (s.preguntas_ids && s.preguntas_ids.length) ||
+              (s.preguntas && s.preguntas.length) ||
+              s.total_preguntas || 0
+            ),
+            tiempo: Number(s.tiempo_restante ?? 0),
+            oposicion: s.config?.oposicion ?? s.oposicion ?? null,
+            tema_slug: s.config?.tema_slug ?? s.tema_slug ?? null,
+            temas: Array.isArray(s.config?.temas) ? s.config.temas : (Array.isArray(s.temas) ? s.temas : []),
+            created_at: s.created_at || s.fecha || null,
+            estado: s.estado || 'abandonado',
+          }));
+          return norm;
+        } catch {
+          // siguiente intento
+        }
+      }
+      return [];
+    };
+
+    (async () => {
+      setLoadingPending(true);
+      const list = await tryEndpoints();
+      setPending(list.slice(0, 5)); // solo los últimos 5
+      setLoadingPending(false);
+    })();
+  }, [API, token]);
+
+  const pieData = useMemo(() => (stats ? [
+    { name: 'Aciertos', value: stats.resumen_aciertos.aciertos },
+    { name: 'Fallos', value: stats.resumen_aciertos.fallos },
+  ] : []), [stats]);
 
   if (loading) return <p className="text-center mt-20">Analizando tu progreso...</p>;
-  
+
   if (!user) {
     return (
       <main className="text-center p-8 container mx-auto">
         <div className="bg-white p-8 rounded-lg shadow-md mt-10 border border-gray-200">
           <h2 className="text-2xl font-bold text-dark">Inicia sesión para ver tu progreso</h2>
-          <Link href="/login" className="mt-4 inline-block bg-primary text-white px-6 py-2 rounded-md hover:bg-primary-hover">Iniciar Sesión</Link>
+          <Link href="/login" className="mt-4 inline-block bg-primary text-white px-6 py-2 rounded-md hover:bg-primary-hover">
+            Iniciar Sesión
+          </Link>
         </div>
       </main>
     );
   }
-  
+
   if (error || !stats) {
     return (
-        <main className="text-center p-8 container mx-auto">
-            <div className="bg-white p-8 rounded-lg shadow-md mt-10 border border-gray-200">
-                <h2 className="text-2xl font-bold text-dark">Aún no hay estadísticas</h2>
-                <p className="mt-2 text-secondary">{error || "Completa tu primer test para empezar a ver tu progreso."}</p>
-                <Link href="/" className="mt-4 inline-block bg-primary text-white px-6 py-2 rounded-md hover:bg-primary-hover">Empezar un test</Link>
-            </div>
-        </main>
-    )
+      <main className="text-center p-8 container mx-auto">
+        <div className="bg-white p-8 rounded-lg shadow-md mt-10 border border-gray-200">
+          <h2 className="text-2xl font-bold text-dark">Aún no hay estadísticas</h2>
+          <p className="mt-2 text-secondary">{error || 'Completa tu primer test para empezar a ver tu progreso.'}</p>
+          <Link href="/" className="mt-4 inline-block bg-primary text-white px-6 py-2 rounded-md hover:bg-primary-hover">
+            Empezar un test
+          </Link>
+        </div>
+      </main>
+    );
   }
 
-  const pieData = [
-      { name: 'Aciertos', value: stats.resumen_aciertos.aciertos },
-      { name: 'Fallos', value: stats.resumen_aciertos.fallos },
-  ];
-
   return (
-    // --- CAMBIO CLAVE: El contenedor principal ahora es el relativo ---
+    // contenedor principal relativo (para overlay)
     <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-
-      {/* --- LÓGICA CONDICIONAL: Mostramos el overlay si el usuario no está suscrito --- */}
       {!isSubscribed && <PremiumOverlay />}
 
-      {/* --- Este div ahora envuelve todo el contenido y aplica el efecto --- */}
+      {/* contenido (se difumina si no es premium) */}
       <div className={!isSubscribed ? 'opacity-50 blur-sm pointer-events-none' : ''}>
+        {/* === NUEVO: Sesiones sin finalizar (arriba del todo) === */}
+        <section className="mb-10">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-white">Tests sin finalizar</h2>
+            {!loadingPending && (
+              <span className="text-sm text-white/80">
+                {pending.length > 0 ? `${pending.length} pendiente(s)` : 'Nada pendiente'}
+              </span>
+            )}
+          </div>
+
+          <div className="mt-4">
+            {loadingPending ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-28 rounded-xl bg-white/30 animate-pulse border border-white/40" />
+                ))}
+              </div>
+            ) : pending.length === 0 ? (
+              <p className="text-white/80 text-sm">No tienes tests pendientes de finalizar.</p>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {pending.map((s) => {
+                  const total = s.total || 0;
+                  const current = Math.min(s.idx + 1, Math.max(1, total || 1));
+                  const pct = total ? Math.round((current / total) * 100) : 0;
+
+                  // Destino para continuar
+                  let href = '/test-de-repaso';
+                  if (s.tipo === 'repaso') {
+                    href = `/test-de-repaso?sesion=${s.id}`;
+                  } else if (s.tipo === 'tema') {
+                    const tslug = s.tema_slug || (Array.isArray(s.temas) && s.temas[0]) || '';
+                    href = tslug ? `/tema/${tslug}?sesion=${s.id}` : `/tema?sesion=${s.id}`;
+                  } else {
+                    href = `/test-de-repaso?sesion=${s.id}`;
+                  }
+
+                  return (
+                    <div key={s.id} className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold">
+                            {s.tipo === 'tema' ? 'Tema' : 'Repaso'}
+                          </span>
+                          {s.oposicion && (
+                            <span className="text-[11px] px-2 py-0.5 rounded bg-gray-100 text-gray-700">{s.oposicion}</span>
+                          )}
+                        </div>
+                        <span className="text-xs text-gray-500">{fmt(s.tiempo)} restantes</span>
+                      </div>
+
+                      {/* Temas chips */}
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {s.tipo === 'tema' && s.tema_slug && (
+                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
+                            {s.tema_slug}
+                          </span>
+                        )}
+                        {s.tipo === 'repaso' && Array.isArray(s.temas) && s.temas.slice(0, 3).map(t => (
+                          <span key={t} className="text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
+                            {t}
+                          </span>
+                        ))}
+                        {s.tipo === 'repaso' && s.temas?.length > 3 && (
+                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                            +{s.temas.length - 3}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Progreso lineal */}
+                      <div className="mt-3">
+                        <div className="flex justify-between text-xs text-gray-600 mb-1">
+                          <span>Pregunta {current} / {total || '?'}</span>
+                          <span>{pct}%</span>
+                        </div>
+                        <div className="h-2 w-full bg-gray-100 rounded">
+                          <div
+                            className="h-2 rounded bg-primary transition-all"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex justify-end">
+                        <Link
+                          href={href}
+                          className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-primary-hover"
+                        >
+                          Continuar
+                          <svg viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor">
+                            <path d="M7.293 14.707a1 1 0 0 1 0-1.414L10.586 10 7.293 6.707A1 1 0 1 1 8.707 5.293l4 4a1 1 0 0 1 0 1.414l-4 4a1 1 0 0 1-1.414 0z" />
+                          </svg>
+                        </Link>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* ======= Resto del dashboard ======= */}
         <header className="mb-12 text-center">
           <h1 className="text-4xl font-bold text-white">Dashboard de Progreso</h1>
           <p className="text-lg text-white mt-2">Analiza tu rendimiento y descubre tus puntos fuertes y débiles.</p>
         </header>
-        
+
         <div>
-            {stats.puntos_debiles && stats.puntos_debiles.length > 0 && (
-              <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-lg shadow-md mb-8">
-                  <h2 className="text-2xl font-bold text-red-800">Temas a Reforzar</h2>
-                  <p className="text-red-700 mt-1">Estos son los temas con tu porcentaje de aciertos más bajo. ¡Concéntrate en ellos!</p>
-                  <ul className="space-y-3 mt-4">
-                      {stats.puntos_debiles.map((item) => (
-                          <li key={item.tema_id} className="flex flex-col sm:flex-row justify-between items-center p-3 bg-white rounded-md border">
-                              <div>
-                                  <p className="font-semibold text-dark">{item.tema}</p>
-                                  <p className="text-sm text-secondary">{item.oposicion}</p>
-                              </div>
-                              <div className="flex items-center mt-2 sm:mt-0">
-                                  <span className="font-bold text-lg text-red-600 mr-4">{item.media}%</span>
-                                  <Link href={`/tema/${item.tema_id}`} className="bg-primary text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-primary-hover transition-colors">
-                                      Hacer Test
-                                  </Link>
-                              </div>
-                          </li>
-                      ))}
-                  </ul>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-              <div className="lg:col-span-1 bg-white p-6 rounded-lg shadow-md border border-gray-200 text-center flex flex-col justify-center">
-                  <h2 className="text-xl font-semibold text-dark">Aciertos General</h2>
-                  <p className="text-6xl font-bold text-primary mt-2">{stats.media_general}%</p>
-              </div>
-              <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                  <h2 className="text-xl font-semibold text-dark mb-4 text-center">Resumen Total</h2>
-                  <ResponsiveContainer width="100%" height={250}>
-                      <PieChart>
-                          <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
-                              {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />)}
-                          </Pie>
-                          <Tooltip formatter={(value) => `${value} preguntas`} />
-                          <Legend />
-                      </PieChart>
-                  </ResponsiveContainer>
-              </div>
+          {stats.puntos_debiles && stats.puntos_debiles.length > 0 && (
+            <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-lg shadow-md mb-8">
+              <h2 className="text-2xl font-bold text-red-800">Temas a Reforzar</h2>
+              <p className="text-red-700 mt-1">Estos son los temas con tu porcentaje de aciertos más bajo. ¡Concéntrate en ellos!</p>
+              <ul className="space-y-3 mt-4">
+                {stats.puntos_debiles.map((item) => (
+                  <li key={item.tema_id} className="flex flex-col sm:flex-row justify-between items-center p-3 bg-white rounded-md border">
+                    <div>
+                      <p className="font-semibold text-dark">{item.tema}</p>
+                      <p className="text-sm text-secondary">{item.oposicion}</p>
+                    </div>
+                    <div className="flex items-center mt-2 sm:mt-0">
+                      <span className="font-bold text-lg text-red-600 mr-4">{item.media}%</span>
+                      <Link href={`/tema/${item.tema_id}`} className="bg-primary text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-primary-hover transition-colors">
+                        Hacer Test
+                      </Link>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </div>
+          )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                <h2 className="text-xl font-semibold text-dark mb-4">Rendimiento por Oposición</h2>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={stats.stats_por_oposicion} layout="vertical" margin={{ top: 5, right: 30, left: 100, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" domain={[0, 100]} unit="%" />
-                    <YAxis dataKey="oposicion" type="category" width={150} tick={{ fontSize: 12 }} />
-                    <Tooltip formatter={(value) => `${value}%`} />
-                    <Bar dataKey="media" name="Aciertos" fill="#007bff" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-                <h2 className="text-xl font-semibold text-dark mb-4">Evolución de Resultados (Últimos Tests)</h2>
-                  <ResponsiveContainer width="100%" height={300}>
-                      <LineChart data={stats.historico_resultados} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="fecha" />
-                          <YAxis domain={[0, 100]} unit="%" />
-                          <Tooltip formatter={(value) => `${value}%`} />
-                          <Legend />
-                          <Line type="monotone" dataKey="nota" name="Nota Media" stroke="#28a745" strokeWidth={2} />
-                      </LineChart>
-                  </ResponsiveContainer>
-              </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            <div className="lg:col-span-1 bg-white p-6 rounded-lg shadow-md border border-gray-200 text-center flex flex-col justify-center">
+              <h2 className="text-xl font-semibold text-dark">Aciertos General</h2>
+              <p className="text-6xl font-bold text-primary mt-2">{stats.media_general}%</p>
             </div>
+            <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-md border border-gray-200">
+              <h2 className="text-xl font-semibold text-dark mb-4 text-center">Resumen Total</h2>
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => `${value} preguntas`} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+              <h2 className="text-xl font-semibold text-dark mb-4">Rendimiento por Oposición</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={stats.stats_por_oposicion} layout="vertical" margin={{ top: 5, right: 30, left: 100, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" domain={[0, 100]} unit="%" />
+                  <YAxis dataKey="oposicion" type="category" width={150} tick={{ fontSize: 12 }} />
+                  <Tooltip formatter={(value) => `${value}%`} />
+                  <Bar dataKey="media" name="Aciertos" fill="#007bff" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+              <h2 className="text-xl font-semibold text-dark mb-4">Evolución de Resultados (Últimos Tests)</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={stats.historico_resultados} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="fecha" />
+                  <YAxis domain={[0, 100]} unit="%" />
+                  <Tooltip formatter={(value) => `${value}%`} />
+                  <Legend />
+                  <Line type="monotone" dataKey="nota" name="Nota Media" stroke="#28a745" strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
         </div>
       </div>
     </div>

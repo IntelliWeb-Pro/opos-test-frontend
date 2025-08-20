@@ -1,7 +1,9 @@
+// src/components/TestRepasoClient.js
 'use client';
 
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 // Utils
@@ -21,8 +23,10 @@ function sampleN(arr, n) {
 
 export default function TestRepasoClient() {
   const { user, token, isSubscribed } = useAuth();
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
-  // Gates
+  // ==== GATES ====
   if (!user) {
     return (
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -52,7 +56,9 @@ export default function TestRepasoClient() {
     );
   }
 
-  // State
+  const API = process.env.NEXT_PUBLIC_API_URL;
+
+  // ==== STATE Config ====
   const [oposiciones, setOposiciones] = useState([]); // {id,nombre,slug}
   const [opSelected, setOpSelected] = useState(null);
   const [temas, setTemas] = useState([]); // {id,slug,nombre}
@@ -62,7 +68,8 @@ export default function TestRepasoClient() {
   const [tiempoMinutos, setTiempoMinutos] = useState(20);
   const [cargandoTemas, setCargandoTemas] = useState(false);
 
-  const [preguntas, setPreguntas] = useState([]);
+  // ==== STATE Test ====
+  const [preguntas, setPreguntas] = useState([]); // cada pregunta marcada opcionalmente con _tema_slug
   const [respuestasUsuario, setRespuestasUsuario] = useState({});
   const [idxActual, setIdxActual] = useState(0);
   const [enCurso, setEnCurso] = useState(false);
@@ -76,34 +83,111 @@ export default function TestRepasoClient() {
   const totalSeconds = useMemo(() => tiempoMinutos * 60, [tiempoMinutos]);
   const elapsed = totalSeconds > 0 ? totalSeconds - timeLeft : 0;
 
-  // Data fetch
+  // ==== STATE Sesión (guardado/reanudación) ====
+  const [sessionId, setSessionId] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const autosaveRef = useRef(null);
+  const lastSavedRef = useRef({}); // para evitar parches idénticos
+
+  // --------------- Fetch helpers ---------------
+  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+
+  const fetchPreguntasByIds = useCallback(
+    async (ids = []) => {
+      if (!ids.length) return [];
+      // Intento 1: endpoint dedicado (si existe en tu backend)
+      try {
+        const r = await fetch(`${API}/api/preguntas/detalle/?ids=${ids.join(',')}`, { headers: authHeaders });
+        if (r.ok) return await r.json();
+      } catch (_) {}
+      // Intento 2 (fallback): usar /corregir/ (incluye es_correcta; la UI no la usa hasta finalizar)
+      const c = await fetch(`${API}/api/preguntas/corregir/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        body: JSON.stringify({ ids }),
+      });
+      if (!c.ok) throw new Error('No se pudieron reconstruir las preguntas de la sesión');
+      const data = await c.json();
+      // normalizamos para que el test no “revele” nada: dejamos el objeto tal cual
+      return data;
+    },
+    [API, authHeaders]
+  );
+
+  // --------------- Carga oposiciones ---------------
   useEffect(() => {
-    const api = process.env.NEXT_PUBLIC_API_URL;
-    fetch(`${api}/api/oposiciones/`)
+    fetch(`${API}/api/oposiciones/`)
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
       .then(data => setOposiciones(data || []))
       .catch(() => setOposiciones([]));
-  }, []);
+  }, [API]);
 
+  // --------------- Carga temas por oposición ---------------
   useEffect(() => {
     if (!opSelected) {
       setTemas([]); setTemasSeleccionados([]); return;
     }
-    const api = process.env.NEXT_PUBLIC_API_URL;
     setCargandoTemas(true);
-    fetch(`${api}/api/oposiciones/${opSelected.slug}/`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+    fetch(`${API}/api/oposiciones/${opSelected.slug}/`, { headers: authHeaders })
       .then(r => { if (!r.ok) throw new Error(); return r.json(); })
       .then(data => {
         const nestedTemas = (data?.bloques || []).flatMap(b => b?.temas || []) || data?.temas || [];
-        const norm = nestedTemas.map(t => ({ id: t.id ?? null, slug: t.slug, nombre: t.nombre || t.nombre_oficial || t.titulo || `Tema ${t.id ?? ''}` }));
+        const norm = nestedTemas.map(t => ({
+          id: t.id ?? null,
+          slug: t.slug,
+          nombre: t.nombre || t.nombre_oficial || t.titulo || `Tema ${t.id ?? ''}`
+        }));
         setTemas(norm);
         setTemasSeleccionados([]);
       })
       .catch(() => setTemas([]))
       .finally(() => setCargandoTemas(false));
-  }, [opSelected, token]);
+  }, [API, opSelected, authHeaders]);
 
-  // Derived
+  // --------------- Reanudación desde ?sesion=ID ---------------
+  useEffect(() => {
+    const sid = searchParams?.get('sesion');
+    if (!sid || !token) return;
+
+    (async () => {
+      try {
+        const r = await fetch(`${API}/api/sesiones/${sid}/`, { headers: authHeaders });
+        if (!r.ok) throw new Error('No se pudo cargar la sesión');
+        const s = await r.json();
+
+        // Esperamos campos:
+        // s: { id, tipo:'repaso', preguntas_ids:[...], preguntas:[...?], idx_actual, respuestas, tiempo_restante, config:{temas, nPorTema, minutos} }
+        setSessionId(s.id);
+
+        // Config
+        if (s?.config?.minutos) setTiempoMinutos(Number(s.config.minutos));
+        if (s?.config?.nPorTema) setNPregPorTema(Number(s.config.nPorTema));
+        if (Array.isArray(s?.config?.temas)) setTemasSeleccionados(s.config.temas);
+
+        // Preguntas
+        let qs = Array.isArray(s.preguntas) && s.preguntas.length ? s.preguntas : null;
+        if (!qs && Array.isArray(s.preguntas_ids)) {
+          qs = await fetchPreguntasByIds(s.preguntas_ids);
+        }
+        // marca tema slug si te viene en config.temas (best effort)
+        const temasSet = new Set(s?.config?.temas || []);
+        qs = (qs || []).map(q => ({ ...q, _tema_slug: q._tema_slug || (q.tema?.slug && temasSet.has(q.tema.slug) ? q.tema.slug : undefined) }));
+
+        setPreguntas(qs);
+        setRespuestasUsuario(s.respuestas || {});
+        setIdxActual(Math.max(0, Math.min(Number(s.idx_actual || 0), (qs?.length || 1) - 1)));
+        setTimeLeft(Math.max(1, Number(s.tiempo_restante || (s?.config?.minutos || 20) * 60)));
+        setEnCurso(true);
+        setTerminado(false);
+      } catch (e) {
+        console.error('Error al reanudar sesión:', e);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, token]);
+
+  // --------------- Derivados ---------------
   const filteredTemas = useMemo(() => {
     const q = temaQuery.trim().toLowerCase();
     if (!q) return temas;
@@ -114,7 +198,7 @@ export default function TestRepasoClient() {
 
   const totalPreguntasPreview = temasSeleccionados.length * (nPregPorTema || 0);
 
-  // Handlers
+  // --------------- Handlers config ---------------
   const handleSelectOposicion = (e) => {
     const slug = e.target.value || '';
     setOpSelected(oposiciones.find(o => o.slug === slug) || null);
@@ -125,22 +209,79 @@ export default function TestRepasoClient() {
   const seleccionarTodos = () => setTemasSeleccionados(temas.map(t => t.slug));
   const limpiarTemas = () => setTemasSeleccionados([]);
 
+  // --------------- Crear sesión (cuando empieza el test) ---------------
+  const crearSesion = useCallback(async (pregs) => {
+    if (!token) return null;
+    try {
+      const r = await fetch(`${API}/api/sesiones/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        body: JSON.stringify({
+          tipo: 'repaso',
+          preguntas: pregs.map(p => p.id),
+          idx_actual: 0,
+          respuestas: {},
+          tiempo_restante: tiempoMinutos * 60,
+          config: {
+            temas: temasSeleccionados,
+            nPorTema: nPregPorTema,
+            minutos: tiempoMinutos,
+            oposicion: opSelected?.slug || null,
+          },
+        }),
+      });
+      if (!r.ok) throw new Error('No se pudo crear la sesión');
+      const s = await r.json();
+      return s.id;
+    } catch (e) {
+      console.warn('Sesión no creada (se seguirá sin guardado):', e.message);
+      return null;
+    }
+  }, [API, token, authHeaders, tiempoMinutos, temasSeleccionados, nPregPorTema, opSelected]);
+
+  const patchSesion = useCallback(async (payload) => {
+    if (!sessionId || !token) return;
+    // evitar spam con payloads idénticos
+    const key = JSON.stringify(payload);
+    if (lastSavedRef.current[sessionId] === key) return;
+    lastSavedRef.current[sessionId] = key;
+
+    try {
+      setSaving(true);
+      await fetch(`${API}/api/sesiones/${sessionId}/`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        body: JSON.stringify(payload),
+      });
+    } catch (e) {
+      console.warn('No se pudo guardar la sesión:', e.message);
+    } finally {
+      setSaving(false);
+    }
+  }, [API, sessionId, token, authHeaders]);
+
+  // --------------- Generar test ---------------
   const generarTest = async () => {
     if (!opSelected) return alert('Elige una oposición');
     if (temasSeleccionados.length === 0) return alert('Selecciona al menos un tema');
     if (nPregPorTema <= 0) return alert('Indica nº de preguntas por tema (>0)');
     if (tiempoMinutos <= 0) return alert('Indica el tiempo en minutos (>0)');
 
-    const api = process.env.NEXT_PUBLIC_API_URL;
     try {
       const porTema = await Promise.all(
         temasSeleccionados.map(async (temaSlug) => {
-          const tryRepaso = await fetch(`${api}/api/preguntas/repaso/?tema_slug=${encodeURIComponent(temaSlug)}&limit=${nPregPorTema}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+          const tryRepaso = await fetch(
+            `${API}/api/preguntas/repaso/?tema_slug=${encodeURIComponent(temaSlug)}&limit=${nPregPorTema}`,
+            { headers: authHeaders }
+          );
           if (tryRepaso.ok) {
             const data = await tryRepaso.json();
             return sampleN(data || [], nPregPorTema).map(p => ({ ...p, _tema_slug: temaSlug }));
           }
-          const r = await fetch(`${api}/api/preguntas/?tema_slug=${encodeURIComponent(temaSlug)}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+          const r = await fetch(
+            `${API}/api/preguntas/?tema_slug=${encodeURIComponent(temaSlug)}`,
+            { headers: authHeaders }
+          );
           if (!r.ok) throw new Error('No se pudieron cargar preguntas');
           const data = await r.json();
           return sampleN(data || [], nPregPorTema).map(p => ({ ...p, _tema_slug: temaSlug }));
@@ -148,6 +289,11 @@ export default function TestRepasoClient() {
       );
       const combinadas = shuffle(porTema.flat());
       if (combinadas.length === 0) return alert('No hay preguntas para la selección realizada.');
+
+      // Creamos sesión en backend (premium)
+      const sid = await crearSesion(combinadas);
+      if (sid) setSessionId(sid);
+
       setPreguntas(combinadas);
       setRespuestasUsuario({});
       setIdxActual(0);
@@ -157,12 +303,21 @@ export default function TestRepasoClient() {
       setPuntuacion(0);
       setEnCurso(true);
       setTimeLeft(tiempoMinutos * 60);
+
+      // Actualizamos URL con ?sesion=SID para permitir volver
+      if (sid) {
+        const params = new URLSearchParams(window.location.search);
+        params.set('sesion', sid);
+        const newUrl = `${window.location.pathname}?${params.toString()}`;
+        window.history.replaceState({}, '', newUrl);
+      }
     } catch (e) {
       console.error(e);
       alert('Error generando el test de repaso.');
     }
   };
 
+  // --------------- Temporizador + autosave ---------------
   useEffect(() => {
     if (!enCurso || terminado) return;
     if (timeLeft <= 0) { terminarTest(); return; }
@@ -171,58 +326,120 @@ export default function TestRepasoClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enCurso, terminado, timeLeft]);
 
-  const handleSelectRespuesta = (preguntaId, respuestaId) => setRespuestasUsuario(prev => ({ ...prev, [preguntaId]: respuestaId }));
+  // Autosave cada 15s
+  useEffect(() => {
+    if (!enCurso || terminado || !sessionId) return;
+    autosaveRef.current && clearInterval(autosaveRef.current);
+    autosaveRef.current = setInterval(() => {
+      patchSesion({
+        idx_actual: idxActual,
+        respuestas: respuestasUsuario,
+        tiempo_restante: timeLeft,
+      });
+    }, 15000);
+    return () => {
+      autosaveRef.current && clearInterval(autosaveRef.current);
+    };
+  }, [enCurso, terminado, sessionId, idxActual, respuestasUsuario, timeLeft, patchSesion]);
+
+  // Guardar al ocultar pestaña / recargar
+  useEffect(() => {
+    if (!enCurso || terminado) return;
+
+    const handleBeforeUnload = (e) => {
+      // Guardado rápido
+      if (sessionId) {
+        navigator.sendBeacon?.(
+          `${API}/api/sesiones/${sessionId}/`,
+          new Blob([JSON.stringify({
+            idx_actual: idxActual,
+            respuestas: respuestasUsuario,
+            tiempo_restante: timeLeft,
+          })], { type: 'application/json' })
+        );
+      }
+      // Mostrar prompt nativo
+      e.preventDefault();
+      e.returnValue = '';
+    };
+
+    const handleVisibility = () => {
+      if (document.hidden && sessionId) {
+        patchSesion({
+          idx_actual: idxActual,
+          respuestas: respuestasUsuario,
+          tiempo_restante: timeLeft,
+        });
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [enCurso, terminado, sessionId, idxActual, respuestasUsuario, timeLeft, API, patchSesion]);
+
+  // --------------- Interacciones del test ---------------
+  const handleSelectRespuesta = (preguntaId, respuestaId) => {
+    setRespuestasUsuario(prev => ({ ...prev, [preguntaId]: respuestaId }));
+    // guardado inmediato ligero
+    if (sessionId) {
+      patchSesion({
+        respuestas: { ...respuestasUsuario, [preguntaId]: respuestaId },
+        idx_actual: idxActual,
+        tiempo_restante: timeLeft,
+      });
+    }
+  };
   const siguiente = () => setIdxActual(i => Math.min(i + 1, preguntas.length - 1));
   const anterior = () => setIdxActual(i => Math.max(i - 1, 0));
 
+  // --------------- Terminar test (corrige + cierra sesión) ---------------
   const terminarTest = useCallback(async () => {
     if (terminado || preguntas.length === 0) return;
     setTerminado(true);
     setCorrigiendo(true);
     try {
-      const api = process.env.NEXT_PUBLIC_API_URL;
       const ids = preguntas.map(p => p.id);
-      const r = await fetch(`${api}/api/preguntas/corregir/`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) });
+      const r = await fetch(`${API}/api/preguntas/corregir/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        body: JSON.stringify({ ids }),
+      });
       if (!r.ok) throw new Error('Fallo al obtener la corrección');
       const data = await r.json();
       setDatosCorreccion(data || []);
       let ok = 0;
-      data.forEach(preg => {
-        const userAns = respuestasUsuario[preg.id];
-        const correcta = preg.respuestas.find(x => x.es_correcta);
-        if (userAns && correcta && userAns === correcta.id) ok++;
-      });
-      setPuntuacion(ok);
-
-      const qIdToTemaSlug = new Map();
-      preguntas.forEach(p => {
-        if (p._tema_slug) qIdToTemaSlug.set(p.id, p._tema_slug);
-        else if (p.tema && typeof p.tema === 'object' && p.tema.slug) qIdToTemaSlug.set(p.id, p.tema.slug);
-        else if (p.tema_id != null) {
-          const found = temas.find(t => Number(t.id) === Number(p.tema_id));
-          if (found?.slug) qIdToTemaSlug.set(p.id, found.slug);
-        }
-      });
-
       const perTema = new Map();
       data.forEach(preg => {
-        const temaSlug = qIdToTemaSlug.get(preg.id) ?? null;
         const userAns = respuestasUsuario[preg.id];
         const correcta = preg.respuestas.find(x => x.es_correcta)?.id;
         const esOK = userAns && correcta && userAns === correcta;
+        if (esOK) ok++;
+
+        // map pregunta -> tema_slug
+        let temaSlug = null;
+        const original = preguntas.find(q => q.id === preg.id);
+        if (original?._tema_slug) temaSlug = original._tema_slug;
+        else if (original?.tema?.slug) temaSlug = original.tema.slug;
+
         const bucket = perTema.get(temaSlug) || { total: 0, correctas: 0, aciertos: [], fallos: [] };
         bucket.total += 1;
         if (esOK) { bucket.correctas += 1; bucket.aciertos.push(preg.id); }
         else { bucket.fallos.push(preg.id); }
         perTema.set(temaSlug, bucket);
       });
+      setPuntuacion(ok);
 
+      // Guardar resultados por tema (progreso)
       if (token && perTema.size > 0) {
         await Promise.all(
           Array.from(perTema.entries()).map(([temaSlug, bucket]) =>
-            fetch(`${api}/api/resultados/`, {
+            fetch(`${API}/api/resultados/`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+              headers: { 'Content-Type': 'application/json', ...authHeaders },
               body: JSON.stringify({
                 tema_slug: temaSlug,
                 puntuacion: bucket.correctas,
@@ -234,19 +451,51 @@ export default function TestRepasoClient() {
           )
         );
       }
+
+      // Cerrar sesión
+      if (sessionId) {
+        await patchSesion({
+          estado: 'finalizado',
+          idx_actual: idxActual,
+          respuestas: respuestasUsuario,
+          tiempo_restante: Math.max(0, timeLeft),
+        });
+      }
     } catch (e) {
       console.error('Error corrigiendo/guardando resultados de repaso:', e);
     } finally {
       setCorrigiendo(false);
+      // quitar ?sesion de la URL para evitar reanudar tras finalizar
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('sesion')) {
+        params.delete('sesion');
+        const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+        window.history.replaceState({}, '', newUrl);
+      }
     }
-  }, [terminado, preguntas, respuestasUsuario, token, temas]);
+  }, [terminado, preguntas, respuestasUsuario, token, API, authHeaders, sessionId, patchSesion, idxActual, timeLeft]);
 
-  const fmt = (s) => {
-    const m = Math.floor(s / 60), ss = s % 60;
-    return `${m < 10 ? '0' : ''}${m}:${ss < 10 ? '0' : ''}${ss}`;
+  // --------------- Salir sin finalizar ---------------
+  const onConfirmExit = async () => {
+    setShowExitConfirm(false);
+    if (sessionId) {
+      await patchSesion({
+        estado: 'abandonado',
+        idx_actual: idxActual,
+        respuestas: respuestasUsuario,
+        tiempo_restante: timeLeft,
+      });
+    }
+    setEnCurso(false); // volvemos a la pantalla de configuración
+    // dejamos ?sesion en la URL para poder reanudar desde Progreso
   };
 
-  // ---------------- UI ----------------
+  const onAskExit = () => setShowExitConfirm(true);
+  const onCancelExit = () => setShowExitConfirm(false);
+
+  // ======= UI =======
+
+  // ---------------- Pantalla de configuración ----------------
   if (!enCurso) {
     return (
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -264,7 +513,6 @@ export default function TestRepasoClient() {
             <div className="bg-white border border-gray-100 rounded-2xl p-6 h-full shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-primary/10 grid place-items-center">
-                  {/* icon */}
                   <svg viewBox="0 0 24 24" className="h-5 w-5 text-primary" fill="none" stroke="currentColor" strokeWidth="1.8">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 7h18M3 12h18M3 17h18" />
                   </svg>
@@ -311,13 +559,11 @@ export default function TestRepasoClient() {
                   <h2 className="text-lg font-semibold text-gray-900">2) Temas</h2>
                   <p className="text-sm text-gray-600">Elige uno o varios. Usa el buscador para filtrar.</p>
                 </div>
-                {/* contador seleccionado */}
                 <span className="text-xs font-semibold px-2 py-1 rounded-full bg-primary/10 text-primary">
                   {temasSeleccionados.length} sel.
                 </span>
               </div>
 
-              {/* Buscador + acciones */}
               <div className="mt-4 flex items-center gap-2">
                 <div className="relative flex-1">
                   <input
@@ -349,7 +595,6 @@ export default function TestRepasoClient() {
                 </button>
               </div>
 
-              {/* Lista / skeleton */}
               {cargandoTemas ? (
                 <div className="mt-4 space-y-2">
                   {[...Array(6)].map((_, i) => (
@@ -388,7 +633,6 @@ export default function TestRepasoClient() {
                 </div>
               )}
 
-              {/* Chips seleccionados */}
               {temasSeleccionados.length > 0 && (
                 <div className="mt-4 flex flex-wrap gap-2">
                   {temas
@@ -431,7 +675,6 @@ export default function TestRepasoClient() {
               <div className="mt-5">
                 <label className="block text-sm font-medium text-gray-700">Nº de preguntas por tema</label>
                 <div className="mt-2 flex items-center gap-2">
-                  {/* Presets */}
                   {[5, 10, 20].map(n => (
                     <button
                       key={n}
@@ -452,7 +695,6 @@ export default function TestRepasoClient() {
                     onChange={(e) => setNPregPorTema(Number(e.target.value || 1))}
                   />
                 </div>
-                {/* Slider con “burbuja” */}
                 <div className="mt-3">
                   <input
                     type="range"
@@ -520,7 +762,6 @@ export default function TestRepasoClient() {
                   className="mt-4 w-full group relative overflow-hidden rounded-xl bg-success text-white px-4 py-3 font-semibold shadow hover:shadow-md transition"
                 >
                   <span className="relative z-10">Empezar test</span>
-                  {/* overlay sutil */}
                   <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-120%] group-hover:translate-x-[120%] transition-transform duration-700" />
                 </button>
               </div>
@@ -549,18 +790,45 @@ export default function TestRepasoClient() {
     );
   }
 
-  // --- Pantalla del test (sin cambios de fondo, solo retoques leves) ---
+  // ---------------- Pantalla del test ----------------
   const actual = preguntas[idxActual];
 
   if (!terminado) {
     return (
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Barra superior: timer + guardado */}
+        <div className="mb-3 flex items-center justify-between">
+          <span className="text-sm text-gray-600">
+            {sessionId ? (
+              <span className="inline-flex items-center gap-2">
+                Sesión #{sessionId}
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] ${saving ? 'bg-yellow-100 text-yellow-800' : 'bg-emerald-100 text-emerald-700'}`}>
+                  <span className="h-1.5 w-1.5 rounded-full bg-current"></span>
+                  {saving ? 'Guardando…' : 'Guardado'}
+                </span>
+              </span>
+            ) : 'Sesión local'}
+          </span>
+
+          <button
+            onClick={onAskExit}
+            className="text-sm px-3 py-1.5 rounded-md border border-red-300 text-red-700 hover:bg-red-50"
+          >
+            Salir sin finalizar
+          </button>
+        </div>
+
         <div className="bg-white p-6 sm:p-8 rounded-lg shadow-md border border-gray-200">
           <div className="flex items-center justify-between">
             <span className="text-lg font-semibold text-dark">Pregunta {idxActual + 1} de {preguntas.length}</span>
-            <span className="text-2xl font-bold text-dark tabular-nums">{fmt(timeLeft)}</span>
+            <span className="text-2xl font-bold text-dark tabular-nums">{(() => {
+              const m = Math.floor(timeLeft / 60), s = timeLeft % 60;
+              return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+            })()}</span>
           </div>
+
           <h2 className="text-2xl font-semibold text-dark mt-6">{actual?.texto_pregunta}</h2>
+
           <div className="mt-6 space-y-4">
             {(actual?.respuestas || []).map((r) => (
               <button
@@ -573,6 +841,7 @@ export default function TestRepasoClient() {
               </button>
             ))}
           </div>
+
           <div className="flex justify-between mt-8">
             <button onClick={anterior} disabled={idxActual === 0} className="bg-secondary text-white px-6 py-2 rounded-md disabled:bg-gray-300">
               Anterior
@@ -588,10 +857,29 @@ export default function TestRepasoClient() {
             )}
           </div>
         </div>
+
+        {/* Modal salir sin finalizar */}
+        {showExitConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-md rounded-2xl bg-white shadow-xl border border-gray-200">
+              <div className="p-6">
+                <h3 className="text-lg font-bold text-gray-900">¿Seguro que quieres abandonar este test sin finalizar?</h3>
+                <p className="mt-2 text-sm text-gray-600">
+                  Se pausará el tiempo y guardaremos tu progreso para que puedas continuar después desde <b>Progreso</b>.
+                </p>
+                <div className="mt-6 flex justify-end gap-3">
+                  <button onClick={onCancelExit} className="px-4 py-2 rounded-md border hover:bg-gray-50">Continuar</button>
+                  <button onClick={onConfirmExit} className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700">Salir</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
 
+  // ---------------- Resultados ----------------
   if (corrigiendo) return <p className="text-center mt-20">Calculando resultados…</p>;
 
   const minutosFinales = Math.floor(elapsed / 60);
@@ -610,6 +898,18 @@ export default function TestRepasoClient() {
           </span>
         </p>
         <p className="text-sm text-gray-500">Tiempo seleccionado: {tiempoMinutos} min</p>
+
+        <div className="flex justify-center gap-3 flex-wrap mt-4">
+          <Link href="/progreso" className="inline-block bg-secondary text-white px-6 py-2 rounded-md hover:bg-gray-600">
+            Ver mi progreso
+          </Link>
+          <button
+            onClick={() => router.replace('/test-de-repaso')}
+            className="inline-block bg-primary text-white px-6 py-2 rounded-md hover:bg-primary-hover"
+          >
+            Nuevo test
+          </button>
+        </div>
       </div>
 
       {datosCorreccion.map((pregunta, index) => {
