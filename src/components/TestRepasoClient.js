@@ -29,9 +29,9 @@ export default function TestRepasoClient() {
     return (
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="max-w-xl mx-auto bg-white border border-gray-200 rounded-2xl p-6 text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Test de repaso</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Test de personalizado</h1>
           <p className="mt-2 text-gray-600">
-            Debes iniciar sesión para usar el test de repaso.
+            Debes iniciar sesión para usar el test personalizado.
           </p>
           <Link
             href="/login"
@@ -48,7 +48,7 @@ export default function TestRepasoClient() {
     return (
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="max-w-xl mx-auto bg-white border border-gray-200 rounded-2xl p-6 text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Test de repaso</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Test personalizado</h1>
           <p className="mt-2 text-gray-600">
             Esta función es para usuarios suscritos. Activa tu acceso para crear
             tests por temas y controlar tiempo.
@@ -335,7 +335,7 @@ export default function TestRepasoClient() {
     return (
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <header className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white">Test de repaso</h1>
+          <h1 className="text-3xl font-bold text-white">Test personalizado</h1>
           <p className="text-white/90 mt-2 max-w-2xl mx-auto">
             Elige tu oposición, selecciona los temas, define cuántas preguntas por tema quieres
             y el tiempo del examen. Generaremos un test mezclado con el formato habitual de TestEstado.
