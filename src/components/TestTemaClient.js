@@ -322,7 +322,8 @@ export default function TestTemaClient() {
             {isSubscribed && (
               <button
                 onClick={() => requestExit()}
-                className="px-3 py-2 rounded-md border hover:bg-gray-50 text-sm"
+                className="text-sm px-3 py-1.5 rounded-md border bg-white border-red-300 text-red-700 hover:bg-red-50"
+
               >
                 Salir
               </button>
