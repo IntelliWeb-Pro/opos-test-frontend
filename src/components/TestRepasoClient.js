@@ -29,6 +29,7 @@ export default function TestRepasoClient() {
   const API = useMemo(() => process.env.NEXT_PUBLIC_API_URL, []);
   const authHeaders = useMemo(() => (token ? { Authorization: `Bearer ${token}` } : {}), [token]);
   const RESUME_KEY = useMemo(() => `resume:repaso:${opSlug || 'default'}`, [opSlug]);
+  const TRIGGER_KEY = `resume-trigger:repaso:${opSlug || 'default'}`;
 
   // ==== GATES ====
   if (!user) {
@@ -174,49 +175,56 @@ export default function TestRepasoClient() {
 
   // --- Reanudar sesión desde localStorage (sin querystring) ---
   useEffect(() => {
-    (async () => {
-      if (!token) return;
+  // Requiere: usuario logueado, slug de oposición, y "disparador" puesto por Progreso
+  if (!token || !opSlug) return;
+
+  let triggered = false;
+  try {
+    triggered = sessionStorage.getItem(TRIGGER_KEY) === '1';
+    if (triggered) sessionStorage.removeItem(TRIGGER_KEY); // one-shot
+  } catch {}
+  if (!triggered) return; // <- NO reanudar automáticamente
+
+  (async () => {
+    try {
       let sid = null;
-      try {
-        sid = localStorage.getItem(RESUME_KEY);
-      } catch {}
+      try { sid = localStorage.getItem(RESUME_KEY); } catch {}
       if (!sid) return;
 
-      try {
-        const r = await fetch(`${API}/api/sesiones/${sid}/`, { headers: authHeaders });
-        if (!r.ok) throw new Error('No se pudo cargar la sesión');
-        const s = await r.json();
+      const r = await fetch(`${API}/api/sesiones/${sid}/`, { headers: authHeaders });
+      if (!r.ok) throw new Error('No se pudo cargar la sesión');
+      const s = await r.json();
 
-        // si la sesión es de otra oposición, no reanudamos aquí
-        const opFromSession = s?.config?.oposicion || null;
-        if (opFromSession && opSlug && opFromSession !== opSlug) return;
+      // seguridad: si la sesión no es de esta oposición, no reanudamos
+      const opFromSession = s?.config?.oposicion || null;
+      if (opFromSession && opFromSession !== opSlug) return;
 
-        setSessionId(s.id);
-        if (s?.config?.minutos) setTiempoMinutos(+s.config.minutos);
-        if (s?.config?.nPorTema) setNPregPorTema(+s.config.nPorTema);
-        if (Array.isArray(s?.config?.temas)) setTemasSeleccionados(s.config.temas);
+      setSessionId(s.id);
+      if (s?.config?.minutos) setTiempoMinutos(Number(s.config.minutos));
+      if (s?.config?.nPorTema) setNPregPorTema(Number(s.config.nPorTema));
+      if (Array.isArray(s?.config?.temas)) setTemasSeleccionados(s.config.temas);
 
-        let qs = Array.isArray(s.preguntas) && s.preguntas.length ? s.preguntas : null;
-        if (!qs && Array.isArray(s.preguntas_ids)) qs = await fetchPreguntasByIds(s.preguntas_ids);
+      let qs = Array.isArray(s.preguntas) && s.preguntas.length ? s.preguntas : null;
+      if (!qs && Array.isArray(s.preguntas_ids)) qs = await fetchPreguntasByIds(s.preguntas_ids);
 
-        const temasSet = new Set(s?.config?.temas || []);
-        qs = (qs || []).map((q) => ({
-          ...q,
-          _tema_slug: q._tema_slug || (q.tema?.slug && temasSet.has(q.tema.slug) ? q.tema.slug : undefined),
-        }));
+      const temasSet = new Set(s?.config?.temas || []);
+      qs = (qs || []).map(q => ({
+        ...q,
+        _tema_slug: q._tema_slug || (q.tema?.slug && temasSet.has(q.tema.slug) ? q.tema.slug : undefined),
+      }));
 
-        setPreguntas(qs);
-        setRespuestasUsuario(s.respuestas || {});
-        setIdxActual(Math.max(0, Math.min(+s.idx_actual || 0, (qs?.length || 1) - 1)));
-        setTimeLeft(Math.max(1, +(s.tiempo_restante ?? (s?.config?.minutos || 20) * 60)));
-        setEnCurso(true);
-        setTerminado(false);
-      } catch (e) {
-        console.error('Error al reanudar sesión:', e);
-      }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, opSlug, RESUME_KEY]);
+      setPreguntas(qs);
+      setRespuestasUsuario(s.respuestas || {});
+      setIdxActual(Math.max(0, Math.min(Number(s.idx_actual || 0), (qs?.length || 1) - 1)));
+      setTimeLeft(Math.max(1, Number(s.tiempo_restante || (s?.config?.minutos || 20) * 60)));
+      setEnCurso(true);
+      setTerminado(false);
+    } catch (e) {
+      console.error('Error al reanudar sesión:', e);
+    }
+  })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [token, opSlug]);
 
   // --- Derivados ---
   const filteredTemas = useMemo(() => {

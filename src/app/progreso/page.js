@@ -4,6 +4,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line
@@ -38,6 +39,7 @@ const fmt = (s) => {
 };
 
 export default function ProgresoPage() {
+  const router = useRouter();
   const { user, token, isSubscribed } = useAuth();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -75,14 +77,12 @@ export default function ProgresoPage() {
           const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
           if (!r.ok) continue;
           const data = await r.json();
-          // admitir {results:[...]} o array plano
           const items = Array.isArray(data) ? data : (Array.isArray(data?.results) ? data.results : []);
           if (!items.length) continue;
 
-          // normalizar
           const norm = items.map(s => ({
             id: s.id,
-            tipo: s.tipo || s.type || 'repaso', // 'repaso' | 'tema'
+            tipo: s.tipo || s.type || 'repaso',
             idx: Number(s.idx_actual ?? 0),
             total: Number(
               (s.preguntas_ids && s.preguntas_ids.length) ||
@@ -98,7 +98,7 @@ export default function ProgresoPage() {
           }));
           return norm;
         } catch {
-          // siguiente intento
+          // probar siguiente URL
         }
       }
       return [];
@@ -107,10 +107,44 @@ export default function ProgresoPage() {
     (async () => {
       setLoadingPending(true);
       const list = await tryEndpoints();
-      setPending(list.slice(0, 5)); // solo los últimos 5
+      setPending(list.slice(0, 5));
       setLoadingPending(false);
     })();
   }, [API, token]);
+
+  // === NUEVO: handler Continuar que activa el "trigger" y navega sin querystring ===
+  const continuarSesion = (s) => {
+    try {
+      if (s.tipo === 'repaso') {
+        const opSlug = s.oposicion || 'temas';
+        const RESUME_KEY = `resume:repaso:${opSlug}`;
+        const TRIGGER_KEY = `resume-trigger:repaso:${opSlug}`;
+        localStorage.setItem(RESUME_KEY, s.id);
+        sessionStorage.setItem(TRIGGER_KEY, '1');
+        router.push(`/test-de-repaso/${opSlug}`);
+      } else if (s.tipo === 'tema') {
+        const temaSlug = s.tema_slug || (Array.isArray(s.temas) && s.temas[0]);
+        if (!temaSlug) return;
+        const RESUME_KEY = `resume:tema:${temaSlug}`;
+        const TRIGGER_KEY = `resume-trigger:tema:${temaSlug}`;
+        localStorage.setItem(RESUME_KEY, s.id);
+        sessionStorage.setItem(TRIGGER_KEY, '1');
+        router.push(`/tema/${temaSlug}`);
+      } else {
+        // fallback a repaso
+        const opSlug = s.oposicion || 'temas';
+        const RESUME_KEY = `resume:repaso:${opSlug}`;
+        const TRIGGER_KEY = `resume-trigger:repaso:${opSlug}`;
+        localStorage.setItem(RESUME_KEY, s.id);
+        sessionStorage.setItem(TRIGGER_KEY, '1');
+        router.push(`/test-de-repaso/${opSlug}`);
+      }
+    } catch {
+      // si storage falla, al menos navega
+      if (s.tipo === 'repaso') router.push(`/test-de-repaso/${s.oposicion || 'temas'}`);
+      else if (s.tipo === 'tema') router.push(`/tema/${s.tema_slug || ''}`);
+    }
+  };
 
   const pieData = useMemo(() => (stats ? [
     { name: 'Aciertos', value: stats.resumen_aciertos.aciertos },
@@ -147,17 +181,16 @@ export default function ProgresoPage() {
   }
 
   return (
-    // contenedor principal relativo (para overlay)
     <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {!isSubscribed && <PremiumOverlay />}
 
-      {/* contenido (se difumina si no es premium) */}
       <div className={!isSubscribed ? 'opacity-50 blur-sm pointer-events-none' : ''}>
-  <header className="mb-12 text-center">
+        <header className="mb-12 text-center">
           <h1 className="text-4xl font-bold text-white">Dashboard de Progreso</h1>
           <p className="text-lg text-white mt-2">Analiza tu rendimiento y descubre tus puntos fuertes y débiles.</p>
         </header>
-        {/* === NUEVO: Sesiones sin finalizar (arriba del todo) === */}
+
+        {/* === Sesiones sin finalizar === */}
         <section className="mb-10">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold text-white">Tests sin finalizar</h2>
@@ -184,17 +217,6 @@ export default function ProgresoPage() {
                   const current = Math.min(s.idx + 1, Math.max(1, total || 1));
                   const pct = total ? Math.round((current / total) * 100) : 0;
 
-                  // Destino para continuar
-                  let href = '/test-de-repaso';
-                  if (s.tipo === 'repaso') {
-                    href = `/test-de-repaso?sesion=${s.id}`;
-                  } else if (s.tipo === 'tema') {
-                    const tslug = s.tema_slug || (Array.isArray(s.temas) && s.temas[0]) || '';
-                    href = tslug ? `/tema/${tslug}?sesion=${s.id}` : `/tema?sesion=${s.id}`;
-                  } else {
-                    href = `/test-de-repaso?sesion=${s.id}`;
-                  }
-
                   return (
                     <div key={s.id} className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
                       <div className="flex items-center justify-between">
@@ -209,49 +231,38 @@ export default function ProgresoPage() {
                         <span className="text-xs text-gray-500">{fmt(s.tiempo)} restantes</span>
                       </div>
 
-                      {/* Temas chips */}
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {s.tipo === 'tema' && s.tema_slug && (
-                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
-                            {s.tema_slug}
-                          </span>
+                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">{s.tema_slug}</span>
                         )}
                         {s.tipo === 'repaso' && Array.isArray(s.temas) && s.temas.slice(0, 3).map(t => (
-                          <span key={t} className="text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
-                            {t}
-                          </span>
+                          <span key={t} className="text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">{t}</span>
                         ))}
                         {s.tipo === 'repaso' && s.temas?.length > 3 && (
-                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-                            +{s.temas.length - 3}
-                          </span>
+                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">+{s.temas.length - 3}</span>
                         )}
                       </div>
 
-                      {/* Progreso lineal */}
                       <div className="mt-3">
                         <div className="flex justify-between text-xs text-gray-600 mb-1">
                           <span>Pregunta {current} / {total || '?'}</span>
                           <span>{pct}%</span>
                         </div>
                         <div className="h-2 w-full bg-gray-100 rounded">
-                          <div
-                            className="h-2 rounded bg-primary transition-all"
-                            style={{ width: `${pct}%` }}
-                          />
+                          <div className="h-2 rounded bg-primary transition-all" style={{ width: `${pct}%` }} />
                         </div>
                       </div>
 
                       <div className="mt-4 flex justify-end">
-                        <Link
-                          href={href}
+                        <button
+                          onClick={() => continuarSesion(s)}
                           className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-primary-hover"
                         >
                           Continuar
                           <svg viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor">
                             <path d="M7.293 14.707a1 1 0 0 1 0-1.414L10.586 10 7.293 6.707A1 1 0 1 1 8.707 5.293l4 4a1 1 0 0 1 0 1.414l-4 4a1 1 0 0 1-1.414 0z" />
                           </svg>
-                        </Link>
+                        </button>
                       </div>
                     </div>
                   );
@@ -262,7 +273,6 @@ export default function ProgresoPage() {
         </section>
 
         {/* ======= Resto del dashboard ======= */}
-
         <div>
           {stats.puntos_debiles && stats.puntos_debiles.length > 0 && (
             <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-lg shadow-md mb-8">
