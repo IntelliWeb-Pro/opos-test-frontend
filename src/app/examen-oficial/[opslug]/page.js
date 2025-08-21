@@ -34,20 +34,29 @@ export default function ExamenOficialPage() {
 
   // Crear o cargar sesión
   useEffect(() => {
-    let cancelled = false;
+   // Espera a tener slug y token del usuario
+   if (!opslug || !token) return;
 
-    const createExamSession = async () => {
-      const r = await fetch(`${API}/api/sesiones/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
+   let cancelled = false;
+
+   const createExamSession = async () => {
+     const r = await fetch(`${API}/api/sesiones/`, {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ tipo: 'examen', config: { oposicion: opslug } }),
-      });
-      if (!r.ok) throw new Error('No se pudo crear el examen.');
-      return r.json();
-    };
+     });
+     if (!r.ok) {
+       let msg = 'No se pudo crear el examen.';
+       try { const j = await r.json(); if (j?.error) msg = j.error; } catch {}
+       throw new Error(msg);
+     }
+     return r.json();
+   };
 
     const loadSession = async (sid) => {
-      const r = await fetch(`${API}/api/sesiones/${sid}/`, { headers: authHeaders });
+     const r = await fetch(`${API}/api/sesiones/${sid}/`, {
+       headers: { Authorization: `Bearer ${token}` },
+      });
       if (!r.ok) throw new Error('Sesión no encontrada.');
       return r.json();
     };
@@ -58,7 +67,6 @@ export default function ExamenOficialPage() {
         const data = sesionQS ? await loadSession(sesionQS) : await createExamSession();
         if (cancelled) return;
         setSession(data);
-        // si la hemos creado nueva, navega con ?sesion=
         if (!sesionQS) {
           router.replace(`/examen-oficial/${opslug}?sesion=${data.id}`);
         }
@@ -68,11 +76,10 @@ export default function ExamenOficialPage() {
       } finally {
         if (!cancelled) setLoading(false);
       }
-    })();
+      })();
 
     return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [opslug, sesionQS, token]);
+    }, [opslug, sesionQS, token]);
 
   // Timer
   useEffect(() => {
