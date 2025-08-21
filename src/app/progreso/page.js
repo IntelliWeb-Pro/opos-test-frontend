@@ -257,7 +257,7 @@ export default function ProgresoPage() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold">
-                            {s.tipo === 'tema' ? 'Tema' : 'Repaso'}
+                            {label}
                           </span>
                           {s.oposicion && (
                             <span className="text-[11px] px-2 py-0.5 rounded bg-gray-100 text-gray-700">{s.oposicion}</span>
