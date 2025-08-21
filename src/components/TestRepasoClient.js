@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 // Utils puras (no dependen de estado)
@@ -25,6 +25,8 @@ export default function TestRepasoClient() {
   const router = useRouter();
   const params = useParams();
   const opSlug = Array.isArray(params?.slug) ? params.slug[0] : params?.slug; // /test-de-repaso/[slug]
+  const searchParams = useSearchParams();
+  const sessionQS = searchParams?.get('sesion') || null;
 
   // Constantes memorizadas
   const API = useMemo(() => process.env.NEXT_PUBLIC_API_URL, []);
@@ -175,57 +177,43 @@ export default function TestRepasoClient() {
   }, [API, opSelected, authHeaders]);
 
   // --- Reanudar sesión desde localStorage (sin querystring) ---
-  useEffect(() => {
-  // Requiere: usuario logueado, slug de oposición, y "disparador" puesto por Progreso
-  if (!token || !opSlug) return;
+  // --- Reanudar SÓLO si viene ?sesion=... en la URL ---
+ useEffect(() => {
+   const loadFromQS = async (sid) => {
+      try {
+        const r = await fetch(`${API}/api/sesiones/${sid}/`, { headers: authHeaders });
+        if (!r.ok) throw new Error('No se pudo cargar la sesión');
+        const s = await r.json();
 
-  let triggered = false;
-  try {
-    triggered = sessionStorage.getItem(TRIGGER_KEY) === '1';
-    if (triggered) sessionStorage.removeItem(TRIGGER_KEY); // one-shot
-  } catch {}
-  if (!triggered) return; // <- NO reanudar automáticamente
+     // si está finalizada, no tiene sentido reanudar
+      if (s.estado === 'finalizado') return;
 
-  (async () => {
-    try {
-      let sid = null;
-      try { sid = localStorage.getItem(RESUME_KEY); } catch {}
-      if (!sid) return;
+       setSessionId(s.id);
+       if (s?.config?.minutos) setTiempoMinutos(Number(s.config.minutos));
+       if (s?.config?.nPorTema) setNPregPorTema(Number(s.config.nPorTema));
+       if (Array.isArray(s?.config?.temas)) setTemasSeleccionados(s.config.temas);
 
-      const r = await fetch(`${API}/api/sesiones/${sid}/`, { headers: authHeaders });
-      if (!r.ok) throw new Error('No se pudo cargar la sesión');
-      const s = await r.json();
+       let qs = Array.isArray(s.preguntas) && s.preguntas.length ? s.preguntas : null;
+       if (!qs && Array.isArray(s.preguntas_ids)) qs = await fetchPreguntasByIds(s.preguntas_ids);
 
-      // seguridad: si la sesión no es de esta oposición, no reanudamos
-      const opFromSession = s?.config?.oposicion || null;
-      if (opFromSession && opFromSession !== opSlug) return;
+       const temasSet = new Set(s?.config?.temas || []);
+       qs = (qs || []).map(q => ({
+         ...q,
+         _tema_slug: q._tema_slug || (q.tema?.slug && temasSet.has(q.tema.slug) ? q.tema.slug : undefined)
+          }));
 
-      setSessionId(s.id);
-      if (s?.config?.minutos) setTiempoMinutos(Number(s.config.minutos));
-      if (s?.config?.nPorTema) setNPregPorTema(Number(s.config.nPorTema));
-      if (Array.isArray(s?.config?.temas)) setTemasSeleccionados(s.config.temas);
-
-      let qs = Array.isArray(s.preguntas) && s.preguntas.length ? s.preguntas : null;
-      if (!qs && Array.isArray(s.preguntas_ids)) qs = await fetchPreguntasByIds(s.preguntas_ids);
-
-      const temasSet = new Set(s?.config?.temas || []);
-      qs = (qs || []).map(q => ({
-        ...q,
-        _tema_slug: q._tema_slug || (q.tema?.slug && temasSet.has(q.tema.slug) ? q.tema.slug : undefined),
-      }));
-
-      setPreguntas(qs);
-      setRespuestasUsuario(s.respuestas || {});
-      setIdxActual(Math.max(0, Math.min(Number(s.idx_actual || 0), (qs?.length || 1) - 1)));
-      setTimeLeft(Math.max(1, Number(s.tiempo_restante || (s?.config?.minutos || 20) * 60)));
-      setEnCurso(true);
-      setTerminado(false);
-    } catch (e) {
-      console.error('Error al reanudar sesión:', e);
-    }
-  })();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [token, opSlug]);
+       setPreguntas(qs);
+       setRespuestasUsuario(s.respuestas || {});
+       setIdxActual(Math.max(0, Math.min(Number(s.idx_actual || 0), (qs?.length || 1) - 1)));
+       setTimeLeft(Math.max(1, Number(s.tiempo_restante || (s?.config?.minutos || 20) * 60)));
+       setEnCurso(true);
+       setTerminado(false);
+     } catch (e) {
+       console.error('Error al reanudar sesión desde querystring:', e);
+     }
+   };
+   if (token && sessionQS) loadFromQS(sessionQS);
+ }, [token, sessionQS, API, authHeaders, fetchPreguntasByIds]);
 
   // --- Derivados ---
   const filteredTemas = useMemo(() => {
