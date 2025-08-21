@@ -77,9 +77,11 @@ export default function OposicionGuiaPage() {
                 <Link href={`/temario/${oposicion.slug}`} className="w-full sm:w-auto text-center bg-primary text-white px-8 py-3 rounded-md text-lg font-semibold hover:bg-primary-hover transition-colors">
                     Realizar Test por Temas
                 </Link>
-                <button disabled className="w-full sm:w-auto text-center bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 px-8 py-3 rounded-md text-lg font-semibold cursor-not-allowed" title="Próximamente">
+                <Link
+                    href={`/examen-oficial/${oposicion.slug}`}  className="inline-block bg-amber-200 hover:bg-amber-300 text-dark font-semibold px-6 py-3 rounded-md transition">
                     Test Oficial de Examen
-                </button>
+                </Link>
+
                 <Link href="/test-de-repaso" className="w-full sm:w-auto text-center bg-primary text-white px-8 py-3 rounded-md text-lg font-semibold hover:bg-primary-hover transition-colors">
                     Test Personalizado
                 </Link>

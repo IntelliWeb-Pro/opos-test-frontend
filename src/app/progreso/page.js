@@ -234,15 +234,23 @@ export default function ProgresoPage() {
                   const current = Math.min(s.idx + 1, Math.max(1, total || 1));
                   const pct = total ? Math.round((current / total) * 100) : 0;
 
-                  let href = '/test-de-repaso';
-                  if (s.tipo === 'repaso') {
-                    href = `/test-de-repaso?sesion=${s.id}`;
-                  } else if (s.tipo === 'tema') {
-                    const tslug = s.tema_slug || (Array.isArray(s.temas) && s.temas[0]) || '';
-                    href = tslug ? `/tema/${tslug}?sesion=${s.id}` : `/tema?sesion=${s.id}`;
-                  } else {
-                    href = `/test-de-repaso?sesion=${s.id}`;
-                  }
+                  const label =
+                      s.tipo === 'tema' ? 'Tema' :
+                      s.tipo === 'examen' ? 'Examen' :
+                      'Repaso';
+
+                    // destino según tipo
+                    let href = '/test-de-repaso';
+                    if (s.tipo === 'repaso') {
+                      href = `/test-de-repaso?sesion=${s.id}`;
+                    } else if (s.tipo === 'tema') {
+                      const tslug = s.tema_slug || (Array.isArray(s.temas) && s.temas[0]) || '';
+                      href = tslug ? `/tema/${tslug}?sesion=${s.id}` : `/tema?sesion=${s.id}`;
+                    } else if (s.tipo === 'examen') {
+                      href = `/examen-oficial/${s.oposicion}?sesion=${s.id}`;
+                    } else {
+                      href = `/test-de-repaso?sesion=${s.id}`;
+                    }
 
                   return (
                     <div key={s.id} className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
