@@ -23,7 +23,8 @@ const sampleN = (arr, n) => {
 export default function TestRepasoClient() {
   const { user, token, isSubscribed } = useAuth();
   const router = useRouter();
-  const { slug: opSlug } = useParams(); // /test-de-repaso/[slug]
+  const params = useParams();
+  const opSlug = Array.isArray(params?.slug) ? params.slug[0] : params?.slug; // /test-de-repaso/[slug]
 
   // Constantes memorizadas
   const API = useMemo(() => process.env.NEXT_PUBLIC_API_URL, []);
