@@ -4,7 +4,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line
@@ -39,15 +38,15 @@ const fmt = (s) => {
 };
 
 export default function ProgresoPage() {
-  const router = useRouter();
   const { user, token, isSubscribed } = useAuth();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // NUEVO: sesiones incompletas (repaso/tema)
+  // Sesiones incompletas + nombres de temas
   const [pending, setPending] = useState([]);
   const [loadingPending, setLoadingPending] = useState(true);
+  const [topicNames, setTopicNames] = useState({}); // {slug: "Nombre oficial"}
 
   const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -60,15 +59,15 @@ export default function ProgresoPage() {
       .catch(err => { setError(err.message); setLoading(false); });
   }, [API, token]);
 
-  // Cargar sesiones incompletas (arriba del todo)
+  // Cargar sesiones incompletas
   useEffect(() => {
     if (!token) { setLoadingPending(false); return; }
 
     const tryEndpoints = async () => {
       const base = `${API}/api/sesiones`;
       const urls = [
-        `${base}/?estado=incompleta&limit=5`,
         `${base}/?pendientes=1&limit=5`,
+        `${base}/?estado=incompleta&limit=5`,
         `${base}/?estado=abandonado,en_curso&limit=5`,
         `${base}/incompletas/?limit=5`,
       ];
@@ -96,55 +95,73 @@ export default function ProgresoPage() {
             created_at: s.created_at || s.fecha || null,
             estado: s.estado || 'abandonado',
           }));
-          return norm;
-        } catch {
-          // probar siguiente URL
-        }
+
+          // 1) Quitar finalizados y también los que están al 100% (idx+1>=total)
+          const cleaned = norm.filter(s =>
+            s.estado !== 'finalizado' &&
+            !(s.total > 0 && (s.idx + 1) >= s.total)
+          );
+
+          return cleaned;
+        } catch { /* sigue intentando */ }
       }
       return [];
+    };
+
+    const loadTopicNames = async (sessions) => {
+      if (!sessions.length) return;
+
+      // A) Traer temas de cada oposición (menos peticiones)
+      const oppSlugs = [...new Set(sessions.map(s => s.oposicion).filter(Boolean))];
+      const map = {};
+
+      for (const opp of oppSlugs) {
+        try {
+          const r = await fetch(`${API}/api/oposiciones/${opp}/`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {}
+          });
+          if (!r.ok) continue;
+          const data = await r.json();
+          const temas = (data?.bloques || []).flatMap(b => b?.temas || []);
+          temas.forEach(t => {
+            if (t?.slug) map[t.slug] = t.nombre_oficial || t.nombre || t.titulo || t.slug;
+          });
+        } catch { /* noop */ }
+      }
+
+      // B) Fallback: para slugs que sigan sin nombre, pedir el tema individual
+      const missing = new Set();
+      sessions.forEach(s => {
+        if (s.tipo === 'tema' && s.tema_slug && !map[s.tema_slug]) missing.add(s.tema_slug);
+        if (Array.isArray(s.temas)) s.temas.forEach(sl => { if (!map[sl]) missing.add(sl); });
+      });
+
+      for (const slug of missing) {
+        try {
+          const r = await fetch(`${API}/api/temas/${slug}/`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {}
+          });
+          if (r.ok) {
+            const t = await r.json();
+            map[slug] = t?.nombre_oficial || t?.nombre || t?.titulo || slug;
+          }
+        } catch { /* noop */ }
+      }
+
+      if (Object.keys(map).length) {
+        setTopicNames(prev => ({ ...prev, ...map }));
+      }
     };
 
     (async () => {
       setLoadingPending(true);
       const list = await tryEndpoints();
-      setPending(list.slice(0, 5));
+      setPending(list.slice(0, 5)); // solo 5
       setLoadingPending(false);
+      // cargar nombres de temas para mostrar chips bonitos
+      loadTopicNames(list);
     })();
   }, [API, token]);
-
-  // === NUEVO: handler Continuar que activa el "trigger" y navega sin querystring ===
-  const continuarSesion = (s) => {
-    try {
-      if (s.tipo === 'repaso') {
-        const opSlug = s.oposicion || 'temas';
-        const RESUME_KEY = `resume:repaso:${opSlug}`;
-        const TRIGGER_KEY = `resume-trigger:repaso:${opSlug}`;
-        localStorage.setItem(RESUME_KEY, s.id);
-        sessionStorage.setItem(TRIGGER_KEY, '1');
-        router.push(`/test-de-repaso/${opSlug}`);
-      } else if (s.tipo === 'tema') {
-        const temaSlug = s.tema_slug || (Array.isArray(s.temas) && s.temas[0]);
-        if (!temaSlug) return;
-        const RESUME_KEY = `resume:tema:${temaSlug}`;
-        const TRIGGER_KEY = `resume-trigger:tema:${temaSlug}`;
-        localStorage.setItem(RESUME_KEY, s.id);
-        sessionStorage.setItem(TRIGGER_KEY, '1');
-        router.push(`/tema/${temaSlug}`);
-      } else {
-        // fallback a repaso
-        const opSlug = s.oposicion || 'temas';
-        const RESUME_KEY = `resume:repaso:${opSlug}`;
-        const TRIGGER_KEY = `resume-trigger:repaso:${opSlug}`;
-        localStorage.setItem(RESUME_KEY, s.id);
-        sessionStorage.setItem(TRIGGER_KEY, '1');
-        router.push(`/test-de-repaso/${opSlug}`);
-      }
-    } catch {
-      // si storage falla, al menos navega
-      if (s.tipo === 'repaso') router.push(`/test-de-repaso/${s.oposicion || 'temas'}`);
-      else if (s.tipo === 'tema') router.push(`/tema/${s.tema_slug || ''}`);
-    }
-  };
 
   const pieData = useMemo(() => (stats ? [
     { name: 'Aciertos', value: stats.resumen_aciertos.aciertos },
@@ -217,6 +234,16 @@ export default function ProgresoPage() {
                   const current = Math.min(s.idx + 1, Math.max(1, total || 1));
                   const pct = total ? Math.round((current / total) * 100) : 0;
 
+                  let href = '/test-de-repaso';
+                  if (s.tipo === 'repaso') {
+                    href = `/test-de-repaso?sesion=${s.id}`;
+                  } else if (s.tipo === 'tema') {
+                    const tslug = s.tema_slug || (Array.isArray(s.temas) && s.temas[0]) || '';
+                    href = tslug ? `/tema/${tslug}?sesion=${s.id}` : `/tema?sesion=${s.id}`;
+                  } else {
+                    href = `/test-de-repaso?sesion=${s.id}`;
+                  }
+
                   return (
                     <div key={s.id} className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
                       <div className="flex items-center justify-between">
@@ -231,38 +258,49 @@ export default function ProgresoPage() {
                         <span className="text-xs text-gray-500">{fmt(s.tiempo)} restantes</span>
                       </div>
 
+                      {/* Temas chips (usando nombres) */}
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {s.tipo === 'tema' && s.tema_slug && (
-                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">{s.tema_slug}</span>
+                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
+                            {topicNames[s.tema_slug] || s.tema_slug}
+                          </span>
                         )}
-                        {s.tipo === 'repaso' && Array.isArray(s.temas) && s.temas.slice(0, 3).map(t => (
-                          <span key={t} className="text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">{t}</span>
+                        {s.tipo === 'repaso' && Array.isArray(s.temas) && s.temas.slice(0, 3).map(slug => (
+                          <span key={slug} className="text-[11px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
+                            {topicNames[slug] || slug}
+                          </span>
                         ))}
                         {s.tipo === 'repaso' && s.temas?.length > 3 && (
-                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">+{s.temas.length - 3}</span>
+                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                            +{s.temas.length - 3}
+                          </span>
                         )}
                       </div>
 
+                      {/* Progreso lineal */}
                       <div className="mt-3">
                         <div className="flex justify-between text-xs text-gray-600 mb-1">
                           <span>Pregunta {current} / {total || '?'}</span>
                           <span>{pct}%</span>
                         </div>
                         <div className="h-2 w-full bg-gray-100 rounded">
-                          <div className="h-2 rounded bg-primary transition-all" style={{ width: `${pct}%` }} />
+                          <div
+                            className="h-2 rounded bg-primary transition-all"
+                            style={{ width: `${pct}%` }}
+                          />
                         </div>
                       </div>
 
                       <div className="mt-4 flex justify-end">
-                        <button
-                          onClick={() => continuarSesion(s)}
+                        <Link
+                          href={href}
                           className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-primary-hover"
                         >
                           Continuar
                           <svg viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor">
                             <path d="M7.293 14.707a1 1 0 0 1 0-1.414L10.586 10 7.293 6.707A1 1 0 1 1 8.707 5.293l4 4a1 1 0 0 1 0 1.414l-4 4a1 1 0 0 1-1.414 0z" />
                           </svg>
-                        </button>
+                        </Link>
                       </div>
                     </div>
                   );
