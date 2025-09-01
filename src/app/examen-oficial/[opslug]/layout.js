@@ -1,15 +1,15 @@
 // Metadata dinámica para /examen-oficial/[id] sin tocar page.js
 export async function generateMetadata({ params }) {
   const site = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.testestado.es';
-  const id = params?.id;
-  const url = `${site}/examen-oficial/${id}`;
+  const slug = params?.opslug;
+  const url = `${site}/examen-oficial/${slug}`;
 
   let item = null;
 
   // Intento 1: endpoint de detalle
   try {
-    const r1 = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/examenes-oficiales/${id}/`, {
-      next: { revalidate: 86400 },
+    const r1 = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/examenes-oficiales/${slug}/`, {
+       next: { revalidate: 86400 },
     });
     if (r1.ok) item = await r1.json();
   } catch {}

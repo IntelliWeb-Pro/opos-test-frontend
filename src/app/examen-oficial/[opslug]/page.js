@@ -39,12 +39,14 @@ export default function ExamenOficialPage() {
 
    let cancelled = false;
 
-   const createExamSession = async () => {
-     const r = await fetch(`${API}/api/sesiones/`, {
-       method: 'POST',
-       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ tipo: 'examen', config: { oposicion: opslug } }),
-     });
+    const createExamSession = async () => {
+      // Delegamos la lógica de composición al backend:
+      // POST /api/examenes-oficiales/<slug>/iniciar/
+      const r = await fetch(`${API}/api/examenes-oficiales/${opslug}/iniciar/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({}), // opcional: { n1, n2, minutos, preferirTemas: true }
+    });
      if (!r.ok) {
        let msg = 'No se pudo crear el examen.';
        try { const j = await r.json(); if (j?.error) msg = j.error; } catch {}
