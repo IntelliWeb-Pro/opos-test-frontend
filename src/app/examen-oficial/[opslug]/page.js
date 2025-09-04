@@ -1,10 +1,10 @@
 // src/app/examen-oficial/[opslug]/page.js
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams, useParams, useRouter } from 'next/navigation';
+import {useEffect, useMemo, useRef, useState} from 'react';
+import {useSearchParams, useParams, useRouter} from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/context/AuthContext';
+import {useAuth} from '@/context/AuthContext';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -17,31 +17,37 @@ const fmt = (s) => {
 };
 
 export default function ExamenOficialPage() {
-  const { opslug } = useParams();           // slug de oposición
+  const {opslug} = useParams();         // slug de oposición
   const search = useSearchParams();
-  const sesionQS = search.get('sesion');    // si viene, continuar
+  const sesionQS = search.get('sesion'); // si viene, continuar
   const router = useRouter();
 
-  const { token, user } = useAuth();
-  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
-
-  const [session, setSession] = useState(null);   // objeto sesión (TestSession)
+  const {token, user} = useAuth();
+  const [session, setSession] = useState(null);   // objeto sesión
   const [loading, setLoading] = useState(true);
+  const [qCache, setQCache] = useState({});       // id -> pregunta (simple)
   const [saving, setSaving] = useState(false);
   const [finished, setFinished] = useState(false);
-  const [qList, setQList] = useState([]);         // preguntas completas (sin flags)
   const timerRef = useRef(null);
 
-  // Crear o cargar sesión (usa backend unificado /api/sesiones con tipo="examen")
+  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+
+  // Crear o cargar sesión
   useEffect(() => {
+    // Si no hay slug o no hay token aún, no hacemos nada (evita fallos)
     if (!opslug || !token) return;
+
     let cancelled = false;
 
     const createExamSession = async () => {
+      // 🔁 NUEVO: usamos el endpoint general de sesiones
       const r = await fetch(`${API}/api/sesiones/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ tipo: 'examen', config: { oposicion: opslug } }),
+        body: JSON.stringify({
+          tipo: 'examen',
+          config: { oposicion: opslug } // el backend arma las preguntas y 90 min
+        }),
       });
       if (!r.ok) {
         let msg = 'No se pudo crear el examen.';
@@ -52,7 +58,9 @@ export default function ExamenOficialPage() {
     };
 
     const loadSession = async (sid) => {
-      const r = await fetch(`${API}/api/sesiones/${sid}/`, { headers: { Authorization: `Bearer ${token}` } });
+      const r = await fetch(`${API}/api/sesiones/${sid}/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (!r.ok) throw new Error('Sesión no encontrada.');
       return r.json();
     };
@@ -64,7 +72,6 @@ export default function ExamenOficialPage() {
         if (cancelled) return;
         setSession(data);
         if (!sesionQS) {
-          // fijamos la URL con ?sesion=...
           router.replace(`/examen-oficial/${opslug}?sesion=${data.id}`);
         }
       } catch (e) {
@@ -78,29 +85,7 @@ export default function ExamenOficialPage() {
     return () => { cancelled = true; };
   }, [opslug, sesionQS, token, router]);
 
-  // Cargar TODAS las preguntas de la sesión de una vez
-  useEffect(() => {
-    if (!session?.preguntas_ids?.length || !token) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const r = await fetch(`${API}/api/preguntas/por-ids/`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...authHeaders },
-          body: JSON.stringify({ ids: session.preguntas_ids }),
-        });
-        if (!r.ok) throw new Error('No se pudieron cargar las preguntas.');
-        const data = await r.json();
-        if (!cancelled) setQList(data);
-      } catch (e) {
-        console.error(e);
-        alert(e.message || 'Error cargando preguntas.');
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [session?.preguntas_ids, token]); // authHeaders estable
-
-  // Timer (90 min ya viene en tiempo_restante)
+  // Timer
   useEffect(() => {
     if (!session || finished) return;
     if (timerRef.current) clearInterval(timerRef.current);
@@ -120,37 +105,40 @@ export default function ExamenOficialPage() {
     return () => clearInterval(timerRef.current);
   }, [session, finished]);
 
-  // Cuando se marca finished, avisamos al backend (estado=finalizado) una sola vez
+  const ids = session?.preguntas_ids || [];
+  const idx = session?.idx_actual || 0;
+  const qid = ids[idx];
+
+  // cargar pregunta actual si no está cacheada
   useEffect(() => {
-    if (!finished || !session?.id) return;
+    if (!qid || qCache[qid]) return;
     (async () => {
-      try {
-        await fetch(`${API}/api/sesiones/${session.id}/`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', ...authHeaders },
-          body: JSON.stringify({ estado: 'finalizado' }),
-        });
-      } catch (_) {}
+      const r = await fetch(`${API}/api/preguntas/por-ids/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        body: JSON.stringify({ ids: [qid] }),
+      });
+      if (!r.ok) return;
+      const [q] = await r.json();
+      setQCache((prev) => ({ ...prev, [qid]: q }));
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [finished, session?.id]);
+  }, [qid, authHeaders, qCache]);
 
-  // Progreso
-  const total = session?.preguntas_ids?.length || 0;
-  const respondidas = useMemo(() => Object.keys(session?.respuestas || {}).length, [session?.respuestas]);
-  const pct = total ? Math.round((respondidas / total) * 100) : 0;
+  const current = qCache[qid];
 
-  // Guardar respuesta
-  const markAnswer = async (qid, respuestaId) => {
+  const total = ids.length || 0;
+  const pct = total ? Math.round(((idx + 1) / total) * 100) : 0;
+
+  const markAnswer = async (respuestaId) => {
     if (!session) return;
     const newResp = { ...(session.respuestas || {}), [qid]: respuestaId };
-    setSession((prev) => ({ ...prev, respuestas: newResp })); // optimista
+    const body = { respuestas: newResp };
     setSaving(true);
     try {
       const r = await fetch(`${API}/api/sesiones/${session.id}/`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', ...authHeaders },
-        body: JSON.stringify({ respuestas: newResp }),
+        body: JSON.stringify(body),
       });
       if (r.ok) {
         const s = await r.json();
@@ -161,42 +149,61 @@ export default function ExamenOficialPage() {
     }
   };
 
-  // Finalizar manualmente
+  const go = async (dir) => {
+    if (!session) return;
+    const next = Math.min(total - 1, Math.max(0, idx + dir));
+    if (next === idx) return;
+    const body = { idx_actual: next };
+    setSaving(true);
+    try {
+      const r = await fetch(`${API}/api/sesiones/${session.id}/`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        body: JSON.stringify(body),
+      });
+      if (r.ok) {
+        const s = await r.json();
+        setSession(s);
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const finalizar = async () => {
     if (!session) return;
-    setFinished(true); // el efecto superior marcará finalizado en backend
+    setFinished(true);
+    // marcamos finalizada en backend
+    await fetch(`${API}/api/sesiones/${session.id}/`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...authHeaders },
+      body: JSON.stringify({ estado: 'finalizado' }),
+    });
   };
 
   // Corrección completa (cuando finished)
   const [review, setReview] = useState(null); // {detallePreguntas, aciertos, total}
   useEffect(() => {
-    if (!finished || !session?.preguntas_ids?.length) return;
+    if (!finished || !session) return;
     (async () => {
-      try {
-        const r = await fetch(`${API}/api/preguntas/corregir/`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...authHeaders },
-          body: JSON.stringify({ ids: session.preguntas_ids }),
-        });
-        if (!r.ok) throw new Error('No se pudo corregir el examen.');
-        const detalle = await r.json(); // incluye es_correcta, justificación y url
-
-        // calculamos aciertos con respuestas del usuario
-        let aciertos = 0;
-        const mapCorrecta = {};
-        detalle.forEach(p => {
-          const ok = p.respuestas.find(rr => rr.es_correcta);
-          if (ok) mapCorrecta[p.id] = ok.id;
-        });
-        session.preguntas_ids.forEach(q => {
-          const marcada = session.respuestas?.[q];
-          if (mapCorrecta[q] && mapCorrecta[q] === marcada) aciertos += 1;
-        });
-        setReview({ detallePreguntas: detalle, aciertos, total: session.preguntas_ids.length });
-      } catch (e) {
-        console.error(e);
-        alert(e.message || 'Error al corregir el examen.');
-      }
+      const r = await fetch(`${API}/api/preguntas/corregir/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        body: JSON.stringify({ ids }),
+      });
+      if (!r.ok) return;
+      const detalle = await r.json(); // incluye es_correcta, justificación y url
+      // calculamos aciertos con respuestas del usuario
+      let aciertos = 0;
+      const mapCorrecta = {};
+      detalle.forEach(p => {
+        const ok = p.respuestas.find(r => r.es_correcta);
+        if (ok) mapCorrecta[p.id] = ok.id;
+      });
+      ids.forEach(q => {
+        if (mapCorrecta[q] && mapCorrecta[q] === session.respuestas?.[q]) aciertos += 1;
+      });
+      setReview({ detallePreguntas: detalle, aciertos, total: ids.length });
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [finished, session?.id]);
@@ -286,72 +293,57 @@ export default function ExamenOficialPage() {
     );
   }
 
-  // Vista de examen (TODAS las preguntas en una sola página)
+  // Vista de examen
   return (
     <main className="container mx-auto p-6">
-      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+      <header className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Examen Oficial — {opslug}</h1>
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <div className="text-sm text-gray-600">Tiempo restante</div>
-            <div className={`text-2xl font-bold ${session.tiempo_restante <= 60 ? 'text-rose-600' : ''}`}>
-              {fmt(session.tiempo_restante)}
-            </div>
-          </div>
-          <button onClick={finalizar} className="px-4 py-2 rounded bg-emerald-600 text-white">
-            Finalizar examen
-          </button>
+        <div className="text-right">
+          <div className="text-sm text-gray-600">Tiempo restante</div>
+          <div className={`text-2xl font-bold ${session.tiempo_restante <= 60 ? 'text-rose-600' : ''}`}>{fmt(session.tiempo_restante)}</div>
         </div>
       </header>
 
-      <div className="mb-4">
+      <div className="bg-white rounded-xl border p-4">
         <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-600">Respondidas {respondidas} de {total}</p>
-          <div className="w-56 h-2 bg-gray-100 rounded overflow-hidden">
+          <p className="text-sm text-gray-600">Pregunta {idx + 1} de {total}</p>
+          <div className="w-48 h-2 bg-gray-100 rounded overflow-hidden">
             <div className="h-2 bg-primary" style={{ width: `${pct}%` }} />
           </div>
         </div>
-      </div>
 
-      <div className="space-y-6">
-        {qList.length === 0 ? (
-          <p>Cargando preguntas…</p>
-        ) : (
-          qList.map((q, i) => {
-            const marcada = session.respuestas?.[q.id];
-            return (
-              <div key={q.id} className="bg-white rounded-xl border p-4">
-                <p className="font-semibold mb-2">
-                  {i + 1}. {q.texto_pregunta}
-                </p>
-                <div className="grid gap-2">
-                  {q.respuestas.map((r) => (
-                    <label
+        <div className="mt-4 min-h-[100px]">
+          {!current ? (
+            <p>Cargando pregunta…</p>
+          ) : (
+            <>
+              <p className="font-semibold">{current.texto_pregunta}</p>
+              <div className="mt-3 space-y-2">
+                {current.respuestas.map(r => {
+                  const marcada = session.respuestas?.[qid] === r.id;
+                  return (
+                    <button
                       key={r.id}
-                      className={`flex items-start gap-2 rounded border p-2 cursor-pointer ${marcada === r.id ? 'border-primary bg-primary/5' : 'border-gray-200 hover:bg-gray-50'}`}
+                      onClick={() => markAnswer(r.id)}
+                      className={`block w-full text-left px-3 py-2 rounded border ${marcada ? 'border-primary bg-primary/5' : 'border-gray-200 hover:bg-gray-50'}`}
+                      disabled={saving}
                     >
-                      <input
-                        type="radio"
-                        name={`q-${q.id}`}
-                        className="mt-1"
-                        checked={marcada === r.id}
-                        onChange={() => markAnswer(q.id, r.id)}
-                        disabled={saving}
-                      />
-                      <span>{r.texto_respuesta}</span>
-                    </label>
-                  ))}
-                </div>
+                      {r.texto_respuesta}
+                    </button>
+                  );
+                })}
               </div>
-            );
-          })
-        )}
-      </div>
+            </>
+          )}
+        </div>
 
-      <div className="mt-8 flex justify-end">
-        <button onClick={finalizar} className="px-4 py-2 rounded bg-emerald-600 text-white">
-          Finalizar examen
-        </button>
+        <div className="mt-5 flex items-center justify-between">
+          <button onClick={() => go(-1)} disabled={idx === 0 || saving} className="px-4 py-2 rounded bg-gray-100 text-gray-800 disabled:opacity-50">Anterior</button>
+          <div className="flex gap-2">
+            <button onClick={() => go(1)} disabled={idx >= total - 1 || saving} className="px-4 py-2 rounded bg-gray-100 text-gray-800 disabled:opacity-50">Siguiente</button>
+            <button onClick={finalizar} className="px-4 py-2 rounded bg-emerald-600 text-white">Finalizar examen</button>
+          </div>
+        </div>
       </div>
     </main>
   );
