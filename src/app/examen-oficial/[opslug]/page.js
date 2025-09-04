@@ -1,12 +1,15 @@
 // src/app/examen-oficial/[opslug]/page.js
 'use client';
 
-import {useEffect, useMemo, useRef, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {useSearchParams, useParams, useRouter} from 'next/navigation';
 import Link from 'next/link';
 import {useAuth} from '@/context/AuthContext';
 
-const API = process.env.NEXT_PUBLIC_API_URL;
+// Base API (con fallback a relativo si no hay NEXT_PUBLIC_API_URL)
+const API_BASE =
+  (process.env.NEXT_PUBLIC_API_URL && process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '')) || '';
+const api = (p) => `${API_BASE}${p}`;
 
 // Util
 const fmt = (s) => {
@@ -23,30 +26,37 @@ export default function ExamenOficialPage() {
   const router = useRouter();
 
   const {token, user} = useAuth();
-  const [session, setSession] = useState(null);   // objeto sesión
+  const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [qCache, setQCache] = useState({});       // id -> pregunta (simple)
+  const [qCache, setQCache] = useState({});
   const [saving, setSaving] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [review, setReview] = useState(null);
+  const [hardError, setHardError] = useState(null);
   const timerRef = useRef(null);
 
   const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
 
   // Crear o cargar sesión
   useEffect(() => {
-    // Si no hay slug o no hay token aún, no hacemos nada (evita fallos)
-    if (!opslug || !token) return;
-
     let cancelled = false;
 
+    // No intentes crear la sesión si falta dato clave
+    if (!opslug) return;
+    if (!token) {
+      // si el usuario no está logado, no intentes crear nada
+      setLoading(false);
+      return;
+    }
+
     const createExamSession = async () => {
-      // 🔁 NUEVO: usamos el endpoint general de sesiones
-      const r = await fetch(`${API}/api/sesiones/`, {
+      console.log('[EXAM] creando sesión examen para', opslug, 'API_BASE:', API_BASE || '(relativo)');
+      const r = await fetch(api('/api/sesiones/'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           tipo: 'examen',
-          config: { oposicion: opslug } // el backend arma las preguntas y 90 min
+          config: { oposicion: opslug }, // el backend monta las preguntas y 90 min
         }),
       });
       if (!r.ok) {
@@ -58,9 +68,7 @@ export default function ExamenOficialPage() {
     };
 
     const loadSession = async (sid) => {
-      const r = await fetch(`${API}/api/sesiones/${sid}/`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const r = await fetch(api(`/api/sesiones/${sid}/`), { headers: authHeaders });
       if (!r.ok) throw new Error('Sesión no encontrada.');
       return r.json();
     };
@@ -72,18 +80,19 @@ export default function ExamenOficialPage() {
         if (cancelled) return;
         setSession(data);
         if (!sesionQS) {
+          // añade ?sesion= en la URL sin recargar
           router.replace(`/examen-oficial/${opslug}?sesion=${data.id}`);
         }
       } catch (e) {
-        console.error(e);
-        alert(e.message || 'Error inicializando el examen.');
+        console.error('[EXAM] error inicializando el examen:', e);
+        setHardError(e.message || 'Error inicializando el examen.');
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
 
     return () => { cancelled = true; };
-  }, [opslug, sesionQS, token, router]);
+  }, [opslug, sesionQS, token, router]); // deps correctas
 
   // Timer
   useEffect(() => {
@@ -113,19 +122,22 @@ export default function ExamenOficialPage() {
   useEffect(() => {
     if (!qid || qCache[qid]) return;
     (async () => {
-      const r = await fetch(`${API}/api/preguntas/por-ids/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
-        body: JSON.stringify({ ids: [qid] }),
-      });
-      if (!r.ok) return;
-      const [q] = await r.json();
-      setQCache((prev) => ({ ...prev, [qid]: q }));
+      try {
+        const r = await fetch(api('/api/preguntas/por-ids/'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...authHeaders },
+          body: JSON.stringify({ ids: [qid] }),
+        });
+        if (!r.ok) throw new Error('No se pudo cargar la pregunta.');
+        const [q] = await r.json();
+        setQCache((prev) => ({ ...prev, [qid]: q }));
+      } catch (e) {
+        console.error('[EXAM] error cargando pregunta:', e);
+      }
     })();
   }, [qid, authHeaders, qCache]);
 
   const current = qCache[qid];
-
   const total = ids.length || 0;
   const pct = total ? Math.round(((idx + 1) / total) * 100) : 0;
 
@@ -135,7 +147,7 @@ export default function ExamenOficialPage() {
     const body = { respuestas: newResp };
     setSaving(true);
     try {
-      const r = await fetch(`${API}/api/sesiones/${session.id}/`, {
+      const r = await fetch(api(`/api/sesiones/${session.id}/`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify(body),
@@ -156,7 +168,7 @@ export default function ExamenOficialPage() {
     const body = { idx_actual: next };
     setSaving(true);
     try {
-      const r = await fetch(`${API}/api/sesiones/${session.id}/`, {
+      const r = await fetch(api(`/api/sesiones/${session.id}/`), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify(body),
@@ -173,46 +185,61 @@ export default function ExamenOficialPage() {
   const finalizar = async () => {
     if (!session) return;
     setFinished(true);
-    // marcamos finalizada en backend
-    await fetch(`${API}/api/sesiones/${session.id}/`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', ...authHeaders },
-      body: JSON.stringify({ estado: 'finalizado' }),
-    });
+    try {
+      await fetch(api(`/api/sesiones/${session.id}/`), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        body: JSON.stringify({ estado: 'finalizado' }),
+      });
+    } catch (e) {
+      console.error('[EXAM] error marcando finalizado:', e);
+    }
   };
 
   // Corrección completa (cuando finished)
-  const [review, setReview] = useState(null); // {detallePreguntas, aciertos, total}
   useEffect(() => {
     if (!finished || !session) return;
     (async () => {
-      const r = await fetch(`${API}/api/preguntas/corregir/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
-        body: JSON.stringify({ ids }),
-      });
-      if (!r.ok) return;
-      const detalle = await r.json(); // incluye es_correcta, justificación y url
-      // calculamos aciertos con respuestas del usuario
-      let aciertos = 0;
-      const mapCorrecta = {};
-      detalle.forEach(p => {
-        const ok = p.respuestas.find(r => r.es_correcta);
-        if (ok) mapCorrecta[p.id] = ok.id;
-      });
-      ids.forEach(q => {
-        if (mapCorrecta[q] && mapCorrecta[q] === session.respuestas?.[q]) aciertos += 1;
-      });
-      setReview({ detallePreguntas: detalle, aciertos, total: ids.length });
+      try {
+        const r = await fetch(api('/api/preguntas/corregir/'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...authHeaders },
+          body: JSON.stringify({ ids }),
+        });
+        if (!r.ok) throw new Error('No se pudo corregir el examen.');
+        const detalle = await r.json();
+        let aciertos = 0;
+        const mapCorrecta = {};
+        detalle.forEach(p => {
+          const ok = p.respuestas.find(r => r.es_correcta);
+          if (ok) mapCorrecta[p.id] = ok.id;
+        });
+        ids.forEach(q => {
+          if (mapCorrecta[q] && mapCorrecta[q] === session.respuestas?.[q]) aciertos += 1;
+        });
+        setReview({ detallePreguntas: detalle, aciertos, total: ids.length });
+      } catch (e) {
+        console.error('[EXAM] error corrigiendo:', e);
+      }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [finished, session?.id]);
+  }, [finished, session?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Estados de acceso
   if (!user) {
     return (
       <main className="container mx-auto p-6 text-center">
         <h1 className="text-2xl font-bold">Inicia sesión para hacer el examen</h1>
         <Link href="/login" className="mt-4 inline-block bg-primary text-white px-4 py-2 rounded">Iniciar sesión</Link>
+      </main>
+    );
+  }
+
+  // Errores duros (por ejemplo, API_BASE mal configurado)
+  if (hardError) {
+    return (
+      <main className="container mx-auto p-6 text-center">
+        <h1 className="text-2xl font-bold mb-2">No se pudo iniciar el examen</h1>
+        <p className="text-secondary">{hardError}</p>
       </main>
     );
   }
@@ -320,7 +347,7 @@ export default function ExamenOficialPage() {
               <p className="font-semibold">{current.texto_pregunta}</p>
               <div className="mt-3 space-y-2">
                 {current.respuestas.map(r => {
-                  const marcada = session.respuestas?.[qid] === r.id;
+                  const marcada = session.respuestas?.[ids[idx]] === r.id;
                   return (
                     <button
                       key={r.id}
