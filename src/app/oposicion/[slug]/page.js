@@ -78,7 +78,7 @@ export default function OposicionGuiaPage() {
                     Realizar Test por Temas
                 </Link>
                 <Link
-                    href={`/examen-oficial`}  className="inline-block bg-amber-200 hover:bg-amber-300 text-dark font-semibold px-6 py-3 rounded-md transition">
+                    href={`/examen-oficial/${oposicion.slug}`}  className="inline-block bg-amber-200 hover:bg-amber-300 text-dark font-semibold px-6 py-3 rounded-md transition">
                     Test Oficial de Examen
                 </Link>
 
